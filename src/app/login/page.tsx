@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Lock, User, HelpCircle, LogIn, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../../../lib/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,23 +12,61 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
-    router.push('/admin/proyectos');
+    setError('');
+
+    try {
+      // Buscar el email real usando el username
+      const { data: persona, error: personaError } = await supabase
+        .from('personas')
+        .select('email, rol')
+        .eq('username', username.trim().toLowerCase())
+        .single();
+
+      if (personaError || !persona?.email) {
+        setError('Usuario o contraseña incorrectos.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Autenticar con el email real
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: persona.email,
+        password: password,
+      });
+
+      if (authError || !authData.user) {
+        setError('Usuario o contraseña incorrectos.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Redirigir según rol
+      if (persona.rol === 'administrador') {
+        router.push('/admin/proyectos');
+      } else {
+        router.push('/docente');
+      }
+
+    } catch (err) {
+      setError('Ocurrió un error inesperado. Intente nuevamente.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-white flex flex-col lg:flex-row relative overflow-hidden font-sans">
-      {/* Background soft gradients */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-blue-50 rounded-full blur-[120px]" />
         <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-indigo-50 rounded-full blur-[100px]" />
       </div>
 
-      {/* Left Column: Branding (Desktop Only) */}
+      {/* Left Column */}
       <div className="hidden lg:flex lg:w-[55%] relative flex-col justify-between p-20 z-10">
         <div>
           <motion.div
@@ -53,7 +92,6 @@ export default function LoginPage() {
             <p className="text-slate-500 text-lg font-medium leading-relaxed mb-12">
               Gestione y califique el talento de la Carrera de Ingeniería Industrial con nuestra plataforma centralizada de evaluación.
             </p>
-
           </motion.div>
         </div>
 
@@ -67,20 +105,20 @@ export default function LoginPage() {
         </motion.div>
       </div>
 
-      {/* Right Column: Authentication Form */}
+      {/* Right Column */}
       <div className="flex-1 flex items-center justify-center p-6 md:p-12 relative z-10 bg-slate-50/50 lg:bg-transparent">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-md"
         >
           <div className="bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden border border-slate-100">
             <div className="p-10 md:p-14">
-              {/* Logo Section (Only visible on mobile as it's already on the left on desktop) */}
+              {/* Logo mobile */}
               <div className="flex flex-col items-center text-center mb-12 lg:hidden">
-                <img 
-                  src="/logo/logocarrera.png" 
-                  alt="Logo Carrera" 
+                <img
+                  src="/logo/logocarrera.png"
+                  alt="Logo Carrera"
                   className="w-20 h-20 object-contain mb-6"
                 />
                 <h1 className="text-2xl font-black text-[#162748] tracking-tight leading-tight">
@@ -105,7 +143,7 @@ export default function LoginPage() {
                       placeholder="Ingrese su usuario"
                       value={username}
                       onChange={e => setUsername(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4.5 bg-slate-50 border-2 border-transparent rounded-2xl text-slate-900 placeholder-slate-300 focus:outline-none focus:border-blue-600/10 focus:bg-white focus:ring-4 focus:ring-blue-600/5 transition-all font-bold text-sm"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent rounded-2xl text-slate-900 placeholder-slate-300 focus:outline-none focus:border-blue-600/10 focus:bg-white focus:ring-4 focus:ring-blue-600/5 transition-all font-bold text-sm"
                     />
                   </div>
                 </div>
@@ -120,7 +158,7 @@ export default function LoginPage() {
                       placeholder="••••••••"
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      className="w-full pl-12 pr-12 py-4.5 bg-slate-50 border-2 border-transparent rounded-2xl text-slate-900 placeholder-slate-300 focus:outline-none focus:border-blue-600/10 focus:bg-white focus:ring-4 focus:ring-blue-600/5 transition-all font-bold text-sm"
+                      className="w-full pl-12 pr-12 py-4 bg-slate-50 border-2 border-transparent rounded-2xl text-slate-900 placeholder-slate-300 focus:outline-none focus:border-blue-600/10 focus:bg-white focus:ring-4 focus:ring-blue-600/5 transition-all font-bold text-sm"
                     />
                     <button
                       type="button"
@@ -132,7 +170,20 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <div className="pt-4">
+                <AnimatePresence>
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      className="bg-red-50 border border-red-100 text-red-500 text-xs font-bold rounded-xl px-4 py-3 text-center"
+                    >
+                      {error}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <div className="pt-2">
                   <button
                     type="submit"
                     disabled={isLoading}
