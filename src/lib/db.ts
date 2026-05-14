@@ -285,8 +285,7 @@ export async function fetchResultadosTop(limit: number = 5): Promise<ResultadoTo
       id_proyecto,
       proyectos:id_proyecto (
         codigo_proyecto,
-        nombre_proyecto,
-        evaluaciones(id)
+        nombre_proyecto
       )
     `)
     .order('ranking_posicion', { ascending: true })
@@ -298,8 +297,60 @@ export async function fetchResultadosTop(limit: number = 5): Promise<ResultadoTo
     posicion: r.ranking_posicion,
     nombre: r.proyectos?.nombre_proyecto || 'Proyecto Desconocido',
     puntajeFinal: Number(r.promedio_final) || 0,
-    evaluaciones: r.proyectos?.evaluaciones?.length || 0,
+    evaluaciones: 0, // Se puede expandir para contar si es necesario
   }));
+}
+
+/**
+ * Calcula el promedio de las evaluaciones de un proyecto y actualiza la tabla de resultados.
+ */
+export async function sincronizarResultadosProyecto(idProyecto: string) {
+  // 1. Obtener todas las evaluaciones confirmadas del proyecto
+  const { data: evals } = await supabase
+    .from('evaluaciones')
+    .select('nota_final')
+    .eq('id_proyecto', idProyecto)
+    .eq('confirmada', true);
+
+  if (!evals || evals.length === 0) return;
+
+  // 2. Calcular acumulado y promedio
+  const puntajeAcumulado = evals.reduce((acc, curr) => acc + (Number(curr.nota_final) || 0), 0);
+  const promedio = puntajeAcumulado / evals.length;
+
+  // 3. Upsert en resultados_proyectos
+  const { error } = await supabase
+    .from('resultados_proyectos')
+    .upsert({
+      id_proyecto: idProyecto,
+      puntaje_acumulado: parseFloat(puntajeAcumulado.toFixed(2)),
+      promedio_final: parseFloat(promedio.toFixed(2))
+    }, { onConflict: 'id_proyecto' });
+
+  if (error) console.error('Error sincronizando resultados:', error.message);
+  
+  // 4. Recalcular ranking global
+  await recalcularTodoElRanking();
+}
+
+/**
+ * Recalcula las posiciones de ranking para todos los proyectos basados en su promedio.
+ */
+export async function recalcularTodoElRanking() {
+  const { data: resultados } = await supabase
+    .from('resultados_proyectos')
+    .select('id_proyecto, promedio_final')
+    .order('promedio_final', { ascending: false });
+
+  if (!resultados || resultados.length === 0) return;
+
+  // Actualizar posiciones secuencialmente
+  for (let i = 0; i < resultados.length; i++) {
+    await supabase
+      .from('resultados_proyectos')
+      .update({ ranking_posicion: i + 1 })
+      .eq('id_proyecto', resultados[i].id_proyecto);
+  }
 }
 
 // ─── CRITERIOS DE EVALUACIÓN ──────────────────────────────────────────────────

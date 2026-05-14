@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ChevronLeft, AlignLeft, AlertTriangle, Pencil, Check, Loader2 } from 'lucide-react';
-import { supabase } from '../../../../../lib/supabase';
+import { supabase } from '@/lib/supabase';
+import { sincronizarResultadosProyecto } from '@/lib/db';
 
 type Step = 1 | 2 | 3;
 
@@ -175,52 +176,8 @@ export default function EvaluarProyecto() {
       return;
     }
 
-    // 2. Obtener todas las evaluaciones confirmadas de este proyecto
-    const { data: todasEvals } = await supabase
-      .from('evaluaciones')
-      .select('nota_final')
-      .eq('id_proyecto', id)
-      .eq('confirmada', true);
-
-    if (todasEvals && todasEvals.length > 0) {
-      const puntajeAcumulado = parseFloat(
-        todasEvals.reduce((sum, e) => sum + Number(e.nota_final), 0).toFixed(2)
-      );
-      const promedioFinal = parseFloat((puntajeAcumulado / todasEvals.length).toFixed(2));
-
-      // 3. Verificar si ya existe en resultados_proyectos
-      const { data: existente } = await supabase
-        .from('resultados_proyectos')
-        .select('id')
-        .eq('id_proyecto', id)
-        .maybeSingle();
-
-      if (existente) {
-        await supabase
-          .from('resultados_proyectos')
-          .update({ puntaje_acumulado: puntajeAcumulado, promedio_final: promedioFinal })
-          .eq('id_proyecto', id);
-      } else {
-        await supabase
-          .from('resultados_proyectos')
-          .insert([{ id_proyecto: id, puntaje_acumulado: puntajeAcumulado, promedio_final: promedioFinal, ranking_posicion: 0 }]);
-      }
-
-      // 4. Recalcular ranking
-      const { data: todosResultados } = await supabase
-        .from('resultados_proyectos')
-        .select('id, promedio_final')
-        .order('promedio_final', { ascending: false });
-
-      if (todosResultados) {
-        for (let i = 0; i < todosResultados.length; i++) {
-          await supabase
-            .from('resultados_proyectos')
-            .update({ ranking_posicion: i + 1 })
-            .eq('id', todosResultados[i].id);
-        }
-      }
-    }
+    // 2. Sincronizar resultados (promedios y ranking)
+    await sincronizarResultadosProyecto(id);
 
     setSaving(false);
     router.push('/docente/completado');
