@@ -52,23 +52,31 @@ function getInitials(name: string): string {
 // ─── PROYECTOS ────────────────────────────────────────────────────────────────
 
 export async function fetchProyectosAdmin(): Promise<Proyecto[]> {
-  const { data, error } = await supabase
+  // 1. Obtener todos los proyectos
+  const { data: proys, error: proyError } = await supabase
     .from('proyectos')
-    .select(`
-      id, 
-      codigo_proyecto, 
-      nombre_proyecto,
-      categoria,
-      evaluaciones(id, confirmada)
-    `)
+    .select('id, codigo_proyecto, nombre_proyecto, categoria')
     .order('codigo_proyecto');
 
-  if (error || !data) return [];
+  if (proyError || !proys) return [];
 
-  return data.map((p: any) => {
-    const evals = p.evaluaciones ?? [];
-    const completadas = evals.length; // Contamos todas para ver avance real
-    const confirmadas = evals.filter((e: any) => e.confirmada).length;
+  // 2. Obtener TODAS las evaluaciones para contar manualmente
+  const { data: evals } = await supabase
+    .from('evaluaciones')
+    .select('id, id_proyecto, confirmada');
+
+  // 3. Mapear evaluaciones por proyecto
+  const evalCountMap = new Map<string, any[]>();
+  evals?.forEach(e => {
+    const list = evalCountMap.get(e.id_proyecto) || [];
+    list.push(e);
+    evalCountMap.set(e.id_proyecto, list);
+  });
+
+  return proys.map((p: any) => {
+    const projectEvals = evalCountMap.get(p.id) || [];
+    const completadas = projectEvals.length;
+    const confirmadas = projectEvals.filter((e: any) => e.confirmada).length;
     const total = 3; 
 
     let estado: EstadoProyecto = 'Pendiente';

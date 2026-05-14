@@ -45,7 +45,7 @@ export default function LoginPage() {
       }
 
       if (persona.rol === 'administrador') {
-        router.push('/admin/proyectos');
+        router.push('/admin');
       } else {
         router.push('/docente');
       }
