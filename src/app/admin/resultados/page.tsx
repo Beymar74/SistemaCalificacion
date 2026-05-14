@@ -9,6 +9,7 @@ export default function ResultadosPage() {
   const [resultados, setResultados] = useState<ResultadoTop[]>([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState('');
+  const [isExporting, setIsExporting] = useState(false);
 
   const cargarDatos = () => {
     setLoading(true);
@@ -17,6 +18,15 @@ export default function ResultadosPage() {
       .then(setResultados)
       .catch(() => setError('No se pudo cargar los resultados.'))
       .finally(() => setLoading(false));
+  };
+
+  const handleExport = () => {
+    setIsExporting(true);
+    // Simulación de exportación
+    setTimeout(() => {
+      setIsExporting(false);
+      alert('Resultados exportados correctamente a Excel.');
+    }, 1500);
   };
 
   useEffect(() => { cargarDatos(); }, []);
@@ -59,7 +69,7 @@ export default function ResultadosPage() {
       <div className="flex items-center justify-between mb-8">
         <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs font-medium text-slate-600 shadow-sm">
           <Award className="w-3.5 h-3.5" />
-          GALA DE PREMIACIÓN 2024
+          GALA DE PREMIACIÓN 2026
         </span>
         <button
           onClick={cargarDatos}
