@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { Proyecto, EstadoProyecto, ProyectoGestion, ResultadoTop } from './data';
+import type { Proyecto, EstadoProyecto, ProyectoGestion, ResultadoTop, ProyectoAsignado, EstadoAsignado } from './data';
 
 // ─── TYPES ──────────────────────────────────────────────────────────────────
 
@@ -60,7 +60,7 @@ export async function fetchProyectosAdmin(): Promise<Proyecto[]> {
   return data.map((p: any) => {
     const evals = p.evaluaciones ?? [];
     const completadas = evals.filter((e: any) => e.confirmada).length;
-    const total = 3; 
+    const total = 3;
 
     let estado: EstadoProyecto = 'Pendiente';
     if (completadas >= total) estado = 'Evaluado';
@@ -224,7 +224,7 @@ export async function fetchAuditoriaAsignaciones() {
   const { data: asigs, error: asigError } = await supabase
     .from('asignaciones')
     .select('id, id_proyecto, id_docente');
-  
+
   if (asigError || !asigs) {
     console.error('Audit Error (Asigs):', asigError?.message);
     return [];
@@ -310,10 +310,11 @@ export async function fetchResultadosTop(): Promise<ResultadoTop[]> {
 
   if (error || !data) return [];
 
-  return data.map((r: any) => ({
-    codigo: r.proyectos?.codigo_proyecto || 'S/C',
+  return data.map((r: any, i: number) => ({
+    posicion: i + 1,
     nombre: r.proyectos?.nombre_proyecto || 'Proyecto Desconocido',
-    promedio: Number(r.promedio_final) || 0,
+    puntajeFinal: Number(r.promedio_final) || 0,
+    evaluaciones: 0, // Placeholder
   }));
 }
 
@@ -435,5 +436,43 @@ export async function fetchDetalleProyectoEvaluaciones(idProyecto: string) {
     departamento: a.personas?.materia || 'General',
     estado: a.estado,
     puntaje: a.evaluaciones?.[0]?.puntaje_final || null
+  }));
+}
+export async function fetchAsignacionesDocente(idDocente: string): Promise<ProyectoAsignado[]> {
+  // 1. Obtener asignaciones con proyectos
+  const { data, error } = await supabase
+    .from('asignaciones')
+    .select(`
+      id,
+      id_proyecto,
+      proyectos:id_proyecto (
+        id,
+        codigo_proyecto,
+        nombre_proyecto
+      )
+    `)
+    .eq('id_docente', idDocente);
+
+  if (error || !data) {
+    console.error('fetchAsignacionesDocente:', error?.message);
+    return [];
+  }
+
+  // 2. Obtener evaluaciones confirmadas de este docente por separado
+  const { data: evals } = await supabase
+    .from('evaluaciones')
+    .select('id_proyecto, confirmada')
+    .eq('id_docente', idDocente)
+    .eq('confirmada', true);
+
+  // Set de proyectos ya evaluados
+  const evaluadosSet = new Set((evals ?? []).map((e: any) => e.id_proyecto));
+
+  return data.map((a: any) => ({
+    id: a.proyectos?.id || '',
+    stand: a.proyectos?.codigo_proyecto || 'S/N',
+    categoria: '',
+    nombre: a.proyectos?.nombre_proyecto || 'Desconocido',
+    estado: evaluadosSet.has(a.id_proyecto) ? 'Calificado' : 'Pendiente' as EstadoAsignado,
   }));
 }

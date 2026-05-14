@@ -96,10 +96,10 @@ export const docentes: Docente[] = [
 ];
 
 export const proyectosGestion: ProyectoGestion[] = [
-  { id: '1', codigo: 'PRJ-089', nombre: 'Optimización de Línea de Ensamblaje', sector: 'Sector Manufactura', accion: 'Reasignar' },
-  { id: '2', codigo: 'PRJ-092', nombre: 'Análisis de Cadena de Suministro IoT', sector: 'Logística', accion: 'Cambiar' },
-  { id: '3', codigo: 'PRJ-105', nombre: 'Sistema de Control de Calidad Visual', sector: 'Tecnología Industrial', accion: 'Asignar' },
-  { id: '4', codigo: 'PRJ-112', nombre: 'Ergonomía en Puestos de Trabajo', sector: 'Salud Ocupacional', accion: 'Cambiar' },
+  { id: '1', codigo: 'PRJ-089', nombre: 'Optimización de Línea de Ensamblaje', sector: 'Sector Manufactura', asistio: true, evaluadores: [], accion: 'Reasignar' },
+  { id: '2', codigo: 'PRJ-092', nombre: 'Análisis de Cadena de Suministro IoT', sector: 'Logística', asistio: true, evaluadores: [], accion: 'Cambiar' },
+  { id: '3', codigo: 'PRJ-105', nombre: 'Sistema de Control de Calidad Visual', sector: 'Tecnología Industrial', asistio: true, evaluadores: [], accion: 'Asignar' },
+  { id: '4', codigo: 'PRJ-112', nombre: 'Ergonomía en Puestos de Trabajo', sector: 'Salud Ocupacional', asistio: true, evaluadores: [], accion: 'Cambiar' },
 ];
 
 export const evaluadoresDisponibles = [
