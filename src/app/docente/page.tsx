@@ -1,12 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { 
-  ClipboardList, 
-  CheckCircle2, 
-  Bell, 
-  UserCircle, 
-  LayoutGrid, 
+import {
+  ClipboardList,
+  CheckCircle2,
+  Bell,
+  UserCircle,
+  LayoutGrid,
   ArrowRight,
   Clock
 } from 'lucide-react';
@@ -42,19 +42,19 @@ export default function DocenteHome() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-3"
           >
-            <img 
-              src="/logo/logocarrera.png" 
-              alt="Logo Carrera" 
+            <img
+              src="/logo/logocarrera.png"
+              alt="Logo Carrera"
               className="w-10 h-10 object-contain"
             />
             <span className="text-lg font-black text-[#162748] tracking-tight">IE TechFair</span>
           </motion.div>
-          
+
           <div className="flex items-center gap-2">
             <button className="p-2.5 hover:bg-slate-100 rounded-xl transition-all relative">
               <Bell className="w-5 h-5 text-slate-500" />
@@ -84,7 +84,7 @@ export default function DocenteHome() {
                 Tienes <span className="text-slate-900 font-bold">{pendientes} evaluaciones pendientes</span> para hoy.
               </p>
             </div>
-            
+
             {/* Quick Stats Mini Cards */}
             <div className="flex gap-3">
               <div className="bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-2">
@@ -101,7 +101,7 @@ export default function DocenteHome() {
 
         {/* Project List */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <motion.div 
+          <motion.div
             className="col-span-full mb-2 flex items-center justify-between"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -115,7 +115,7 @@ export default function DocenteHome() {
             </div>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -125,13 +125,12 @@ export default function DocenteHome() {
               <motion.div
                 key={p.id}
                 variants={itemVariants}
-                whileHover={{ y: -5, shadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
+                whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
                 className="group bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col h-full transition-all"
               >
                 {/* Card Header Background */}
-                <div className={`h-2 w-full ${
-                  p.estado === 'Calificado' ? 'bg-emerald-500' : 'bg-blue-600'
-                }`} />
+                <div className={`h-2 w-full ${p.estado === 'Calificado' ? 'bg-emerald-500' : 'bg-blue-600'
+                  }`} />
 
                 <div className="p-6 flex flex-col flex-1">
                   <div className="flex items-start justify-between mb-4">
