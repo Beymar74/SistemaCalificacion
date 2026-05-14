@@ -29,6 +29,13 @@ export interface DocentesSummary {
   total: number;
 }
 
+export interface ConfigSistema {
+  id: string;
+  periodo_activo: string;
+  evaluacion_abierta: boolean;
+  mostrar_resultados: boolean;
+}
+
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 const PREFIJOS = new Set(['Dr.', 'Dra.', 'Ing.', 'MSc.', 'Lic.', 'Mgr.', 'Prof.']);
@@ -389,4 +396,26 @@ export async function fetchAsignacionesDocente(idDocente: string): Promise<Proye
     nombre: a.proyectos?.nombre_proyecto || 'Desconocido',
     estado: evalMap.get(a.id_proyecto) ? 'Calificado' : 'Pendiente' as EstadoAsignado,
   }));
+}
+
+// ─── CONFIGURACIÓN DEL SISTEMA ────────────────────────────────────────────────
+
+export async function fetchConfiguracion(): Promise<ConfigSistema | null> {
+  const { data, error } = await supabase
+    .from('configuracion_sistema')
+    .select('*')
+    .single();
+
+  if (error || !data) return null;
+  return data;
+}
+
+export async function updateConfiguracion(config: ConfigSistema): Promise<{ error?: string }> {
+  const { error } = await supabase
+    .from('configuracion_sistema')
+    .update(config)
+    .eq('id', config.id);
+
+  if (error) return { error: error.message };
+  return {};
 }
