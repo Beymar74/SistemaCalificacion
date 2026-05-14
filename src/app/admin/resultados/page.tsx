@@ -7,8 +7,8 @@ import type { ResultadoTop } from '@/lib/data';
 
 export default function ResultadosPage() {
   const [resultados, setResultados] = useState<ResultadoTop[]>([]);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [isExporting, setIsExporting] = useState(false);
 
   const cargarDatos = () => {
@@ -110,7 +110,7 @@ export default function ResultadosPage() {
             <RefreshCw className="w-4 h-4" />
             Actualizar
           </button>
-          <button 
+          <button
             onClick={handleExport}
             disabled={isExporting}
             className="flex items-center gap-2 border border-slate-300 bg-white text-slate-600 text-sm px-4 py-2 rounded-lg hover:bg-slate-50 shadow-sm disabled:opacity-50"
@@ -137,17 +137,15 @@ export default function ResultadosPage() {
             return (
               <div
                 key={r.posicion}
-                className={`relative rounded-2xl p-5 text-center ${
-                  isFirst
+                className={`relative rounded-2xl p-5 text-center ${isFirst
                     ? 'bg-[#162748] text-white w-72 py-8 shadow-2xl z-10'
                     : 'bg-white text-slate-800 w-56 border border-slate-200 shadow-sm'
-                }`}
+                  }`}
               >
                 {/* Position badge */}
                 <div
-                  className={`absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold ${
-                    isFirst ? 'bg-[#162748] text-white border-white' : 'bg-white text-slate-700 border-slate-300'
-                  }`}
+                  className={`absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold ${isFirst ? 'bg-[#162748] text-white border-white' : 'bg-white text-slate-700 border-slate-300'
+                    }`}
                 >
                   {r.posicion}
                 </div>
@@ -157,9 +155,8 @@ export default function ResultadosPage() {
                 />
 
                 <h3
-                  className={`text-sm font-bold mb-3 leading-snug ${
-                    isFirst ? 'text-white' : 'text-slate-800'
-                  }`}
+                  className={`text-sm font-bold mb-3 leading-snug ${isFirst ? 'text-white' : 'text-slate-800'
+                    }`}
                 >
                   {r.nombre.length > 38 ? r.nombre.slice(0, 38) + '...' : r.nombre}
                 </h3>
