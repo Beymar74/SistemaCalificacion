@@ -51,8 +51,6 @@ function getInitials(name: string): string {
 
 // ─── PROYECTOS ────────────────────────────────────────────────────────────────
 
-// ─── PROYECTOS ────────────────────────────────────────────────────────────────
-
 export async function fetchProyectosAdmin(): Promise<Proyecto[]> {
   const { data, error } = await supabase
     .from('proyectos')
@@ -61,7 +59,7 @@ export async function fetchProyectosAdmin(): Promise<Proyecto[]> {
       codigo_proyecto, 
       nombre_proyecto,
       categoria,
-      evaluaciones:evaluaciones(id, confirmada)
+      evaluaciones(id, confirmada)
     `)
     .order('codigo_proyecto');
 
@@ -69,11 +67,12 @@ export async function fetchProyectosAdmin(): Promise<Proyecto[]> {
 
   return data.map((p: any) => {
     const evals = p.evaluaciones ?? [];
-    const completadas = evals.filter((e: any) => e.confirmada).length;
+    const completadas = evals.length; // Contamos todas para ver avance real
+    const confirmadas = evals.filter((e: any) => e.confirmada).length;
     const total = 3; 
 
     let estado: EstadoProyecto = 'Pendiente';
-    if (completadas >= total) estado = 'Evaluado';
+    if (confirmadas >= total) estado = 'Evaluado';
     else if (completadas > 0) estado = 'En Proceso';
 
     return {
@@ -278,7 +277,8 @@ export async function fetchResultadosTop(limit: number = 5): Promise<ResultadoTo
       id_proyecto,
       proyectos:id_proyecto (
         codigo_proyecto,
-        nombre_proyecto
+        nombre_proyecto,
+        evaluaciones(id)
       )
     `)
     .order('ranking_posicion', { ascending: true })
@@ -290,7 +290,7 @@ export async function fetchResultadosTop(limit: number = 5): Promise<ResultadoTo
     posicion: r.ranking_posicion,
     nombre: r.proyectos?.nombre_proyecto || 'Proyecto Desconocido',
     puntajeFinal: Number(r.promedio_final) || 0,
-    evaluaciones: 0,
+    evaluaciones: r.proyectos?.evaluaciones?.length || 0,
   }));
 }
 
