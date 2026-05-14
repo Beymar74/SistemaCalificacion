@@ -1,52 +1,56 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { 
-  Search, 
-  MoreVertical, 
-  ChevronLeft, 
-  ChevronRight, 
-  LayoutList, 
-  Layers, 
-  Activity, 
-  Users, 
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  Search,
+  MoreVertical,
+  ChevronLeft,
+  ChevronRight,
+  LayoutList,
+  Layers,
+  Activity,
+  Users,
   ArrowUpRight,
   TrendingUp,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  RefreshCw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { proyectos, EstadoProyecto } from '@/lib/data';
+import { fetchProyectosAdmin, fetchDocentesSummary, fetchDetalleProyectoEvaluaciones } from '@/lib/db';
+import type { EstadoProyecto } from '@/lib/data';
+import type { Proyecto } from '@/lib/data';
 
 const estadoConfig: Record<EstadoProyecto, { bg: string; text: string; dot: string; glow: string }> = {
-  Evaluado: { 
-    bg: 'bg-indigo-500/10', 
-    text: 'text-indigo-600', 
+  Evaluado: {
+    bg: 'bg-indigo-500/10',
+    text: 'text-indigo-600',
     dot: 'bg-indigo-500',
     glow: 'shadow-[0_0_8px_rgba(99,102,241,0.4)]'
   },
-  'En Proceso': { 
-    bg: 'bg-amber-500/10', 
-    text: 'text-amber-600', 
+  'En Proceso': {
+    bg: 'bg-amber-500/10',
+    text: 'text-amber-600',
     dot: 'bg-amber-500',
     glow: 'shadow-[0_0_8px_rgba(245,158,11,0.4)]'
   },
-  Pendiente: { 
-    bg: 'bg-rose-500/10', 
-    text: 'text-rose-600', 
+  Pendiente: {
+    bg: 'bg-rose-500/10',
+    text: 'text-rose-600',
     dot: 'bg-rose-500',
     glow: 'shadow-[0_0_8px_rgba(244,63,94,0.4)]'
   },
 };
 
-const StatCard = ({ label, value, icon: Icon, color, delay }: { 
-  label: string; 
-  value: string; 
-  icon: React.ElementType; 
-  color: string; 
-  delay: number 
+const StatCard = ({ label, value, icon: Icon, color, delay }: {
+  label: string;
+  value: string;
+  icon: React.ElementType;
+  color: string;
+  delay: number
 }) => (
-  <motion.div 
+  <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay }}
@@ -65,15 +69,56 @@ const StatCard = ({ label, value, icon: Icon, color, delay }: {
   </motion.div>
 );
 
+const PAGE_SIZE = 8;
+
 export default function ProyectosPage() {
+  const router = useRouter();
+  const [proyectosData, setProyectosData] = useState<Proyecto[]>([]);
+  const [docentesSummary, setDocentesSummary] = useState({ activos: 0, total: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+
   const [search, setSearch] = useState('');
   const [categoria, setCategoria] = useState('');
   const [estado, setEstado] = useState('');
 
-  const categorias = useMemo(() => [...new Set(proyectos.map(p => p.categoria))], []);
+  // Audit Modal State
+  const [selectedAudit, setSelectedAudit] = useState<Proyecto | null>(null);
+  const [auditData, setAuditData] = useState<any[]>([]);
+  const [loadingAudit, setLoadingAudit] = useState(false);
+
+  const cargarDatos = () => {
+    setLoading(true);
+    setError('');
+    Promise.all([fetchProyectosAdmin(), fetchDocentesSummary()])
+      .then(([proyectos, docentes]) => {
+        setProyectosData(proyectos);
+        setDocentesSummary(docentes);
+      })
+      .catch(() => setError('No se pudo cargar la información. Verifica la conexión.'))
+      .finally(() => setLoading(false));
+  };
+
+  const handleOpenAudit = async (p: Proyecto) => {
+    setSelectedAudit(p);
+    setLoadingAudit(true);
+    try {
+      const data = await fetchDetalleProyectoEvaluaciones(p.id);
+      setAuditData(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingAudit(false);
+    }
+  };
+
+  useEffect(() => { cargarDatos(); }, []);
+
+  const categorias = useMemo(() => [...new Set(proyectosData.map(p => p.categoria))], [proyectosData]);
 
   const filtered = useMemo(() => {
-    return proyectos.filter(p => {
+    return proyectosData.filter(p => {
       const q = search.toLowerCase();
       return (
         (!q || p.nombre.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q)) &&
@@ -81,21 +126,58 @@ export default function ProyectosPage() {
         (!estado || p.estado === estado)
       );
     });
-  }, [search, categoria, estado]);
+  }, [proyectosData, search, categoria, estado]);
+
+  const stats = useMemo(() => {
+    const total = proyectosData.length;
+    const evaluados = proyectosData.filter(p => p.estado === 'Evaluado').length;
+    const pendientes = proyectosData.filter(p => p.estado === 'Pendiente').length;
+    const totalEvals = proyectosData.reduce((s, p) => s + p.evaluacionesTotal, 0);
+    const doneEvals  = proyectosData.reduce((s, p) => s + p.evaluacionesCompletadas, 0);
+    const progreso   = totalEvals > 0 ? Math.round((doneEvals / totalEvals) * 100) : 0;
+    const faltan     = totalEvals - doneEvals;
+    return { total, evaluados, pendientes, progreso, faltan };
+  }, [proyectosData]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  if (loading) return (
+    <div className="p-8 bg-slate-50 min-h-screen flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-10 h-10 border-4 border-[#162748]/20 border-t-[#162748] rounded-full animate-spin" />
+        <p className="text-slate-500 font-medium text-sm">Cargando proyectos...</p>
+      </div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="p-8 bg-slate-50 min-h-screen flex items-center justify-center">
+      <div className="text-center space-y-3">
+        <p className="text-rose-500 font-bold">{error}</p>
+        <button
+          onClick={cargarDatos}
+          className="inline-flex items-center gap-2 text-blue-600 text-sm font-bold hover:underline"
+        >
+          <RefreshCw className="w-4 h-4" /> Reintentar
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen">
       {/* Header section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="text-3xl font-black text-[#162748] tracking-tight"
           >
             Administración de Proyectos
           </motion.h1>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
@@ -105,8 +187,8 @@ export default function ProyectosPage() {
             Control central y monitoreo de la Feria Tecnológica.
           </motion.p>
         </div>
-        
-        <motion.div 
+
+        <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="flex items-center gap-3"
@@ -120,14 +202,20 @@ export default function ProyectosPage() {
 
       {/* Stats Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Total Proyectos" value="148" icon={Layers} color="bg-blue-600" delay={0.1} />
-        <StatCard label="Evaluados" value="92" icon={CheckCircle2} color="bg-indigo-500" delay={0.2} />
-        <StatCard label="Pendientes" value="56" icon={Clock} color="bg-rose-500" delay={0.3} />
-        <StatCard label="Docentes" value="24/30" icon={Users} color="bg-amber-500" delay={0.4} />
+        <StatCard label="Total Proyectos" value={String(stats.total)}    icon={Layers}       color="bg-blue-600"   delay={0.1} />
+        <StatCard label="Evaluados"        value={String(stats.evaluados)} icon={CheckCircle2} color="bg-indigo-500" delay={0.2} />
+        <StatCard label="Pendientes"       value={String(stats.pendientes)} icon={Clock}       color="bg-rose-500"   delay={0.3} />
+        <StatCard
+          label="Docentes"
+          value={`${docentesSummary.activos}/${docentesSummary.total}`}
+          icon={Users}
+          color="bg-amber-500"
+          delay={0.4}
+        />
       </div>
 
       {/* Table Card */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
@@ -139,26 +227,26 @@ export default function ProyectosPage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
             <input
               type="text"
-              placeholder="Buscar por ID, nombre o stand..."
+              placeholder="Buscar por código o nombre..."
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
               className="w-full pl-11 pr-4 py-3 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:text-slate-400 font-medium"
             />
           </div>
-          
+
           <div className="flex items-center gap-3">
             <select
               value={categoria}
-              onChange={e => setCategoria(e.target.value)}
+              onChange={e => { setCategoria(e.target.value); setPage(1); }}
               className="bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm font-bold text-slate-600 focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer hover:bg-slate-100 transition-colors"
             >
               <option value="">Categorías</option>
               {categorias.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
-            
+
             <select
               value={estado}
-              onChange={e => setEstado(e.target.value)}
+              onChange={e => { setEstado(e.target.value); setPage(1); }}
               className="bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm font-bold text-slate-600 focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer hover:bg-slate-100 transition-colors"
             >
               <option value="">Estados</option>
@@ -183,13 +271,15 @@ export default function ProyectosPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               <AnimatePresence mode="popLayout">
-                {filtered.length > 0 ? (
-                  filtered.map((p, index) => {
+                {paginated.length > 0 ? (
+                  paginated.map((p, index) => {
                     const cfg = estadoConfig[p.estado];
-                    const avancePct = (p.evaluacionesCompletadas / p.evaluacionesTotal) * 100;
-                    
+                    const avancePct = p.evaluacionesTotal > 0
+                      ? (p.evaluacionesCompletadas / p.evaluacionesTotal) * 100
+                      : 0;
+
                     return (
-                      <motion.tr 
+                      <motion.tr
                         key={p.id}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -240,8 +330,12 @@ export default function ProyectosPage() {
                           </div>
                         </td>
                         <td className="px-6 py-5">
-                          <button className="p-2 hover:bg-white hover:shadow-md rounded-xl text-slate-400 hover:text-blue-600 transition-all border border-transparent hover:border-slate-100">
-                            <MoreVertical className="w-5 h-5" />
+                          <button 
+                            onClick={() => handleOpenAudit(p)}
+                            className="p-2.5 hover:bg-white hover:shadow-md rounded-xl text-slate-400 hover:text-blue-600 transition-all border border-transparent hover:border-slate-100 flex items-center gap-2 group/btn"
+                          >
+                            <Activity className="w-5 h-5" />
+                            <span className="text-[10px] font-black uppercase tracking-widest hidden group-hover/btn:block">Inspeccionar</span>
                           </button>
                         </td>
                       </motion.tr>
@@ -255,7 +349,10 @@ export default function ProyectosPage() {
                           <Search className="w-8 h-8" />
                         </div>
                         <p className="text-slate-500 font-bold">No se encontraron proyectos.</p>
-                        <button onClick={() => {setSearch(''); setCategoria(''); setEstado('');}} className="text-blue-500 text-xs font-black hover:underline uppercase tracking-widest">
+                        <button
+                          onClick={() => { setSearch(''); setCategoria(''); setEstado(''); setPage(1); }}
+                          className="text-blue-500 text-xs font-black hover:underline uppercase tracking-widest"
+                        >
                           Restablecer Filtros
                         </button>
                       </div>
@@ -270,19 +367,25 @@ export default function ProyectosPage() {
         {/* Footer / Pagination */}
         <div className="px-6 py-5 bg-slate-50/30 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100">
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-            Página <span className="text-slate-900">1</span> de <span className="text-slate-900">3</span> · Total <span className="text-slate-900">{filtered.length}</span> Proyectos
+            Página <span className="text-slate-900">{page}</span> de <span className="text-slate-900">{totalPages}</span>
+            {' · '}Total <span className="text-slate-900">{filtered.length}</span> Proyectos
           </p>
           <div className="flex items-center gap-2">
-            <button className="p-2.5 rounded-xl hover:bg-white hover:shadow-sm text-slate-400 disabled:opacity-30 transition-all border border-transparent hover:border-slate-200">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="p-2.5 rounded-xl hover:bg-white hover:shadow-sm text-slate-400 disabled:opacity-30 transition-all border border-transparent hover:border-slate-200"
+            >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <div className="flex items-center gap-1.5">
-              {[1, 2, 3].map(n => (
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(n => (
                 <button
                   key={n}
+                  onClick={() => setPage(n)}
                   className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${
-                    n === 1 
-                    ? 'bg-[#162748] text-white shadow-lg shadow-blue-900/20' 
+                    n === page
+                    ? 'bg-[#162748] text-white shadow-lg shadow-blue-900/20'
                     : 'hover:bg-white text-slate-500 border border-transparent hover:border-slate-200'
                   }`}
                 >
@@ -290,7 +393,11 @@ export default function ProyectosPage() {
                 </button>
               ))}
             </div>
-            <button className="p-2.5 rounded-xl hover:bg-white hover:shadow-sm text-slate-400 transition-all border border-transparent hover:border-slate-200">
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="p-2.5 rounded-xl hover:bg-white hover:shadow-sm text-slate-400 disabled:opacity-30 transition-all border border-transparent hover:border-slate-200"
+            >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -298,7 +405,7 @@ export default function ProyectosPage() {
       </motion.div>
 
       {/* Progress Section */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7 }}
@@ -310,21 +417,25 @@ export default function ProyectosPage() {
               <h3 className="text-lg font-black text-[#162748] tracking-tight">Progreso General de Calificación</h3>
               <div className="flex items-center gap-2 text-blue-600 bg-blue-50 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">
                 <TrendingUp className="w-3 h-3" />
-                +4% última hora
+                En tiempo real
               </div>
             </div>
-            <p className="text-sm text-slate-500 font-medium mb-6">Faltan 56 evaluaciones para completar la fase actual.</p>
+            <p className="text-sm text-slate-500 font-medium mb-6">
+              {stats.faltan > 0
+                ? `Faltan ${stats.faltan} evaluaciones para completar la fase actual.`
+                : 'Todas las evaluaciones han sido completadas.'}
+            </p>
           </div>
-          
+
           <div>
             <div className="flex items-end justify-between mb-3">
-              <span className="text-4xl font-black text-[#162748]">62<span className="text-xl text-slate-300">%</span></span>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Meta: 100% · 18:00</span>
+              <span className="text-4xl font-black text-[#162748]">{stats.progreso}<span className="text-xl text-slate-300">%</span></span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Meta: 100%</span>
             </div>
             <div className="w-full bg-slate-100 rounded-full h-4 overflow-hidden p-1">
-              <motion.div 
+              <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: '62%' }}
+                animate={{ width: `${stats.progreso}%` }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
                 className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.3)]"
               />
@@ -335,18 +446,111 @@ export default function ProyectosPage() {
         <div className="bg-[#162748] rounded-3xl p-6 shadow-xl shadow-blue-900/20 text-white relative overflow-hidden flex flex-col justify-between">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-indigo-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
-          
+
           <div className="relative">
             <Activity className="w-10 h-10 text-blue-400 mb-4" />
             <h3 className="text-xl font-bold leading-tight mb-2">Resumen de Actividad Académica</h3>
             <p className="text-blue-100/60 text-xs font-medium leading-relaxed">Monitoreo en tiempo real de la participación de los docentes y el avance de los grupos.</p>
           </div>
 
-          <button className="relative w-full py-3.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-2xl text-sm font-bold transition-all backdrop-blur-md uppercase tracking-widest mt-6">
-            Descargar Reporte Detallado
+          <button
+            onClick={cargarDatos}
+            className="relative w-full py-3.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-2xl text-sm font-bold transition-all backdrop-blur-md uppercase tracking-widest mt-6 flex items-center justify-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Actualizar Datos
           </button>
         </div>
       </motion.div>
+      {/* Audit Modal */}
+      <AnimatePresence>
+        {selectedAudit && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedAudit(null)}
+              className="absolute inset-0 bg-[#162748]/60 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden"
+            >
+              <div className="p-8">
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h2 className="text-2xl font-black text-[#162748] leading-tight">Auditoría de Proyecto</h2>
+                    <p className="text-slate-500 text-sm font-medium">{selectedAudit.nombre}</p>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedAudit(null)}
+                    className="p-3 bg-slate-50 hover:bg-slate-100 text-slate-400 rounded-2xl transition-all"
+                  >
+                    <RefreshCw className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {loadingAudit ? (
+                    <div className="py-12 flex flex-col items-center gap-4 text-slate-400">
+                      <RefreshCw className="w-8 h-8 animate-spin" />
+                      <p className="text-xs font-black uppercase tracking-widest">Consultando evaluadores...</p>
+                    </div>
+                  ) : auditData.length > 0 ? (
+                    auditData.map((a, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/80 border border-slate-100 group hover:border-blue-200 hover:bg-white transition-all"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs ${
+                            a.estado === 'completado' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'
+                          }`}>
+                            {a.docente.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-800">{a.docente}</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase">{a.departamento}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg ${
+                            a.estado === 'completado' 
+                            ? 'bg-emerald-100 text-emerald-600' 
+                            : 'bg-amber-100 text-amber-600'
+                          }`}>
+                            {a.estado}
+                          </span>
+                          {a.puntaje !== null && (
+                            <p className="text-lg font-black text-[#162748] mt-1">{a.puntaje}<span className="text-[10px] text-slate-300 ml-0.5">pts</span></p>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <div className="py-12 text-center text-slate-400">
+                      <p className="text-sm font-bold">No hay docentes asignados a este proyecto aún.</p>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setSelectedAudit(null)}
+                  className="w-full mt-8 bg-[#162748] hover:bg-black text-white font-black py-4 rounded-2xl shadow-xl transition-all uppercase tracking-widest text-xs"
+                >
+                  Cerrar Inspección
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

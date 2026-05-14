@@ -30,7 +30,9 @@ export interface ProyectoGestion {
   codigo: string;
   nombre: string;
   sector: string;
-  accion: 'Reasignar' | 'Cambiar' | 'Asignar';
+  asistio: boolean;
+  evaluadores: { idAsignacion: string; nombre: string }[];
+  accion: 'Reasignar' | 'Cambiar' | 'Asignar' | 'Completo';
 }
 
 export interface ProyectoAsignado {
