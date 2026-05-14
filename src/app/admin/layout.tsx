@@ -2,18 +2,55 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutList, GraduationCap, BarChart3, Trophy, Download, LogOut } from 'lucide-react';
+import { 
+  LayoutList, 
+  GraduationCap, 
+  BarChart3, 
+  Trophy, 
+  Download, 
+  LogOut,
+  Settings,
+  LayoutDashboard,
+  Users
+} from 'lucide-react';
+
+import { exportToExcel } from '@/lib/export';
+import { fetchResultadosTop } from '@/lib/db';
+import { useState } from 'react';
 
 const navItems = [
+  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/proyectos', label: 'Proyectos', icon: LayoutList },
   { href: '/admin/docentes', label: 'Docentes', icon: GraduationCap },
   { href: '/admin/gestion-proyectos', label: 'Gestión de Proyectos', icon: BarChart3 },
+  { href: '/admin/asignaciones', label: 'Revisión de Jurados', icon: Users },
   { href: '/admin/resultados', label: 'Resultados', icon: Trophy },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const data = await fetchResultadosTop(100);
+      const exportData = data.map(r => ({
+        Posición: r.posicion,
+        Proyecto: r.nombre,
+        'Puntaje Final': r.puntajeFinal,
+        Evaluaciones: r.evaluaciones,
+        ...Object.fromEntries(r.criterios.map(c => [c.nombre, c.puntaje]))
+      }));
+      
+      await exportToExcel(exportData, `Reporte_Resultados_${new Date().toISOString().split('T')[0]}`);
+    } catch (err) {
+      console.error('Export failed:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-slate-100">
@@ -41,7 +78,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5">
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {navItems.map(({ href, label, icon: Icon }) => {
             const isActive = pathname === href;
             return (
@@ -50,7 +87,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-[#e8eef5] text-[#162748]'
+                    ? 'bg-blue-50 text-blue-600'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
@@ -63,9 +100,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Footer */}
         <div className="px-3 pb-4 border-t border-slate-100 pt-3 space-y-1">
-          <button className="w-full flex items-center justify-center gap-2 bg-[#162748] hover:bg-[#1e3460] text-white text-sm font-medium py-2.5 rounded-lg transition-colors">
-            <Download className="w-4 h-4" />
-            Exportar Reportes
+          <button 
+            onClick={handleExport}
+            disabled={isExporting}
+            className="w-full flex items-center justify-center gap-2 bg-[#162748] hover:bg-blue-600 text-white text-sm font-medium py-2.5 rounded-lg transition-all active:scale-95 disabled:opacity-50"
+          >
+            {isExporting ? (
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+            {isExporting ? 'Exportando...' : 'Exportar Reportes'}
           </button>
           <button
             onClick={() => router.push('/login')}
