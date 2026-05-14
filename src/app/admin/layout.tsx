@@ -41,7 +41,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         Proyecto: r.nombre,
         'Puntaje Final': r.puntajeFinal,
         Evaluaciones: r.evaluaciones,
-        ...Object.fromEntries(r.criterios.map(c => [c.nombre, c.puntaje]))
+        ...Object.fromEntries((r.criterios || []).map(c => [c.nombre, c.puntaje]))
       }));
       
       await exportToExcel(exportData, `Reporte_Resultados_${new Date().toISOString().split('T')[0]}`);
