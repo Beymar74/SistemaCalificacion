@@ -99,9 +99,36 @@ export default function DocentesPage() {
     setIsSaving(true);
     const isNew = !selectedDocente.id;
     const username = generatedUsername || selectedDocente.codigo || '';
+    let userId = selectedDocente.id;
 
+    // 1. Si es nuevo, primero creamos el usuario en Auth para obtener el ID real
+    if (isNew) {
+      try {
+        const res = await fetch('/api/crear-usuario', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: selectedDocente.email, nombre: selectedDocente.nombre, username })
+        });
+        const json = await res.json();
+        
+        if (!res.ok) {
+          setMessage({ text: `Error al crear acceso: ${json.error}`, type: 'error' });
+          setIsSaving(false);
+          setTimeout(() => setMessage(null), 5000);
+          return;
+        }
+        userId = json.id;
+      } catch (err) {
+        setMessage({ text: 'Error de conexión al crear el usuario.', type: 'error' });
+        setIsSaving(false);
+        setTimeout(() => setMessage(null), 5000);
+        return;
+      }
+    }
+
+    // 2. Ahora guardamos en la tabla personas (sea nuevo o actualización)
     const payload = {
-      id_usuario: selectedDocente.id || crypto.randomUUID(),
+      id_usuario: userId,
       nombre_completo: selectedDocente.nombre,
       email: selectedDocente.email,
       username,
@@ -113,28 +140,16 @@ export default function DocentesPage() {
     const { error: dbErr } = await upsertDocente(payload);
 
     if (dbErr) {
-      setMessage({ text: `Error al guardar: ${dbErr}`, type: 'error' });
+      const errorMsg = (dbErr as any).message || JSON.stringify(dbErr);
+      setMessage({ text: `Error al guardar en BD: ${errorMsg}`, type: 'error' });
       setIsSaving(false);
-      setTimeout(() => setMessage(null), 4000);
+      setTimeout(() => setMessage(null), 5000);
       return;
     }
 
-    if (isNew && selectedDocente.email) {
-      try {
-        const res = await fetch('/api/crear-usuario', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: selectedDocente.email, nombre: selectedDocente.nombre, username })
-        });
-        const json = await res.json();
-        if (!res.ok) {
-          setMessage({ text: `Guardado en BD pero error en Auth: ${json.error}`, type: 'error' });
-        } else {
-          setMessage({ text: `Docente creado. Usuario: ${username} | Contraseña: ${DEFAULT_PASSWORD}`, type: 'success' });
-        }
-      } catch {
-        setMessage({ text: 'Guardado en BD pero no se pudo crear la cuenta de acceso.', type: 'error' });
-      }
+    // Éxito
+    if (isNew) {
+      setMessage({ text: `Docente creado. Usuario: ${username} | Contraseña: ${DEFAULT_PASSWORD}`, type: 'success' });
     } else {
       setMessage({ text: 'Docente actualizado correctamente.', type: 'success' });
     }
