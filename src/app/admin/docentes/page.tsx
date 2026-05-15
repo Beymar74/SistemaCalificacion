@@ -389,73 +389,70 @@ export default function DocentesPage() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden"
+              className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl relative z-10 flex flex-col max-h-[90vh]"
             >
-              <div className="p-8 md:p-10">
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-2xl font-black text-[#162748]">
+              <div className="p-6 md:p-7 overflow-y-auto custom-scrollbar">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-xl font-black text-[#162748]">
                     {selectedDocente?.id ? 'Editar Docente' : 'Nuevo Docente'}
                   </h2>
                   <button onClick={() => setModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-xl transition-all">
-                    <X className="w-6 h-6 text-slate-400" />
+                    <X className="w-5 h-5 text-slate-400" />
                   </button>
                 </div>
 
                 {!selectedDocente?.id && (
-                  <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-start gap-3">
+                  <div className="mb-5 p-3.5 bg-blue-50 border border-blue-100 rounded-2xl flex items-start gap-3">
                     <Key className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-xs font-black text-blue-700 uppercase tracking-widest">Contraseña por defecto</p>
-                      <p className="text-sm font-bold text-blue-900 mt-0.5">{DEFAULT_PASSWORD}</p>
-                      <p className="text-[10px] text-blue-500 mt-1">El docente podrá cambiarla después de ingresar.</p>
+                      <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Contraseña por defecto</p>
+                      <p className="text-sm font-bold text-blue-900">{DEFAULT_PASSWORD}</p>
                     </div>
                   </div>
                 )}
 
-                <form onSubmit={handleSave} className="space-y-5">
+                <form onSubmit={handleSave} className="space-y-4">
                   <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nombre Completo</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Nombre Completo</label>
                     <input
                       required type="text" placeholder="Ej: Ing. María López"
                       value={selectedDocente?.nombre || ''}
                       onChange={e => handleNombreChange(e.target.value)}
-                      className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-3 focus:bg-white focus:border-indigo-600/10 font-bold text-sm outline-none transition-all"
+                      className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-2.5 focus:bg-white focus:border-indigo-600/10 font-bold text-sm outline-none transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Email</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Email</label>
                     <input
                       required type="email" placeholder="docente@emi.edu.bo"
                       value={selectedDocente?.email || ''}
                       onChange={e => setSelectedDocente({ ...selectedDocente, email: e.target.value })}
-                      className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-3 focus:bg-white focus:border-indigo-600/10 font-bold text-sm outline-none transition-all"
+                      className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-2.5 focus:bg-white focus:border-indigo-600/10 font-bold text-sm outline-none transition-all"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
                         Usuario (auto)
                       </label>
-                      <div className="relative">
-                        <input
-                          type="text" placeholder="Se genera automáticamente"
-                          value={selectedDocente?.id ? (selectedDocente.codigo || '') : generatedUsername}
-                          onChange={e => {
-                            if (selectedDocente?.id) setSelectedDocente({ ...selectedDocente, codigo: e.target.value });
-                            else setGeneratedUsername(e.target.value);
-                          }}
-                          className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-3 focus:bg-white focus:border-indigo-600/10 font-black text-sm outline-none transition-all text-indigo-700"
-                        />
-                      </div>
+                      <input
+                        type="text" placeholder="Auto"
+                        value={selectedDocente?.id ? (selectedDocente.codigo || '') : generatedUsername}
+                        onChange={e => {
+                          if (selectedDocente?.id) setSelectedDocente({ ...selectedDocente, codigo: e.target.value });
+                          else setGeneratedUsername(e.target.value);
+                        }}
+                        className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-2.5 focus:bg-white focus:border-indigo-600/10 font-black text-sm outline-none transition-all text-indigo-700"
+                      />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Estado</label>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Estado</label>
                       <select
                         value={selectedDocente?.estado || 'Activo'}
                         onChange={e => setSelectedDocente({ ...selectedDocente, estado: e.target.value as 'Activo' | 'Inactivo' })}
-                        className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-3 focus:bg-white focus:border-indigo-600/10 font-bold text-sm outline-none transition-all appearance-none"
+                        className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-2.5 focus:bg-white focus:border-indigo-600/10 font-bold text-sm outline-none transition-all appearance-none"
                       >
                         <option value="Activo">Activo</option>
                         <option value="Inactivo">Inactivo</option>
@@ -463,48 +460,48 @@ export default function DocentesPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Materia / Área</label>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Materia / Área</label>
                       <input
                         type="text" placeholder="Ej: Sistemas"
                         value={selectedDocente?.departamento || ''}
                         onChange={e => setSelectedDocente({ ...selectedDocente, departamento: e.target.value })}
-                        className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-3 focus:bg-white focus:border-indigo-600/10 font-bold text-sm outline-none transition-all"
+                        className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-2.5 focus:bg-white focus:border-indigo-600/10 font-bold text-sm outline-none transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Grado / Especialidad</label>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Grado / Especialidad</label>
                       <input
                         type="text" placeholder="Ej: Mg."
                         value={selectedDocente?.especialidad || ''}
                         onChange={e => setSelectedDocente({ ...selectedDocente, especialidad: e.target.value })}
-                        className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-3 focus:bg-white focus:border-indigo-600/10 font-bold text-sm outline-none transition-all"
+                        className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-2.5 focus:bg-white focus:border-indigo-600/10 font-bold text-sm outline-none transition-all"
                       />
                     </div>
                   </div>
 
                   {!selectedDocente?.id && (
-                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-3">
+                    <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-3">
                       <Eye className="w-4 h-4 text-slate-400" />
                       <div className="flex-1">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Credenciales que se asignarán</p>
-                        <p className="text-sm font-bold text-slate-700 mt-0.5">
-                          Usuario: <span className="text-indigo-600">{generatedUsername || '—'}</span>
-                          {' '}· Contraseña: <span className="text-indigo-600">{DEFAULT_PASSWORD}</span>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Credenciales asignadas</p>
+                        <p className="text-xs font-bold text-slate-700 mt-0.5">
+                          User: <span className="text-indigo-600">{generatedUsername || '—'}</span>
+                          {' '}· Pass: <span className="text-indigo-600">{DEFAULT_PASSWORD}</span>
                         </p>
                       </div>
                     </div>
                   )}
 
-                  <div className="pt-4">
+                  <div className="pt-2">
                     <button
                       disabled={isSaving}
-                      className="w-full bg-[#162748] hover:bg-black text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-900/10 transition-all flex items-center justify-center gap-2"
+                      className="w-full bg-[#162748] hover:bg-black text-white font-black py-3.5 rounded-2xl shadow-xl shadow-blue-900/10 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
                     >
                       {isSaving ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                       <span className="uppercase tracking-widest text-xs">
-                        {selectedDocente?.id ? 'Actualizar Docente' : 'Crear Docente y Cuenta'}
+                        {selectedDocente?.id ? 'Actualizar' : 'Crear Docente'}
                       </span>
                     </button>
                   </div>
