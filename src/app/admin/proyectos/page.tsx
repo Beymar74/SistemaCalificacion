@@ -1,15 +1,12 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   Search,
-  MoreVertical,
   ChevronLeft,
   ChevronRight,
   LayoutList,
   Layers,
-  Activity,
   Users,
   ArrowUpRight,
   TrendingUp,
@@ -18,7 +15,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchProyectosAdmin, fetchDocentesSummary, fetchDetalleProyectoEvaluaciones } from '@/lib/db';
+import { fetchProyectosAdmin, fetchDocentesSummary } from '@/lib/db';
 import type { EstadoProyecto } from '@/lib/data';
 import type { Proyecto } from '@/lib/data';
 
@@ -72,7 +69,6 @@ const StatCard = ({ label, value, icon: Icon, color, delay }: {
 const PAGE_SIZE = 8;
 
 export default function ProyectosPage() {
-  const router = useRouter();
   const [proyectosData, setProyectosData] = useState<Proyecto[]>([]);
   const [docentesSummary, setDocentesSummary] = useState({ activos: 0, total: 0 });
   const [loading, setLoading] = useState(true);
@@ -82,11 +78,6 @@ export default function ProyectosPage() {
   const [search, setSearch] = useState('');
   const [categoria, setCategoria] = useState('');
   const [estado, setEstado] = useState('');
-
-  // Audit Modal State
-  const [selectedAudit, setSelectedAudit] = useState<Proyecto | null>(null);
-  const [auditData, setAuditData] = useState<any[]>([]);
-  const [loadingAudit, setLoadingAudit] = useState(false);
 
   const cargarDatos = () => {
     setLoading(true);
@@ -98,19 +89,6 @@ export default function ProyectosPage() {
       })
       .catch(() => setError('No se pudo cargar la información. Verifica la conexión.'))
       .finally(() => setLoading(false));
-  };
-
-  const handleOpenAudit = async (p: Proyecto) => {
-    setSelectedAudit(p);
-    setLoadingAudit(true);
-    try {
-      const data = await fetchDetalleProyectoEvaluaciones(p.id);
-      setAuditData(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingAudit(false);
-    }
   };
 
   useEffect(() => { cargarDatos(); }, []);
@@ -143,7 +121,7 @@ export default function ProyectosPage() {
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   if (loading) return (
-    <div className="p-8 bg-slate-50 min-h-screen flex items-center justify-center">
+    <div className="p-8 bg-white min-h-screen flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="w-10 h-10 border-4 border-[#162748]/20 border-t-[#162748] rounded-full animate-spin" />
         <p className="text-slate-500 font-medium text-sm">Cargando proyectos...</p>
@@ -152,7 +130,7 @@ export default function ProyectosPage() {
   );
 
   if (error) return (
-    <div className="p-8 bg-slate-50 min-h-screen flex items-center justify-center">
+    <div className="p-8 bg-white min-h-screen flex items-center justify-center">
       <div className="text-center space-y-3">
         <p className="text-rose-500 font-bold">{error}</p>
         <button
@@ -166,7 +144,7 @@ export default function ProyectosPage() {
   );
 
   return (
-    <div className="p-8 bg-slate-50 min-h-screen">
+    <div className="p-8 bg-white min-h-screen">
       {/* Header section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
@@ -262,7 +240,7 @@ export default function ProyectosPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50/50">
-                {['Código', 'Información del Proyecto', 'Categoría', 'Estado', 'Evaluaciones', 'Acciones'].map((h) => (
+                {['Código', 'Información del Proyecto', 'Categoría', 'Estado', 'Evaluaciones (4 Docentes)'].map((h) => (
                   <th key={h} className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
                     {h}
                   </th>
@@ -310,10 +288,10 @@ export default function ProyectosPage() {
                           </span>
                         </td>
                         <td className="px-6 py-5">
-                          <div className="flex flex-col gap-1.5 min-w-[100px]">
+                          <div className="flex flex-col gap-1.5 min-w-[120px]">
                             <div className="flex items-center justify-between">
                               <span className="text-[10px] font-black text-slate-700">
-                                {p.evaluacionesCompletadas}/{p.evaluacionesTotal}
+                                {p.evaluacionesCompletadas}/{p.evaluacionesTotal} docentes
                               </span>
                               <span className="text-[10px] font-black text-slate-400">{Math.round(avancePct)}%</span>
                             </div>
@@ -329,21 +307,12 @@ export default function ProyectosPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-5">
-                          <button 
-                            onClick={() => handleOpenAudit(p)}
-                            className="p-2.5 hover:bg-white hover:shadow-md rounded-xl text-slate-400 hover:text-blue-600 transition-all border border-transparent hover:border-slate-100 flex items-center gap-2 group/btn"
-                          >
-                            <Activity className="w-5 h-5" />
-                            <span className="text-[10px] font-black uppercase tracking-widest hidden group-hover/btn:block">Inspeccionar</span>
-                          </button>
-                        </td>
                       </motion.tr>
                     );
                   })
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-6 py-24 text-center">
+                    <td colSpan={5} className="px-6 py-24 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
                           <Search className="w-8 h-8" />
@@ -422,7 +391,7 @@ export default function ProyectosPage() {
             </div>
             <p className="text-sm text-slate-500 font-medium mb-6">
               {stats.faltan > 0
-                ? `Faltan ${stats.faltan} evaluaciones para completar la fase actual.`
+                ? `Faltan ${stats.faltan} evaluaciones de docentes para completar la fase actual.`
                 : 'Todas las evaluaciones han sido completadas.'}
             </p>
           </div>
@@ -448,9 +417,9 @@ export default function ProyectosPage() {
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-indigo-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
 
           <div className="relative">
-            <Activity className="w-10 h-10 text-blue-400 mb-4" />
-            <h3 className="text-xl font-bold leading-tight mb-2">Resumen de Actividad Académica</h3>
-            <p className="text-blue-100/60 text-xs font-medium leading-relaxed">Monitoreo en tiempo real de la participación de los docentes y el avance de los grupos.</p>
+            <Users className="w-10 h-10 text-blue-400 mb-4" />
+            <h3 className="text-xl font-bold leading-tight mb-2">4 Docentes por Proyecto</h3>
+            <p className="text-blue-100/60 text-xs font-medium leading-relaxed">Cada proyecto es evaluado por exactamente 4 docentes. El estado cambia a Evaluado cuando los 4 confirman su calificación.</p>
           </div>
 
           <button
@@ -462,95 +431,6 @@ export default function ProyectosPage() {
           </button>
         </div>
       </motion.div>
-      {/* Audit Modal */}
-      <AnimatePresence>
-        {selectedAudit && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedAudit(null)}
-              className="absolute inset-0 bg-[#162748]/60 backdrop-blur-md"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden"
-            >
-              <div className="p-8">
-                <div className="flex items-center justify-between mb-8">
-                  <div>
-                    <h2 className="text-2xl font-black text-[#162748] leading-tight">Auditoría de Proyecto</h2>
-                    <p className="text-slate-500 text-sm font-medium">{selectedAudit.nombre}</p>
-                  </div>
-                  <button 
-                    onClick={() => setSelectedAudit(null)}
-                    className="p-3 bg-slate-50 hover:bg-slate-100 text-slate-400 rounded-2xl transition-all"
-                  >
-                    <RefreshCw className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  {loadingAudit ? (
-                    <div className="py-12 flex flex-col items-center gap-4 text-slate-400">
-                      <RefreshCw className="w-8 h-8 animate-spin" />
-                      <p className="text-xs font-black uppercase tracking-widest">Consultando evaluadores...</p>
-                    </div>
-                  ) : auditData.length > 0 ? (
-                    auditData.map((a, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/80 border border-slate-100 group hover:border-blue-200 hover:bg-white transition-all"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs ${
-                            a.estado === 'completado' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'
-                          }`}>
-                            {a.docente.slice(0, 2).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-slate-800">{a.docente}</p>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase">{a.departamento}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg ${
-                            a.estado === 'completado' 
-                            ? 'bg-emerald-100 text-emerald-600' 
-                            : 'bg-amber-100 text-amber-600'
-                          }`}>
-                            {a.estado}
-                          </span>
-                          {a.puntaje !== null && (
-                            <p className="text-lg font-black text-[#162748] mt-1">{a.puntaje}<span className="text-[10px] text-slate-300 ml-0.5">pts</span></p>
-                          )}
-                        </div>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className="py-12 text-center text-slate-400">
-                      <p className="text-sm font-bold">No hay docentes asignados a este proyecto aún.</p>
-                    </div>
-                  )}
-                </div>
-
-                <button
-                  onClick={() => setSelectedAudit(null)}
-                  className="w-full mt-8 bg-[#162748] hover:bg-black text-white font-black py-4 rounded-2xl shadow-xl transition-all uppercase tracking-widest text-xs"
-                >
-                  Cerrar Inspección
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

@@ -100,12 +100,12 @@ export default function LoginPage() {
                 className="text-center"
               >
                 <h1 className="text-3xl font-black text-[#1e3a5f] tracking-tight leading-tight mb-2">
-                  Portal Académico
+                  SCEITII
                 </h1>
                 <div className="flex items-center justify-center gap-2">
                   <span className="h-px w-8 bg-[#1e3a5f]/30" />
                   <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.2em]">
-                    Ingeniería Industrial
+                    Feria de Innovación EMI
                   </p>
                   <span className="h-px w-8 bg-[#1e3a5f]/30" />
                 </div>
@@ -233,7 +233,7 @@ export default function LoginPage() {
               <div className="flex items-center gap-2 px-3 py-1 bg-slate-50 border border-slate-100 rounded-full">
                 <Sparkles className="w-3 h-3 text-[#1e3a5f]" />
                 <span className="text-[9px] text-slate-400 font-black uppercase tracking-tighter">
-                  Sistema de Evaluación v2.0
+                  SCEITII · Gestión 2026
                 </span>
               </div>
             </motion.div>

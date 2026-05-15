@@ -13,13 +13,15 @@ import {
   Trophy,
   ChevronRight,
   Activity,
-  MoreVertical
+  MoreVertical,
+  RefreshCw
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { 
   fetchProyectosAdmin, 
   fetchDocentesSummary, 
-  fetchResultadosTop 
+  fetchResultadosTop,
+  sincronizarTodosLosResultados
 } from '@/lib/db';
 import type { Proyecto, ResultadoTop } from '../../lib/data';
 
@@ -36,40 +38,53 @@ export default function AdminDashboard() {
   const [topProyectos, setTopProyectos] = useState<ResultadoTop[]>([]);
   const [proyectosRecientes, setProyectosRecientes] = useState<Proyecto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  async function loadDashboardData() {
+    try {
+      const [proyectos, docentes, top] = await Promise.all([
+        fetchProyectosAdmin(),
+        fetchDocentesSummary(),
+        fetchResultadosTop(5)
+      ]);
+
+      const completadas = proyectos.reduce((acc, p) => acc + p.evaluacionesCompletadas, 0);
+      const total = proyectos.reduce((acc, p) => acc + p.evaluacionesTotal, 0);
+      const promedio = top.length > 0 
+        ? top.reduce((acc, p) => acc + p.puntajeFinal, 0) / top.length 
+        : 0;
+
+      setStats({
+        totalProyectos: proyectos.length,
+        totalDocentes: docentes.total,
+        docentesActivos: docentes.activos,
+        evaluacionesCompletadas: completadas,
+        evaluacionesTotal: total,
+        promedioGeneral: Math.round(promedio * 10) / 10
+      });
+
+      setTopProyectos(top);
+      setProyectosRecientes(proyectos.slice(0, 5));
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    try {
+      await sincronizarTodosLosResultados();
+      await loadDashboardData();
+    } catch (error) {
+      console.error('Error syncing results:', error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadDashboardData() {
-      try {
-        const [proyectos, docentes, top] = await Promise.all([
-          fetchProyectosAdmin(),
-          fetchDocentesSummary(),
-          fetchResultadosTop(4)
-        ]);
-
-        const completadas = proyectos.reduce((acc, p) => acc + p.evaluacionesCompletadas, 0);
-        const total = proyectos.reduce((acc, p) => acc + p.evaluacionesTotal, 0);
-        const promedio = top.length > 0 
-          ? top.reduce((acc, p) => acc + p.puntajeFinal, 0) / top.length 
-          : 0;
-
-        setStats({
-          totalProyectos: proyectos.length,
-          totalDocentes: docentes.total,
-          docentesActivos: docentes.activos,
-          evaluacionesCompletadas: completadas,
-          evaluacionesTotal: total,
-          promedioGeneral: Math.round(promedio * 10) / 10
-        });
-
-        setTopProyectos(top);
-        setProyectosRecientes(proyectos.slice(0, 5));
-      } catch (error) {
-        console.error('Error loading dashboard data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
     loadDashboardData();
   }, []);
 
@@ -119,13 +134,28 @@ export default function AdminDashboard() {
             Bienvenido al panel de administración de la Feria Tecnológica.
           </p>
         </div>
-        <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-sm border border-slate-100">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          <span className="text-sm font-bold text-slate-700">Sistema Operativo</span>
-          <div className="h-4 w-px bg-slate-200 mx-1" />
-          <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
-            Fase de Evaluación
-          </span>
+        <div className="flex flex-wrap items-center gap-3">
+          <button 
+            onClick={handleSync}
+            disabled={isSyncing}
+            className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg ${
+              isSyncing 
+              ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
+              : 'bg-white text-blue-600 hover:bg-blue-50 border border-blue-100 shadow-blue-600/5'
+            }`}
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Sincronizando...' : 'Sincronizar Datos'}
+          </button>
+
+          <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-sm border border-slate-100">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-sm font-bold text-slate-700">Sistema Operativo</span>
+            <div className="h-4 w-px bg-slate-200 mx-1" />
+            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
+              Fase de Evaluación
+            </span>
+          </div>
         </div>
       </header>
 
@@ -136,19 +166,19 @@ export default function AdminDashboard() {
         animate="show"
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
       >
-        <StatCard 
-          icon={Layers} 
-          label="Total Proyectos" 
-          value={stats.totalProyectos} 
+        <StatCard
+          icon={Layers}
+          label="Total Proyectos"
+          value={stats.totalProyectos}
           color="blue"
-          trend="+2 nuevos"
+          trend={`${stats.totalProyectos} registrados`}
         />
-        <StatCard 
-          icon={Users} 
-          label="Docentes Activos" 
-          value={`${stats.docentesActivos}/${stats.totalDocentes}`} 
+        <StatCard
+          icon={Users}
+          label="Docentes Activos"
+          value={`${stats.docentesActivos}/${stats.totalDocentes}`}
           color="indigo"
-          trend="85% participación"
+          trend={`${stats.totalDocentes > 0 ? Math.round((stats.docentesActivos / stats.totalDocentes) * 100) : 0}% participación`}
         />
         <StatCard 
           icon={CheckCircle2} 

@@ -1,26 +1,32 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  Settings, 
-  Shield, 
-  Calendar, 
-  Eye, 
-  Lock, 
-  Save, 
+import { useRouter } from 'next/navigation';
+import {
+  Settings,
+  Shield,
+  Calendar,
+  Eye,
+  Lock,
+  Save,
   RefreshCcw,
   CheckCircle2,
   AlertTriangle,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  Trash2,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchConfiguracion, updateConfiguracion, type ConfigSistema } from '@/lib/db';
+import { fetchConfiguracion, updateConfiguracion, resetTodasLasCalificaciones, type ConfigSistema } from '@/lib/db';
 
 export default function ConfigPage() {
+  const router = useRouter();
   const [config, setConfig] = useState<ConfigSistema | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetModal, setResetModal] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
@@ -46,6 +52,20 @@ export default function ConfigPage() {
       setMessage({ text: 'Configuración actualizada correctamente.', type: 'success' });
     }
     setTimeout(() => setMessage(null), 3000);
+  };
+
+  const handleReset = async () => {
+    setIsResetting(true);
+    const { error } = await resetTodasLasCalificaciones();
+    setIsResetting(false);
+    setResetModal(false);
+
+    if (error) {
+      setMessage({ text: `Error al reiniciar: ${error}`, type: 'error' });
+    } else {
+      setMessage({ text: 'Todas las calificaciones han sido eliminadas.', type: 'success' });
+    }
+    setTimeout(() => setMessage(null), 4000);
   };
 
   if (isLoading) {
@@ -83,7 +103,7 @@ export default function ConfigPage() {
             Administre el estado global de la feria y los periodos académicos.
           </p>
         </div>
-        
+
         <button
           onClick={handleSave}
           disabled={isSaving}
@@ -123,7 +143,7 @@ export default function ConfigPage() {
             </div>
             <h3 className="text-lg font-black text-[#162748]">Periodo Académico</h3>
           </div>
-          
+
           <div>
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Año / Semestre Activo</label>
             <input
@@ -147,24 +167,24 @@ export default function ConfigPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-xl ${config.evaluacion_abierta ? 'bg-emerald-50' : 'bg-slate-50'}`}>
-                  {config.evaluacion_abierta ? <Lock className="w-5 h-5 text-emerald-600" /> : <Lock className="w-5 h-5 text-slate-400" />}
+                  <Lock className={`w-5 h-5 ${config.evaluacion_abierta ? 'text-emerald-600' : 'text-slate-400'}`} />
                 </div>
                 <h3 className="text-lg font-black text-[#162748]">Estado de Evaluación</h3>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={config.evaluacion_abierta}
                   onChange={(e) => setConfig({ ...config, evaluacion_abierta: e.target.checked })}
-                  className="sr-only peer" 
+                  className="sr-only peer"
                 />
                 <div className="w-14 h-8 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500"></div>
               </label>
             </div>
-            
+
             <p className="text-sm font-medium text-slate-500">
-              {config.evaluacion_abierta 
-                ? 'El sistema está ABIERTO. Los docentes pueden ingresar calificaciones y comentarios en tiempo real.' 
+              {config.evaluacion_abierta
+                ? 'El sistema está ABIERTO. Los docentes pueden ingresar calificaciones y comentarios en tiempo real.'
                 : 'El sistema está CERRADO. Los docentes NO pueden realizar evaluaciones ni modificar puntajes.'}
             </p>
           </div>
@@ -190,16 +210,16 @@ export default function ConfigPage() {
                 <h3 className="text-lg font-black text-[#162748]">Visibilidad de Resultados</h3>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={config.mostrar_resultados}
                   onChange={(e) => setConfig({ ...config, mostrar_resultados: e.target.checked })}
-                  className="sr-only peer" 
+                  className="sr-only peer"
                 />
                 <div className="w-14 h-8 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
             </div>
-            
+
             <p className="text-sm font-medium text-slate-500">
               Si está activo, los resultados finales y rankings serán visibles para todos los usuarios autorizados.
             </p>
@@ -209,8 +229,11 @@ export default function ConfigPage() {
         {/* Quick Links */}
         <div className="bg-[#f8fafc] rounded-[2.5rem] p-8 border border-slate-200/50 flex flex-col justify-center gap-4">
           <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Accesos Directos</h3>
-          
-          <button className="flex items-center justify-between w-full p-4 bg-white hover:bg-slate-50 rounded-2xl border border-slate-100 transition-all group">
+
+          <button
+            onClick={() => router.push('/admin/configuracion/criterios')}
+            className="flex items-center justify-between w-full p-4 bg-white hover:bg-slate-50 rounded-2xl border border-slate-100 transition-all group"
+          >
             <div className="flex items-center gap-3">
               <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
                 <Settings className="w-4 h-4" />
@@ -220,7 +243,10 @@ export default function ConfigPage() {
             <ChevronRight className="w-4 h-4 text-slate-300 group-hover:translate-x-1 transition-transform" />
           </button>
 
-          <button className="flex items-center justify-between w-full p-4 bg-white hover:bg-slate-50 rounded-2xl border border-slate-100 transition-all group">
+          <button
+            onClick={() => router.push('/docente')}
+            className="flex items-center justify-between w-full p-4 bg-white hover:bg-slate-50 rounded-2xl border border-slate-100 transition-all group"
+          >
             <div className="flex items-center gap-3">
               <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
                 <ExternalLink className="w-4 h-4" />
@@ -232,7 +258,7 @@ export default function ConfigPage() {
         </div>
       </div>
 
-      {/* Audit Log / Danger Zone */}
+      {/* Danger Zone */}
       <div className="bg-red-50/50 rounded-[2.5rem] p-8 border border-red-100 mt-12">
         <h3 className="text-lg font-black text-red-900 mb-4 flex items-center gap-2">
           <AlertTriangle className="w-5 h-5" />
@@ -241,10 +267,64 @@ export default function ConfigPage() {
         <p className="text-sm text-red-700 font-medium mb-6">
           Las siguientes acciones son irreversibles y afectan la integridad de los datos históricos.
         </p>
-        <button className="bg-white hover:bg-red-500 hover:text-white text-red-600 border border-red-200 px-6 py-3 rounded-xl text-sm font-bold transition-all">
+        <button
+          onClick={() => setResetModal(true)}
+          className="bg-white hover:bg-red-500 hover:text-white text-red-600 border border-red-200 px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center gap-2"
+        >
+          <Trash2 className="w-4 h-4" />
           Reiniciar Todas las Calificaciones (Reset)
         </button>
       </div>
+
+      {/* Reset Confirmation Modal */}
+      <AnimatePresence>
+        {resetModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isResetting && setResetModal(false)}
+              className="absolute inset-0 bg-[#162748]/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative z-10 text-center"
+            >
+              <div className="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <AlertTriangle className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-black text-[#162748] mb-2 tracking-tight">¿Reiniciar calificaciones?</h3>
+              <p className="text-slate-500 text-sm font-medium mb-8 leading-relaxed">
+                Esta acción eliminará <strong>todas las evaluaciones</strong> y los <strong>resultados del ranking</strong>. Esta operación no se puede deshacer.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setResetModal(false)}
+                  disabled={isResetting}
+                  className="flex-1 py-4 bg-slate-100 text-slate-500 font-black rounded-2xl text-xs uppercase tracking-widest disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleReset}
+                  disabled={isResetting}
+                  className="flex-1 py-4 bg-red-600 text-white font-black rounded-2xl shadow-lg shadow-red-900/20 text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70"
+                >
+                  {isResetting ? (
+                    <RefreshCcw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                  {isResetting ? 'Procesando...' : 'Confirmar Reset'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
