@@ -17,6 +17,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import HelpBanner from '@/components/HelpBanner';
 import { 
   fetchProyectosAdmin, 
   fetchDocentesSummary, 
@@ -158,6 +159,13 @@ export default function AdminDashboard() {
           </div>
         </div>
       </header>
+
+      {/* Help Banner */}
+      <HelpBanner
+        storageKey="dashboard"
+        title="Guía de Inicio Rápido: Dashboard"
+        description="Bienvenido al Panel de Control Central. Aquí puede observar métricas en tiempo real sobre la Feria Tecnológica: cantidad de proyectos, participación de jurados y el avance general de las evaluaciones. Utilice el botón 'Sincronizar Datos' para consolidar los puntajes actuales de todos los proyectos."
+      />
 
       {/* Stats Grid */}
       <motion.div 

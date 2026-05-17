@@ -10,6 +10,7 @@ import {
   Wifi,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import HelpBanner from '@/components/HelpBanner';
 import { fetchResultadosLive, sincronizarTodosLosResultados, type ResultadoLive } from '@/lib/db';
 
 const REFRESH_INTERVAL = 15000; // 15 segundos
@@ -100,6 +101,14 @@ export default function ResultadosLivePage() {
             </button>
           </div>
         </div>
+
+        {/* Help Banner */}
+        <HelpBanner
+          storageKey="resultados-live"
+          title="Guía de Visualización: Tabla de Posiciones en Vivo"
+          className="mb-8"
+          description="Pantalla optimizada para proyección pública o monitoreo continuo en salas de espera. Se actualiza automáticamente cada 15 segundos con los últimos promedios consolidados a medida que los docentes confirman sus calificaciones. Use 'Recalcular' para forzar una sincronización manual."
+        />
 
         {lastUpdate && (
           <p className="text-slate-400 text-xs font-medium mb-6 text-right uppercase tracking-widest">

@@ -12,6 +12,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import HelpBanner from '@/components/HelpBanner';
 import { fetchComputoProyectos, sincronizarTodosLosResultados, type ProyectoComputo } from '@/lib/db';
 
 export default function ComputoPage() {
@@ -75,6 +76,13 @@ export default function ComputoPage() {
           {syncing ? 'Sincronizando...' : 'Sincronizar Cómputo'}
         </button>
       </header>
+
+      {/* Help Banner */}
+      <HelpBanner
+        storageKey="computo"
+        title="Guía de Auditoría: Cómputo de Calificaciones"
+        description="Revise la distribución de notas finales y promedios detallados para auditar el proceso de calificación. Permite identificar proyectos completados (con 4 evaluaciones), en proceso o con evaluaciones pendientes para garantizar la transparencia y equidad del certamen antes del cierre."
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

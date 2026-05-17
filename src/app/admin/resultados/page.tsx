@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Fragment } from 'react';
 import { Download, Award, Medal, RefreshCw, Trophy, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import HelpBanner from '@/components/HelpBanner';
 import { fetchResultadosTop, fetchDetalleConObservaciones } from '@/lib/db';
 import type { ResultadoTop } from '@/lib/data';
 import { exportToExcel } from '@/lib/export';
@@ -138,6 +139,13 @@ export default function ResultadosPage() {
           Clasificación final por puntaje promedio de {resultados.length} proyecto{resultados.length !== 1 ? 's' : ''} evaluados.
         </p>
       </div>
+
+      {/* Help Banner */}
+      <HelpBanner
+        storageKey="resultados"
+        title="Guía del Módulo: Clasificación y Podio Final"
+        description="Consulte las posiciones finales y el podio de los ganadores de la feria. Los puntajes se ponderan automáticamente de acuerdo con los pesos de la rúbrica activa. Expanda cada fila para verificar qué jurados evaluaron y qué observaciones registraron. Puede exportar por secciones o generar el Excel completo."
+      />
 
       {/* Podio */}
       {podium.length > 0 && (

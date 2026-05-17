@@ -13,6 +13,7 @@ import {
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import HelpBanner from '@/components/HelpBanner';
 import { fetchCriterios, upsertCriterio, eliminarCriterio, type Criterio } from '@/lib/db';
 
 export default function CriteriosPage() {
@@ -104,6 +105,13 @@ export default function CriteriosPage() {
           <span>Añadir Criterio</span>
         </button>
       </header>
+
+      {/* Help Banner */}
+      <HelpBanner
+        storageKey="criterios"
+        title="Guía del Módulo: Configuración de la Rúbrica"
+        description="Especifique los criterios, descripciones y pesos porcentuales con los que los docentes calificarán cada proyecto. Para garantizar la consistencia matemática, es indispensable que el peso acumulado sume exactamente el 100%. Las modificaciones aquí afectarán solo a las evaluaciones futuras."
+      />
 
       {/* Warning/Info Banner */}
       <div className={`p-5 rounded-[2rem] border transition-all flex items-center gap-4 ${

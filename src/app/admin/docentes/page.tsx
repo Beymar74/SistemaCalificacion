@@ -5,6 +5,7 @@ import {
   Search,
   Users,
   UserCheck,
+  UserX,
   Briefcase,
   RefreshCw,
   X,
@@ -18,7 +19,8 @@ import {
   EyeOff,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchDocentesAdmin, upsertDocente, deshabilitarDocente, type DocenteAdmin } from '@/lib/db';
+import HelpBanner from '@/components/HelpBanner';
+import { fetchDocentesAdmin, upsertDocente, deshabilitarDocente, habilitarDocente, type DocenteAdmin } from '@/lib/db';
 
 const PAGE_SIZE = 8;
 const DEFAULT_PASSWORD = 'EMI2026*';
@@ -66,7 +68,7 @@ export default function DocentesPage() {
   const [selectedDocente, setSelectedDocente] = useState<Partial<DocenteAdmin> | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  const [filterWorkload, setFilterWorkload] = useState<'all' | 'assigned' | 'unassigned' | 'saturated'>('all');
+  const [filterWorkload, setFilterWorkload] = useState<'all' | 'assigned' | 'unassigned' | 'saturated' | 'inactive'>('all');
   const [showConfirmDisable, setShowConfirmDisable] = useState<DocenteAdmin | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [generatedUsername, setGeneratedUsername] = useState('');
@@ -172,6 +174,17 @@ export default function DocentesPage() {
     setTimeout(() => setMessage(null), 3000);
   };
 
+  const handleEnable = async (docente: DocenteAdmin) => {
+    const { error } = await habilitarDocente(docente.id);
+    if (error) {
+      setMessage({ text: `Error al activar: ${error.message}`, type: 'error' });
+    } else {
+      setMessage({ text: `${docente.nombre} fue activado correctamente.`, type: 'success' });
+      cargarDatos();
+    }
+    setTimeout(() => setMessage(null), 4000);
+  };
+
   const filtered = useMemo(() => {
     return docentesData.filter(d => {
       const matchesSearch =
@@ -179,10 +192,11 @@ export default function DocentesPage() {
         d.codigo.toLowerCase().includes(search.toLowerCase()) ||
         d.especialidad.toLowerCase().includes(search.toLowerCase());
       const matchesWorkload =
-        filterWorkload === 'all' ? true :
-        filterWorkload === 'assigned' ? d.proyectosAsignados > 0 :
-        filterWorkload === 'unassigned' ? d.proyectosAsignados === 0 :
-        filterWorkload === 'saturated' ? d.proyectosAsignados >= 5 : true;
+        filterWorkload === 'all' ? d.estado === 'Activo' :
+        filterWorkload === 'assigned' ? (d.estado === 'Activo' && d.proyectosAsignados > 0) :
+        filterWorkload === 'unassigned' ? (d.estado === 'Activo' && d.proyectosAsignados === 0) :
+        filterWorkload === 'saturated' ? (d.estado === 'Activo' && d.proyectosAsignados >= 5) :
+        filterWorkload === 'inactive' ? d.estado === 'Inactivo' : true;
       return matchesSearch && matchesWorkload;
     });
   }, [docentesData, search, filterWorkload]);
@@ -225,6 +239,13 @@ export default function DocentesPage() {
         </div>
       </div>
 
+      {/* Help Banner */}
+      <HelpBanner
+        storageKey="docentes"
+        title="Guía del Módulo: Cuentas de Docentes"
+        description="Administre los accesos y especialidades de los docentes que actúan como jurados evaluadores. Puede dar de alta nuevos docentes, editar sus datos o inhabilitar cuentas. Recuerde que la contraseña por defecto para nuevas cuentas es EMI2026* y que cada jurado puede evaluar un máximo de 5 proyectos."
+      />
+
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard title="Total Docentes" value={stats.total} icon={Users} color="bg-blue-600" delay={0.1} />
@@ -245,21 +266,23 @@ export default function DocentesPage() {
               className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-600/30 transition-all font-medium"
             />
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-2 flex-wrap">
             {[
               { id: 'all', label: 'Todos', icon: Users },
               { id: 'assigned', label: 'Con Carga', icon: Briefcase },
               { id: 'unassigned', label: 'Disponibles', icon: UserCheck },
-              { id: 'saturated', label: 'Saturados', icon: AlertTriangle }
+              { id: 'saturated', label: 'Saturados', icon: AlertTriangle },
+              { id: 'inactive', label: 'Inactivos', icon: UserX }
             ].map(f => (
               <button
                 key={f.id}
-                onClick={() => setFilterWorkload(f.id as 'all' | 'assigned' | 'unassigned' | 'saturated')}
+                onClick={() => setFilterWorkload(f.id as 'all' | 'assigned' | 'unassigned' | 'saturated' | 'inactive')}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-none ${
                   filterWorkload === f.id ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
                 }`}
               >
-                <f.icon className="w-3 h-3" />
+                <f.icon className="w-3.5 h-3.5" />
                 {f.label}
               </button>
             ))}
@@ -339,13 +362,21 @@ export default function DocentesPage() {
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
-                    {d.estado === 'Activo' && (
+                    {d.estado === 'Activo' ? (
                       <button
                         onClick={() => setShowConfirmDisable(d)}
                         className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
                         title="Dar de baja"
                       >
                         <UserMinus className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleEnable(d)}
+                        className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
+                        title="Activar de nuevo"
+                      >
+                        <UserCheck className="w-4 h-4" />
                       </button>
                     )}
                   </td>
