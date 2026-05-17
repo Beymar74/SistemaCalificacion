@@ -323,7 +323,7 @@ export default function ProyectosPage() {
                         </div>
                         <p className="text-slate-500 font-bold">No se encontraron proyectos.</p>
                         <button
-                          onClick={() => { setSearch(''); setCategoria(''); setEstado(''); setPage(1); }}
+                          onClick={() => { setSearch(''); setEstado(''); setPage(1); }}
                           className="text-blue-500 text-xs font-black hover:underline uppercase tracking-widest"
                         >
                           Restablecer Filtros
