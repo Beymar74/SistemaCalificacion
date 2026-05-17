@@ -5,13 +5,11 @@ import {
   Search,
   Plus,
   Edit3,
-  UserPlus,
   Users,
   RefreshCw,
   X,
   CheckCircle2,
   AlertCircle,
-  Filter,
   Layers,
   PowerOff,
   Power,
@@ -49,6 +47,7 @@ export default function GestionProyectosPage() {
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [filterAttendance, setFilterAttendance] = useState<'all' | 'present' | 'absent'>('all');
   const [filterAssignment, setFilterAssignment] = useState<'all' | 'assigned' | 'unassigned'>('all');
+  const [filterState, setFilterState] = useState<'all' | 'active' | 'inactive'>('active');
 
   const [projectForm, setProjectForm] = useState({
     codigo: '',
@@ -121,7 +120,7 @@ export default function GestionProyectosPage() {
       codigo: p.codigo,
       nombre: p.nombre,
       categoria: p.sector || 'General',
-      sociedad: (p as any).sociedad || '',
+      sociedad: p.sociedad || '',
       gestion: new Date().getFullYear().toString()
     });
     setIsEditing(true);
@@ -135,11 +134,11 @@ export default function GestionProyectosPage() {
   };
 
   const handleToggleHabilitado = async (p: ProyectoGestion) => {
-    const estaHabilitado = (p as any).habilitado !== false;
+    const estaHabilitado = p.habilitado !== false;
     const { error } = estaHabilitado
       ? await deshabilitarProyecto(p.id)
       : await habilitarProyecto(p.id);
-    if (error) notify((error as any).message || 'Error', 'error');
+    if (error) notify(error.message || 'Error', 'error');
     else {
       notify(estaHabilitado ? 'Proyecto deshabilitado' : 'Proyecto habilitado', 'success');
       loadData();
@@ -173,7 +172,10 @@ export default function GestionProyectosPage() {
     const matchesAssignment =
       filterAssignment === 'all' ? true :
       filterAssignment === 'assigned' ? p.evaluadores.length > 0 : p.evaluadores.length === 0;
-    return matchesSearch && matchesAttendance && matchesAssignment;
+    const matchesState =
+      filterState === 'all' ? true :
+      filterState === 'active' ? (p.habilitado !== false) : (p.habilitado === false);
+    return matchesSearch && matchesAttendance && matchesAssignment && matchesState;
   });
 
   return (
@@ -228,44 +230,140 @@ export default function GestionProyectosPage() {
       {/* Table */}
       <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-50 flex items-center gap-4 flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Buscar por código o nombre..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl text-sm focus:outline-none focus:border-blue-600/10 focus:bg-white transition-all font-medium"
-            />
+          {/* Buscar */}
+          <div className="flex flex-col gap-1.5 flex-1 min-w-[200px]">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Buscar</span>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Buscar por código o nombre..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border-2 border-transparent rounded-xl text-sm focus:outline-none focus:border-blue-600/10 focus:bg-white transition-all font-medium"
+              />
+            </div>
           </div>
-          <button
-            onClick={() => {
-              const cycle: Record<string, 'all' | 'present' | 'absent'> = { all: 'present', present: 'absent', absent: 'all' };
-              setFilterAttendance(cycle[filterAttendance]);
-            }}
-            className={`p-3 rounded-xl transition-all flex items-center gap-2 border-2 ${
-              filterAttendance !== 'all' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
-            }`}
-          >
-            <Filter className="w-4 h-4" />
-            <span className="text-[10px] font-black uppercase tracking-widest px-1">
-              {filterAttendance === 'all' ? 'Asistencia: Todos' : filterAttendance === 'present' ? 'Solo Presentes' : 'Solo Ausentes'}
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              const cycle: Record<string, 'all' | 'assigned' | 'unassigned'> = { all: 'assigned', assigned: 'unassigned', unassigned: 'all' };
-              setFilterAssignment(cycle[filterAssignment]);
-            }}
-            className={`p-3 rounded-xl transition-all flex items-center gap-2 border-2 ${
-              filterAssignment !== 'all' ? 'bg-[#162748] border-[#162748] text-white' : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            <span className="text-[10px] font-black uppercase tracking-widest px-1">
-              {filterAssignment === 'all' ? 'Asignación: Todos' : filterAssignment === 'assigned' ? 'Con Jurado' : 'Sin Jurado'}
-            </span>
-          </button>
+
+          {/* Asistencia */}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Asistencia</span>
+            <div className="flex items-center bg-slate-50 border border-slate-100 p-1 rounded-xl gap-1">
+              <button
+                type="button"
+                onClick={() => setFilterAttendance('all')}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                  filterAttendance === 'all'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 font-bold'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                }`}
+              >
+                Todos
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterAttendance('present')}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                  filterAttendance === 'present'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 font-bold'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                }`}
+              >
+                Presentes
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterAttendance('absent')}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                  filterAttendance === 'absent'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 font-bold'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                }`}
+              >
+                Ausentes
+              </button>
+            </div>
+          </div>
+
+          {/* Asignación */}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Asignación de Jurados</span>
+            <div className="flex items-center bg-slate-50 border border-slate-100 p-1 rounded-xl gap-1">
+              <button
+                type="button"
+                onClick={() => setFilterAssignment('all')}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                  filterAssignment === 'all'
+                    ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                }`}
+              >
+                Todos
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterAssignment('assigned')}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                  filterAssignment === 'assigned'
+                    ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                }`}
+              >
+                Con Jurado
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterAssignment('unassigned')}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                  filterAssignment === 'unassigned'
+                    ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                }`}
+              >
+                Sin Jurado
+              </button>
+            </div>
+          </div>
+
+          {/* Estado */}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Estado de Proyecto</span>
+            <div className="flex items-center bg-slate-50 border border-slate-100 p-1 rounded-xl gap-1">
+              <button
+                type="button"
+                onClick={() => setFilterState('all')}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                  filterState === 'all'
+                    ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                }`}
+              >
+                Todos
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterState('active')}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                  filterState === 'active'
+                    ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                }`}
+              >
+                Habilitados
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterState('inactive')}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                  filterState === 'inactive'
+                    ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                }`}
+              >
+                Inhabilitados
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -288,7 +386,7 @@ export default function GestionProyectosPage() {
                   </td>
                 </tr>
               ) : filteredProyectos.map(p => {
-                const estaHabilitado = (p as any).habilitado !== false;
+                const estaHabilitado = p.habilitado !== false;
                 return (
                   <tr key={p.id} className={`hover:bg-slate-50/80 transition-colors group ${!estaHabilitado ? 'opacity-40 grayscale' : ''}`}>
                     <td className="px-6 py-5">
@@ -296,7 +394,7 @@ export default function GestionProyectosPage() {
                     </td>
                     <td className="px-6 py-5">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1.5">
                           <p className="text-sm font-black text-slate-800 leading-tight">{p.nombre}</p>
                           <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest flex-shrink-0 ${
                             p.evaluadores.length >= 4 ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500'
@@ -304,11 +402,11 @@ export default function GestionProyectosPage() {
                             {p.evaluadores.length}/4
                           </span>
                         </div>
-                        {(p as any).sociedad && (
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-1">{(p as any).sociedad}</p>
+                        {p.sociedad && (
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-2">{p.sociedad}</p>
                         )}
-                        <div className="flex flex-wrap gap-1.5">
-                          {p.evaluadores.length > 0 ? p.evaluadores.map(ev => (
+                        <div className="flex flex-wrap items-center gap-2">
+                          {p.evaluadores.map(ev => (
                             <div
                               key={ev.idAsignacion}
                               className="group/tag flex items-center gap-2 bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg transition-all hover:border-blue-200 hover:bg-white"
@@ -318,9 +416,19 @@ export default function GestionProyectosPage() {
                                 <X className="w-3 h-3" />
                               </button>
                             </div>
-                          )) : (
+                          ))}
+                          {p.evaluadores.length < 4 && estaHabilitado ? (
+                            <button
+                              onClick={() => handleOpenAssign(p)}
+                              className="flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 border border-blue-100 hover:border-blue-200 text-blue-600 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
+                              title="Asignar jurado"
+                            >
+                              <Plus className="w-3 h-3" />
+                              <span>Asignar</span>
+                            </button>
+                          ) : p.evaluadores.length === 0 ? (
                             <span className="text-[10px] text-slate-300 font-medium italic">Sin docentes asignados</span>
-                          )}
+                          ) : null}
                         </div>
                       </div>
                     </td>
@@ -345,15 +453,6 @@ export default function GestionProyectosPage() {
                     </td>
                     <td className="px-6 py-5">
                       <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleOpenAssign(p)}
-                          disabled={p.evaluadores.length >= 4 || !estaHabilitado}
-                          className="flex items-center gap-1.5 px-3 py-2 bg-[#162748] hover:bg-blue-600 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                          title={p.evaluadores.length >= 4 ? 'Cupo completo: 4/4 docentes asignados' : 'Asignar docente'}
-                        >
-                          <UserPlus className="w-3.5 h-3.5" />
-                          <span>{p.evaluadores.length >= 4 ? 'Completo' : 'Asignar'}</span>
-                        </button>
                         <button
                           onClick={() => handleEditClick(p)}
                           className="p-2.5 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"

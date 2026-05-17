@@ -31,6 +31,8 @@ export interface ProyectoGestion {
   nombre: string;
   sector: string;
   asistio: boolean;
+  habilitado?: boolean;
+  sociedad?: string;
   evaluadores: { idAsignacion: string; nombre: string }[];
   accion: 'Reasignar' | 'Cambiar' | 'Asignar' | 'Completo';
 }
@@ -60,6 +62,7 @@ export interface ProyectoDetalle {
 }
 
 export interface ResultadoTop {
+  id?: string;
   posicion: number;
   nombre: string;
   puntajeFinal: number;

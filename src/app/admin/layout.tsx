@@ -18,10 +18,8 @@ import {
   Menu,
 } from 'lucide-react';
 
-import { exportToExcel } from '@/lib/export';
-import { fetchComputoProyectos } from '@/lib/db';
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -31,53 +29,13 @@ const navItems = [
   { href: '/admin/asignaciones', label: 'Evaluaciones', icon: MessageSquare },
   { href: '/admin/resultados', label: 'Resultados', icon: Trophy },
   { href: '/admin/resultados-live', label: 'Resultados en Vivo', icon: Radio },
+  { href: '/admin/reportes', label: 'Reportes', icon: Download },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [isExporting, setIsExporting] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const handleExport = async () => {
-    setIsExporting(true);
-    try {
-      const data = await fetchComputoProyectos();
-      const rows: Record<string, string | number>[] = [];
-      data.forEach(p => {
-        if (p.evaluadores.length === 0) {
-          rows.push({
-            Código: p.codigo,
-            Proyecto: p.nombre,
-            Categoría: p.categoria,
-            Jurado: '—',
-            Nota: '—',
-            Observaciones: '—',
-            'Promedio Final': p.promedio || '—',
-            Ranking: p.ranking || '—',
-          });
-        } else {
-          p.evaluadores.forEach(ev => {
-            rows.push({
-              Código: p.codigo,
-              Proyecto: p.nombre,
-              Categoría: p.categoria,
-              Jurado: ev.docente,
-              Nota: ev.nota,
-              Observaciones: ev.observaciones || '—',
-              'Promedio Final': p.promedio,
-              Ranking: p.ranking,
-            });
-          });
-        }
-      });
-      await exportToExcel(rows, `Reporte_Evaluaciones_${new Date().toISOString().split('T')[0]}`);
-    } catch (err) {
-      console.error('Export failed:', err);
-    } finally {
-      setIsExporting(false);
-    }
-  };
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -167,18 +125,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Footer */}
         <div className="px-3 pb-4 border-t border-slate-100 pt-3 space-y-1">
-          <button 
-            onClick={handleExport}
-            disabled={isExporting}
-            className={`w-full flex items-center justify-center gap-2 bg-[#162748] hover:bg-blue-600 text-white text-sm font-medium py-2.5 rounded-lg transition-all active:scale-95 disabled:opacity-50 overflow-hidden ${isCollapsed ? 'px-0' : 'px-3'}`}
-          >
-            {isExporting ? (
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin flex-shrink-0" />
-            ) : (
-              <Download className="w-4 h-4 flex-shrink-0" />
-            )}
-            {!isCollapsed && <span>{isExporting ? 'Exportando...' : 'Exportar Reportes'}</span>}
-          </button>
           <button
             onClick={() => router.push('/login')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-100 rounded-lg text-sm transition-colors overflow-hidden ${isCollapsed ? 'justify-center' : ''}`}

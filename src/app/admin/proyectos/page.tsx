@@ -78,7 +78,6 @@ export default function ProyectosPage() {
   const [page, setPage] = useState(1);
 
   const [search, setSearch] = useState('');
-  const [categoria, setCategoria] = useState('');
   const [estado, setEstado] = useState('');
 
   const cargarDatos = () => {
@@ -93,30 +92,33 @@ export default function ProyectosPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { cargarDatos(); }, []);
-
-  const categorias = useMemo(() => [...new Set(proyectosData.map(p => p.categoria))], [proyectosData]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      cargarDatos();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const filtered = useMemo(() => {
     return proyectosData.filter(p => {
       const q = search.toLowerCase();
       return (
         (!q || p.nombre.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q)) &&
-        (!categoria || p.categoria === categoria) &&
         (!estado || p.estado === estado)
       );
     });
-  }, [proyectosData, search, categoria, estado]);
+  }, [proyectosData, search, estado]);
 
   const stats = useMemo(() => {
     const total = proyectosData.length;
     const evaluados = proyectosData.filter(p => p.estado === 'Evaluado').length;
     const pendientes = proyectosData.filter(p => p.estado === 'Pendiente').length;
+    const enProceso = proyectosData.filter(p => p.estado === 'En Proceso').length;
     const totalEvals = proyectosData.reduce((s, p) => s + p.evaluacionesTotal, 0);
     const doneEvals  = proyectosData.reduce((s, p) => s + p.evaluacionesCompletadas, 0);
     const progreso   = totalEvals > 0 ? Math.round((doneEvals / totalEvals) * 100) : 0;
     const faltan     = totalEvals - doneEvals;
-    return { total, evaluados, pendientes, progreso, faltan };
+    return { total, evaluados, pendientes, enProceso, progreso, faltan };
   }, [proyectosData]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -189,9 +191,10 @@ export default function ProyectosPage() {
       />
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         <StatCard label="Total Proyectos" value={String(stats.total)}    icon={Layers}       color="bg-blue-600"   delay={0.1} />
         <StatCard label="Evaluados"        value={String(stats.evaluados)} icon={CheckCircle2} color="bg-indigo-500" delay={0.2} />
+        <StatCard label="En Proceso"       value={String(stats.enProceso)}  icon={TrendingUp}   color="bg-sky-500"    delay={0.25} />
         <StatCard label="Pendientes"       value={String(stats.pendientes)} icon={Clock}       color="bg-rose-500"   delay={0.3} />
         <StatCard
           label="Docentes"
@@ -223,15 +226,6 @@ export default function ProyectosPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <select
-              value={categoria}
-              onChange={e => { setCategoria(e.target.value); setPage(1); }}
-              className="bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm font-bold text-slate-600 focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer hover:bg-slate-100 transition-colors"
-            >
-              <option value="">Categorías</option>
-              {categorias.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-
             <select
               value={estado}
               onChange={e => { setEstado(e.target.value); setPage(1); }}

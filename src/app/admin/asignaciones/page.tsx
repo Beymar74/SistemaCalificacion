@@ -6,7 +6,6 @@ import {
   RefreshCw,
   AlertTriangle,
   CheckCircle2,
-  Download,
   X,
   MessageSquare,
   ChevronDown,
@@ -16,7 +15,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchEvaluacionesDetalle, type EvaluacionDetalle } from '@/lib/db';
 import HelpBanner from '@/components/HelpBanner';
-import { exportToExcel } from '@/lib/export';
 
 export default function EvaluacionesPage() {
   const [evaluaciones, setEvaluaciones] = useState<EvaluacionDetalle[]>([]);
@@ -24,7 +22,6 @@ export default function EvaluacionesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<'todos' | 'confirmadas' | 'pendientes'>('todos');
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [isExporting, setIsExporting] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => { loadData(); }, []);
@@ -60,29 +57,7 @@ export default function EvaluacionesPage() {
       : 0,
   };
 
-  const handleExport = async () => {
-    setIsExporting(true);
-    try {
-      const rows = filtered.map(e => ({
-        Código: e.proyectoCodigo,
-        Proyecto: e.proyectoNombre,
-        Docente: e.docenteNombre,
-        Materia: e.docenteMateria,
-        'Bloque 1 (Documento)': e.bloque1Total,
-        'Bloque 2 (Exposición)': e.bloque2Total,
-        'Nota Final': e.notaFinal,
-        Estado: e.confirmada ? 'Confirmada' : 'Pendiente',
-        Observaciones: e.observaciones || '—',
-      }));
-      await exportToExcel(rows, `Evaluaciones_${new Date().toISOString().split('T')[0]}`);
-      setMessage({ text: 'Archivo exportado correctamente.', type: 'success' });
-    } catch {
-      setMessage({ text: 'Error al exportar.', type: 'error' });
-    } finally {
-      setIsExporting(false);
-      setTimeout(() => setMessage(null), 3000);
-    }
-  };
+
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
@@ -101,14 +76,6 @@ export default function EvaluacionesPage() {
           >
             <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
           </button>
-          <button
-            onClick={handleExport}
-            disabled={isExporting || filtered.length === 0}
-            className="flex items-center gap-2 bg-[#162748] hover:bg-blue-600 text-white text-sm font-bold px-4 py-3 rounded-2xl shadow-sm transition-all disabled:opacity-50"
-          >
-            {isExporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            Exportar Excel
-          </button>
         </div>
       </header>
 
@@ -116,7 +83,7 @@ export default function EvaluacionesPage() {
       <HelpBanner
         storageKey="evaluaciones"
         title="Guía del Módulo: Historial de Evaluaciones"
-        description="Examine el desglose de las calificaciones enviadas por cada docente. Expanda cualquier fila para revisar los puntajes individuales asignados a los criterios de los bloques (Bloque 1: Documentación y Bloque 2: Exposición de stand) y leer las observaciones/comentarios detallados de los jurados. Puede exportar este reporte completo a formato Excel."
+        description="Examine el desglose de las calificaciones enviadas por cada docente. Expanda cualquier fila para revisar los puntajes individuales asignados a los criterios de los bloques (Bloque 1: Documentación y Bloque 2: Exposición de stand) y leer las observaciones/comentarios detallados de los jurados."
       />
 
       {/* Stats */}
@@ -276,7 +243,7 @@ export default function EvaluacionesPage() {
                                     <div key={i} className="flex items-center justify-between">
                                       <p className="text-xs text-slate-500 font-medium">Indicador D{i}</p>
                                       <span className="text-xs font-black text-[#162748]">
-                                        {(e as any)[`doc_ind${i}`] ?? 0}
+                                        {(e as unknown as Record<string, number>)[`doc_ind${i}`] ?? 0}
                                       </span>
                                     </div>
                                   ))}
@@ -298,7 +265,7 @@ export default function EvaluacionesPage() {
                                       <div key={i} className="flex items-center justify-between">
                                         <p className="text-xs text-slate-500 font-medium">Indicador E{i}</p>
                                         <span className="text-xs font-black text-[#162748]">
-                                          {(e as any)[`exp_ind${i}`] ?? 0}
+                                          {(e as unknown as Record<string, number>)[`exp_ind${i}`] ?? 0}
                                         </span>
                                       </div>
                                     ))}

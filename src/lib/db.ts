@@ -65,7 +65,17 @@ export async function fetchProyectosAdmin(): Promise<Proyecto[]> {
     .from('evaluaciones')
     .select('id, id_proyecto, confirmada');
 
-  // 3. Mapear evaluaciones por proyecto
+  // 3. Obtener todas las asignaciones para saber cuántos jurados tiene asignados cada proyecto
+  const { data: asigs } = await supabase
+    .from('asignaciones')
+    .select('id_proyecto');
+
+  const asigCountMap = new Map<string, number>();
+  asigs?.forEach(a => {
+    asigCountMap.set(a.id_proyecto, (asigCountMap.get(a.id_proyecto) || 0) + 1);
+  });
+
+  // 4. Mapear evaluaciones por proyecto
   const evalCountMap = new Map<string, any[]>();
   evals?.forEach(e => {
     const list = evalCountMap.get(e.id_proyecto) || [];
@@ -77,11 +87,17 @@ export async function fetchProyectosAdmin(): Promise<Proyecto[]> {
     const projectEvals = evalCountMap.get(p.id) || [];
     const completadas = projectEvals.length;
     const confirmadas = projectEvals.filter((e: any) => e.confirmada).length;
-    const total = 4;
+
+    const asignados = asigCountMap.get(p.id) || 0;
+    // Si tiene jurados asignados, el total esperado es la cantidad asignada. Si no, por defecto es 4.
+    const total = asignados > 0 ? asignados : 4;
 
     let estado: EstadoProyecto = 'Pendiente';
-    if (confirmadas >= total) estado = 'Evaluado';
-    else if (completadas > 0) estado = 'En Proceso';
+    if (confirmadas >= total && total > 0) {
+      estado = 'Evaluado';
+    } else if (completadas > 0) {
+      estado = 'En Proceso';
+    }
 
     return {
       id: p.id,
@@ -177,7 +193,7 @@ export async function fetchEvaluadoresDisponibles(): Promise<EvaluadorDisponible
 export async function fetchProyectosParaGestion(): Promise<ProyectoGestion[]> {
   const { data: proys } = await supabase
     .from('proyectos')
-    .select('id, codigo_proyecto, nombre_proyecto, categoria, asistio')
+    .select('id, codigo_proyecto, nombre_proyecto, categoria, asistio, habilitado')
     .order('codigo_proyecto');
 
   if (!proys) return [];
@@ -208,6 +224,7 @@ export async function fetchProyectosParaGestion(): Promise<ProyectoGestion[]> {
     nombre: p.nombre_proyecto,
     sector: p.categoria || 'General',
     asistio: p.asistio ?? true,
+    habilitado: p.habilitado ?? true,
     evaluadores: asigsByProy.get(p.id) || [],
     accion: (asigsByProy.get(p.id)?.length || 0) >= 4 ? 'Completo' : 'Asignar',
   }));
@@ -306,6 +323,7 @@ export async function fetchResultadosTop(limit: number = 5): Promise<ResultadoTo
   });
 
   return data.map((r: any) => ({
+    id: r.id_proyecto,
     posicion: r.ranking_posicion,
     nombre: r.proyectos?.nombre_proyecto || 'Proyecto Desconocido',
     puntajeFinal: Number(r.promedio_final) || 0,
