@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect, Fragment } from 'react';
-import { Download, Award, Medal, RefreshCw, Trophy, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import { Award, Medal, RefreshCw, Trophy, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import HelpBanner from '@/components/HelpBanner';
 import { fetchResultadosTop, fetchDetalleConObservaciones } from '@/lib/db';
 import type { ResultadoTop } from '@/lib/data';
-import { exportToExcel } from '@/lib/export';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const YEAR = new Date().getFullYear();
@@ -14,7 +13,6 @@ export default function ResultadosPage() {
   const [resultados, setResultados] = useState<ResultadoTop[]>([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState('');
-  const [isExporting, setIsExporting] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [detalles, setDetalles] = useState<Record<number, Awaited<ReturnType<typeof fetchDetalleConObservaciones>>>>({});
   const [loadingDetalle, setLoadingDetalle] = useState<number | null>(null);
@@ -28,7 +26,12 @@ export default function ResultadosPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { cargarDatos(); }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      cargarDatos();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleToggleDetalle = async (r: ResultadoTop) => {
     if (expandedId === r.posicion) {
@@ -38,26 +41,10 @@ export default function ResultadosPage() {
     setExpandedId(r.posicion);
     if (!detalles[r.posicion]) {
       setLoadingDetalle(r.posicion);
-      const data = await fetchDetalleConObservaciones((r as any).id || '');
+      const data = await fetchDetalleConObservaciones(r.id || '');
       setDetalles(prev => ({ ...prev, [r.posicion]: data }));
       setLoadingDetalle(null);
     }
-  };
-
-  const exportSection = async (titulo: string, rows: ResultadoTop[]) => {
-    const excelRows = rows.map(r => ({
-      Posición: r.posicion,
-      Proyecto: r.nombre,
-      'Puntaje Final': r.puntajeFinal,
-      Evaluaciones: r.evaluaciones,
-    }));
-    await exportToExcel(excelRows, `${titulo}_${YEAR}`);
-  };
-
-  const handleExportAll = async () => {
-    setIsExporting(true);
-    await exportSection('resultados_completos', resultados);
-    setIsExporting(false);
   };
 
   if (loading) return (
@@ -115,20 +102,6 @@ export default function ResultadosPage() {
           <button onClick={cargarDatos} className="flex items-center gap-2 border border-slate-300 bg-white text-slate-600 text-sm px-4 py-2 rounded-xl hover:bg-slate-50 shadow-sm font-bold">
             <RefreshCw className="w-4 h-4" /> Actualizar
           </button>
-          <button
-            onClick={() => exportSection('top3', top3)}
-            className="flex items-center gap-2 border border-slate-300 bg-white text-slate-600 text-sm px-4 py-2 rounded-xl hover:bg-slate-50 shadow-sm font-bold"
-          >
-            <Download className="w-4 h-4" /> Exportar Top 3
-          </button>
-          <button
-            onClick={handleExportAll}
-            disabled={isExporting}
-            className="flex items-center gap-2 bg-[#162748] text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-600 shadow-sm font-bold disabled:opacity-50"
-          >
-            {isExporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            Exportar Todo
-          </button>
         </div>
       </div>
 
@@ -144,7 +117,7 @@ export default function ResultadosPage() {
       <HelpBanner
         storageKey="resultados"
         title="Guía del Módulo: Clasificación y Podio Final"
-        description="Consulte las posiciones finales y el podio de los ganadores de la feria. Los puntajes se ponderan automáticamente de acuerdo con los pesos de la rúbrica activa. Expanda cada fila para verificar qué jurados evaluaron y qué observaciones registraron. Puede exportar por secciones o generar el Excel completo."
+        description="Consulte las posiciones finales y el podio de los ganadores de la feria. Los puntajes se ponderan automáticamente de acuerdo con los pesos de la rúbrica activa. Expanda cada fila para verificar qué jurados evaluaron y qué observaciones registraron."
       />
 
       {/* Podio */}
@@ -192,12 +165,6 @@ export default function ResultadosPage() {
               Cuadro de Honor
               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Posiciones {top3.length + 1}–{resultados.length}</span>
             </h2>
-            <button
-              onClick={() => exportSection('cuadro_honor', honor)}
-              className="flex items-center gap-1.5 text-xs font-black text-slate-500 hover:text-blue-600 uppercase tracking-widest"
-            >
-              <Download className="w-3.5 h-3.5" /> Exportar sección
-            </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {honor.map(r => (
@@ -262,12 +229,6 @@ export default function ResultadosPage() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-black text-slate-700">Tabla Completa</h2>
-          <button
-            onClick={handleExportAll}
-            className="flex items-center gap-1.5 text-xs font-black text-slate-500 hover:text-blue-600 uppercase tracking-widest"
-          >
-            <Download className="w-3.5 h-3.5" /> Exportar Excel
-          </button>
         </div>
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <table className="w-full">

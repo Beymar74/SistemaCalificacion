@@ -6,4 +6,7 @@ const nextConfig: NextConfig = {
 
 export default nextConfig;
 
-import('@opennextjs/cloudflare').then(m => m.initOpenNextCloudflareForDev());
+const isDev = process.argv.some(arg => arg === "dev" || arg.endsWith("next-dev") || arg.includes("dev"));
+if (isDev) {
+  import('@opennextjs/cloudflare').then(m => m.initOpenNextCloudflareForDev());
+}
