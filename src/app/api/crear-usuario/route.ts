@@ -10,7 +10,8 @@ export async function POST(req: NextRequest) {
 
   try {
     // Intentar obtener las variables del contexto de Cloudflare (Recomendado para OpenNext/Cloudflare Workers)
-    const { env } = getCloudflareContext();
+    const context = getCloudflareContext();
+    const env = context.env as any;
     serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
     supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
   } catch (e) {
