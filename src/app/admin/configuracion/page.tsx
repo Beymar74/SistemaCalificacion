@@ -18,6 +18,7 @@ import {
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import HelpBanner from '@/components/HelpBanner';
 import { fetchConfiguracion, updateConfiguracion, resetTodasLasCalificaciones, type ConfigSistema } from '@/lib/db';
 
 export default function ConfigPage() {
@@ -117,6 +118,13 @@ export default function ConfigPage() {
           <span>Guardar Cambios</span>
         </button>
       </header>
+
+      {/* Help Banner */}
+      <HelpBanner
+        storageKey="configuracion"
+        title="Guía de Seguridad: Configuración y Fases"
+        description="Defina los parámetros clave de la feria tecnológica. Cambie el nombre del semestre o año activo, y controle el acceso de los jurados activando o desactivando la fase de evaluación. IMPORTANTE: El reinicio de calificaciones en la zona de peligro borrará de forma permanente todas las notas del sistema."
+      />
 
       <AnimatePresence>
         {message && (

@@ -15,6 +15,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import HelpBanner from '@/components/HelpBanner';
 import { fetchProyectosAdmin, fetchDocentesSummary } from '@/lib/db';
 import type { EstadoProyecto } from '@/lib/data';
 import type { Proyecto } from '@/lib/data';
@@ -29,7 +30,7 @@ const estadoConfig: Record<EstadoProyecto, { bg: string; text: string; dot: stri
   'En Proceso': {
     bg: 'bg-amber-500/10',
     text: 'text-amber-600',
-    dot: 'bg-amber-500',
+    dot: 'bg-amber-50',
     glow: 'shadow-[0_0_8px_rgba(245,158,11,0.4)]'
   },
   Pendiente: {
@@ -39,6 +40,7 @@ const estadoConfig: Record<EstadoProyecto, { bg: string; text: string; dot: stri
     glow: 'shadow-[0_0_8px_rgba(244,63,94,0.4)]'
   },
 };
+
 
 const StatCard = ({ label, value, icon: Icon, color, delay }: {
   label: string;
@@ -177,6 +179,14 @@ export default function ProyectosPage() {
           </div>
         </motion.div>
       </div>
+
+      {/* Help Banner */}
+      <HelpBanner
+        storageKey="proyectos"
+        title="Guía del Módulo: Proyectos Registrados"
+        className="mb-8"
+        description="Monitoree el avance individual de cada proyecto en la feria. Puede filtrar por estado y categoría para identificar rápidamente cuáles proyectos ya fueron calificados por sus 4 jurados correspondientes, cuáles están en proceso y cuáles no han recibido ninguna evaluación."
+      />
 
       {/* Stats Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

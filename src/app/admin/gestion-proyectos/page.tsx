@@ -17,6 +17,7 @@ import {
   Power,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import HelpBanner from '@/components/HelpBanner';
 import {
   fetchProyectosParaGestion,
   fetchEvaluadoresDisponibles,
@@ -200,6 +201,13 @@ export default function GestionProyectosPage() {
           </button>
         </div>
       </header>
+
+      {/* Help Banner */}
+      <HelpBanner
+        storageKey="gestion-proyectos"
+        title="Guía de Operaciones: Gestión y Asignación de Proyectos"
+        description="Configure el núcleo de la feria. Desde esta pantalla puede registrar nuevos proyectos, controlar la asistencia de los grupos en los stands (Presente/Ausente) y asignar exactamente a los 4 jurados evaluadores por cada proyecto basándose en su carga actual. Si es necesario, puede dar de baja proyectos o remover asignaciones."
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

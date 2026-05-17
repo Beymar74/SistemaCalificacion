@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchEvaluacionesDetalle, type EvaluacionDetalle } from '@/lib/db';
+import HelpBanner from '@/components/HelpBanner';
 import { exportToExcel } from '@/lib/export';
 
 export default function EvaluacionesPage() {
@@ -110,6 +111,13 @@ export default function EvaluacionesPage() {
           </button>
         </div>
       </header>
+
+      {/* Help Banner */}
+      <HelpBanner
+        storageKey="evaluaciones"
+        title="Guía del Módulo: Historial de Evaluaciones"
+        description="Examine el desglose de las calificaciones enviadas por cada docente. Expanda cualquier fila para revisar los puntajes individuales asignados a los criterios de los bloques (Bloque 1: Documentación y Bloque 2: Exposición de stand) y leer las observaciones/comentarios detallados de los jurados. Puede exportar este reporte completo a formato Excel."
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

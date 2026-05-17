@@ -439,7 +439,7 @@ export async function upsertDocente(docente: any) {
     grado: docente.grado,
     materia: docente.materia
   };
-  return await supabase.from('personas').upsert(payload);
+  return await supabase.from('personas').upsert(payload, { onConflict: 'id_usuario' });
 }
 
 export async function eliminarDocente(id_usuario: string) {
@@ -533,6 +533,13 @@ export async function deshabilitarDocente(id_usuario: string) {
   return await supabase
     .from('personas')
     .update({ estado: false })
+    .eq('id_usuario', id_usuario);
+}
+
+export async function habilitarDocente(id_usuario: string) {
+  return await supabase
+    .from('personas')
+    .update({ estado: true })
     .eq('id_usuario', id_usuario);
 }
 
