@@ -31,6 +31,18 @@ export async function POST(req: NextRequest) {
   serviceKey = serviceKey || process.env.SUPABASE_SERVICE_ROLE_KEY || (process.env as any)['SUPABASE_SERVICE_ROLE_KEY'];
   supabaseUrl = supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL || (process.env as any)['NEXT_PUBLIC_SUPABASE_URL'];
 
+  debugInfo.serviceKey = {
+    type: typeof serviceKey,
+    length: serviceKey ? serviceKey.length : 0,
+    prefix: serviceKey && serviceKey.length > 5 ? `${serviceKey.substring(0, 5)}...${serviceKey.slice(-5)}` : 'none'
+  };
+
+  debugInfo.supabaseUrl = {
+    type: typeof supabaseUrl,
+    length: supabaseUrl ? supabaseUrl.length : 0,
+    prefix: supabaseUrl && supabaseUrl.length > 5 ? `${supabaseUrl.substring(0, 10)}...` : 'none'
+  };
+
   if (!serviceKey || !supabaseUrl) {
     const faltantes: string[] = [];
     if (!serviceKey) faltantes.push('SUPABASE_SERVICE_ROLE_KEY');
