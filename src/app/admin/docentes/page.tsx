@@ -68,7 +68,7 @@ export default function DocentesPage() {
   const [selectedDocente, setSelectedDocente] = useState<Partial<DocenteAdmin> | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  const [filterWorkload, setFilterWorkload] = useState<'all' | 'assigned' | 'unassigned' | 'saturated' | 'inactive'>('all');
+  const [filterWorkload, setFilterWorkload] = useState<'all' | 'assigned' | 'unassigned' | 'saturated' | 'inactive' | 'visitors'>('all');
   const [showConfirmDisable, setShowConfirmDisable] = useState<DocenteAdmin | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [generatedUsername, setGeneratedUsername] = useState('');
@@ -136,7 +136,7 @@ export default function DocentesPage() {
       username,
       materia: selectedDocente.departamento,
       grado: selectedDocente.especialidad,
-      estado: selectedDocente.estado === 'Activo'
+      estado: selectedDocente.estado === 'Activo' ? true : selectedDocente.estado === 'Inactivo' ? false : null
     };
 
     const { error: dbErr } = await upsertDocente(payload);
@@ -192,18 +192,19 @@ export default function DocentesPage() {
         d.codigo.toLowerCase().includes(search.toLowerCase()) ||
         d.especialidad.toLowerCase().includes(search.toLowerCase());
       const matchesWorkload =
-        filterWorkload === 'all' ? d.estado === 'Activo' :
-        filterWorkload === 'assigned' ? (d.estado === 'Activo' && d.proyectosAsignados > 0) :
-        filterWorkload === 'unassigned' ? (d.estado === 'Activo' && d.proyectosAsignados === 0) :
-        filterWorkload === 'saturated' ? (d.estado === 'Activo' && d.proyectosAsignados >= 5) :
-        filterWorkload === 'inactive' ? d.estado === 'Inactivo' : true;
+        filterWorkload === 'all' ? (d.estado === 'Activo' || d.estado === 'Visitante') :
+        filterWorkload === 'assigned' ? ((d.estado === 'Activo' || d.estado === 'Visitante') && d.proyectosAsignados > 0) :
+        filterWorkload === 'unassigned' ? ((d.estado === 'Activo' || d.estado === 'Visitante') && d.proyectosAsignados === 0) :
+        filterWorkload === 'saturated' ? ((d.estado === 'Activo' || d.estado === 'Visitante') && d.proyectosAsignados >= 5) :
+        filterWorkload === 'inactive' ? d.estado === 'Inactivo' :
+        filterWorkload === 'visitors' ? d.estado === 'Visitante' : true;
       return matchesSearch && matchesWorkload;
     });
   }, [docentesData, search, filterWorkload]);
 
   const stats = useMemo(() => {
     const total = docentesData.length;
-    const activos = docentesData.filter(d => d.estado === 'Activo').length;
+    const activos = docentesData.filter(d => d.estado === 'Activo' || d.estado === 'Visitante').length;
     const totalProyectos = docentesData.reduce((acc, d) => acc + d.proyectosAsignados, 0);
     return { total, activos, totalProyectos };
   }, [docentesData]);
@@ -273,11 +274,12 @@ export default function DocentesPage() {
               { id: 'assigned', label: 'Con Carga', icon: Briefcase },
               { id: 'unassigned', label: 'Disponibles', icon: UserCheck },
               { id: 'saturated', label: 'Saturados', icon: AlertTriangle },
+              { id: 'visitors', label: 'Visitantes', icon: Users },
               { id: 'inactive', label: 'Inactivos', icon: UserX }
             ].map(f => (
               <button
                 key={f.id}
-                onClick={() => setFilterWorkload(f.id as 'all' | 'assigned' | 'unassigned' | 'saturated' | 'inactive')}
+                onClick={() => setFilterWorkload(f.id as 'all' | 'assigned' | 'unassigned' | 'saturated' | 'inactive' | 'visitors')}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-none ${
                   filterWorkload === f.id ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
                 }`}
@@ -314,7 +316,7 @@ export default function DocentesPage() {
               ) : paginated.length === 0 ? (
                 <tr><td colSpan={6} className="px-6 py-20 text-center"><p className="text-slate-400 font-bold text-xs uppercase tracking-widest">No hay docentes registrados.</p></td></tr>
               ) : paginated.map(d => (
-                <tr key={d.id} className={`hover:bg-slate-50/80 transition-colors group ${d.estado !== 'Activo' ? 'opacity-50 grayscale' : ''}`}>
+                <tr key={d.id} className={`hover:bg-slate-50/80 transition-colors group ${d.estado === 'Inactivo' ? 'opacity-50 grayscale' : ''}`}>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center text-xs font-black text-indigo-600 border border-indigo-100">
@@ -349,7 +351,9 @@ export default function DocentesPage() {
                   </td>
                   <td className="px-6 py-5">
                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                      d.estado === 'Activo' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'
+                      d.estado === 'Activo' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                      d.estado === 'Visitante' ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                      'bg-slate-50 text-slate-500 border-slate-200'
                     }`}>
                       {d.estado}
                     </span>
@@ -362,7 +366,7 @@ export default function DocentesPage() {
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
-                    {d.estado === 'Activo' ? (
+                    {d.estado !== 'Inactivo' ? (
                       <button
                         onClick={() => setShowConfirmDisable(d)}
                         className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
@@ -482,11 +486,12 @@ export default function DocentesPage() {
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Estado</label>
                       <select
                         value={selectedDocente?.estado || 'Activo'}
-                        onChange={e => setSelectedDocente({ ...selectedDocente, estado: e.target.value as 'Activo' | 'Inactivo' })}
+                        onChange={e => setSelectedDocente({ ...selectedDocente, estado: e.target.value as 'Activo' | 'Inactivo' | 'Visitante' })}
                         className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-2.5 focus:bg-white focus:border-indigo-600/10 font-bold text-sm outline-none transition-all appearance-none"
                       >
                         <option value="Activo">Activo</option>
                         <option value="Inactivo">Inactivo</option>
+                        <option value="Visitante">Visitante</option>
                       </select>
                     </div>
                   </div>

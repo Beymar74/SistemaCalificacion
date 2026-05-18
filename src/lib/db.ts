@@ -12,7 +12,7 @@ export interface DocenteAdmin {
   especialidad: string;
   proyectosAsignados: number;
   proyectosTotal: number;
-  estado: 'Activo' | 'Inactivo';
+  estado: 'Activo' | 'Inactivo' | 'Visitante';
   initials: string;
 }
 
@@ -154,7 +154,7 @@ export async function fetchDocentesAdmin(): Promise<DocenteAdmin[]> {
     especialidad: d.grado ?? 'Especialista',
     proyectosAsignados: countMap[d.id_usuario] ?? 0,
     proyectosTotal: 10,
-    estado: d.estado ? 'Activo' : 'Inactivo',
+    estado: d.estado === true ? 'Activo' : d.estado === false ? 'Inactivo' : 'Visitante',
     initials: getInitials(d.nombre_completo),
   }));
 }
@@ -164,7 +164,7 @@ export async function fetchEvaluadoresDisponibles(): Promise<EvaluadorDisponible
     .from('personas')
     .select('id_usuario, nombre_completo, materia')
     .eq('rol', 'docente')
-    .eq('estado', true);
+    .or('estado.eq.true,estado.is.null');
 
   if (error || !data) return [];
 
@@ -204,16 +204,22 @@ export async function fetchProyectosParaGestion(): Promise<ProyectoGestion[]> {
 
   const { data: personas } = await supabase
     .from('personas')
-    .select('id_usuario, nombre_completo');
+    .select('id_usuario, nombre_completo, estado');
 
-  const personasMap = new Map(personas?.map(p => [p.id_usuario, p.nombre_completo]) || []);
+  const personasMap = new Map(
+    personas
+      ?.filter((p: any) => p.estado !== false)
+      ?.map((p: any) => [p.id_usuario, p.nombre_completo]) || []
+  );
   const asigsByProy = new Map<string, any[]>();
   
   asigs?.forEach(a => {
+    const nombreDocente = personasMap.get(a.id_docente);
+    if (!nombreDocente) return; // Skip if the teacher is inactive
     const list = asigsByProy.get(a.id_proyecto) || [];
     list.push({
       idAsignacion: a.id,
-      nombre: personasMap.get(a.id_docente) || 'Docente'
+      nombre: nombreDocente
     });
     asigsByProy.set(a.id_proyecto, list);
   });
