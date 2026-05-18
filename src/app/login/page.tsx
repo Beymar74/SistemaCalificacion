@@ -23,7 +23,7 @@ export default function LoginPage() {
     try {
       const { data: persona, error: personaError } = await supabase
         .from('personas')
-        .select('email, rol')
+        .select('email, rol, estado')  // ← agregado estado
         .eq('username', username.trim().toLowerCase())
         .single();
 
@@ -44,8 +44,11 @@ export default function LoginPage() {
         return;
       }
 
+      // ← lógica actualizada: estado NULL = visitante
       if (persona.rol === 'administrador') {
         router.push('/admin');
+      } else if (persona.rol === 'docente' && !persona.estado) {
+        router.push('/visitante');
       } else {
         router.push('/docente');
       }
