@@ -99,14 +99,21 @@ export default function ProyectosPage() {
     return () => clearTimeout(timer);
   }, []);
 
+  // ── filtro + orden numérico por código ──
   const filtered = useMemo(() => {
-    return proyectosData.filter(p => {
-      const q = search.toLowerCase();
-      return (
-        (!q || p.nombre.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q)) &&
-        (!estado || p.estado === estado)
-      );
-    });
+    return proyectosData
+      .filter(p => {
+        const q = search.toLowerCase();
+        return (
+          (!q || p.nombre.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q)) &&
+          (!estado || p.estado === estado)
+        );
+      })
+      .sort((a, b) => {
+        const numA = parseInt(a.codigo.replace(/\D/g, ''), 10);
+        const numB = parseInt(b.codigo.replace(/\D/g, ''), 10);
+        return numA - numB;
+      });
   }, [proyectosData, search, estado]);
 
   const stats = useMemo(() => {
@@ -115,14 +122,14 @@ export default function ProyectosPage() {
     const pendientes = proyectosData.filter(p => p.estado === 'Pendiente').length;
     const enProceso = proyectosData.filter(p => p.estado === 'En Proceso').length;
     const totalEvals = proyectosData.reduce((s, p) => s + p.evaluacionesTotal, 0);
-    const doneEvals  = proyectosData.reduce((s, p) => s + p.evaluacionesCompletadas, 0);
-    const progreso   = totalEvals > 0 ? Math.round((doneEvals / totalEvals) * 100) : 0;
-    const faltan     = totalEvals - doneEvals;
+    const doneEvals = proyectosData.reduce((s, p) => s + p.evaluacionesCompletadas, 0);
+    const progreso = totalEvals > 0 ? Math.round((doneEvals / totalEvals) * 100) : 0;
+    const faltan = totalEvals - doneEvals;
     return { total, evaluados, pendientes, enProceso, progreso, faltan };
   }, [proyectosData]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   if (loading) return (
     <div className="p-8 bg-white min-h-screen flex items-center justify-center">
@@ -192,10 +199,10 @@ export default function ProyectosPage() {
 
       {/* Stats Summary */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-        <StatCard label="Total Proyectos" value={String(stats.total)}    icon={Layers}       color="bg-blue-600"   delay={0.1} />
-        <StatCard label="Evaluados"        value={String(stats.evaluados)} icon={CheckCircle2} color="bg-indigo-500" delay={0.2} />
-        <StatCard label="En Proceso"       value={String(stats.enProceso)}  icon={TrendingUp}   color="bg-sky-500"    delay={0.25} />
-        <StatCard label="Pendientes"       value={String(stats.pendientes)} icon={Clock}       color="bg-rose-500"   delay={0.3} />
+        <StatCard label="Total Proyectos" value={String(stats.total)} icon={Layers} color="bg-blue-600" delay={0.1} />
+        <StatCard label="Evaluados" value={String(stats.evaluados)} icon={CheckCircle2} color="bg-indigo-500" delay={0.2} />
+        <StatCard label="En Proceso" value={String(stats.enProceso)} icon={TrendingUp} color="bg-sky-500" delay={0.25} />
+        <StatCard label="Pendientes" value={String(stats.pendientes)} icon={Clock} color="bg-rose-500" delay={0.3} />
         <StatCard
           label="Docentes"
           value={`${docentesSummary.activos}/${docentesSummary.total}`}
@@ -213,7 +220,7 @@ export default function ProyectosPage() {
         className="bg-white rounded-3xl shadow-sm border border-slate-200/60 overflow-hidden"
       >
         {/* Toolbar */}
-        <div className="p-5 flex flex-wrap items-center gap-4 border-b border-slate-100 bg-white/50 backdrop-blur-sm">
+        <div className="p-5 flex flex-wrap items-center gap-4 border-b border-slate-100 bg-white backdrop-blur-sm relative z-10">
           <div className="relative flex-1 min-w-[300px] group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
             <input
@@ -221,7 +228,7 @@ export default function ProyectosPage() {
               placeholder="Buscar por código o nombre..."
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }}
-              className="w-full pl-11 pr-4 py-3 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:text-slate-400 font-medium"
+              className="w-full pl-11 pr-4 py-3 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:text-slate-400 font-medium outline-none"
             />
           </div>
 
@@ -252,87 +259,73 @@ export default function ProyectosPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              <AnimatePresence mode="popLayout">
-                {paginated.length > 0 ? (
-                  paginated.map((p, index) => {
-                    const cfg = estadoConfig[p.estado];
-                    const avancePct = p.evaluacionesTotal > 0
-                      ? (p.evaluacionesCompletadas / p.evaluacionesTotal) * 100
-                      : 0;
-
-                    return (
-                      <motion.tr
-                        key={p.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ delay: index * 0.03 }}
-                        className="group hover:bg-blue-50/30 transition-colors"
-                      >
-                        <td className="px-6 py-5">
-                          <span className="text-[11px] font-black bg-slate-100 text-slate-500 px-2.5 py-1.5 rounded-lg uppercase">
-                            {p.codigo}
-                          </span>
-                        </td>
-                        <td className="px-6 py-5">
-                          <div>
-                            <p className="text-sm font-bold text-slate-800 leading-snug group-hover:text-blue-600 transition-colors">{p.nombre}</p>
-                            <p className="text-[11px] text-slate-400 mt-1 font-bold uppercase tracking-wider">{p.grupo}</p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-5">
-                          <span className="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-blue-100/50">
-                            {p.categoria}
-                          </span>
-                        </td>
-                        <td className="px-6 py-5">
-                          <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${cfg.bg} ${cfg.text}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} ${cfg.glow} animate-pulse`} />
-                            {p.estado}
-                          </span>
-                        </td>
-                        <td className="px-6 py-5">
-                          <div className="flex flex-col gap-1.5 min-w-[120px]">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-black text-slate-700">
-                                {p.evaluacionesCompletadas}/{p.evaluacionesTotal} docentes
-                              </span>
-                              <span className="text-[10px] font-black text-slate-400">{Math.round(avancePct)}%</span>
-                            </div>
-                            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                              <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${avancePct}%` }}
-                                transition={{ duration: 1 }}
-                                className={`h-1.5 rounded-full ${
-                                  avancePct === 100 ? 'bg-indigo-500' : 'bg-blue-500'
-                                }`}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-24 text-center">
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
-                          <Search className="w-8 h-8" />
+              {paginated.length > 0 ? (
+                paginated.map((p) => {
+                  const cfg = estadoConfig[p.estado];
+                  const avancePct = p.evaluacionesTotal > 0
+                    ? (p.evaluacionesCompletadas / p.evaluacionesTotal) * 100
+                    : 0;
+                  return (
+                    <tr key={p.id} className="group hover:bg-blue-50/30 transition-colors">
+                      <td className="px-6 py-5">
+                        <span className="text-[11px] font-black bg-slate-100 text-slate-500 px-2.5 py-1.5 rounded-lg uppercase">
+                          {p.codigo}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div>
+                          <p className="text-sm font-bold text-slate-800 leading-snug group-hover:text-blue-600 transition-colors">{p.nombre}</p>
+                          <p className="text-[11px] text-slate-400 mt-1 font-bold uppercase tracking-wider">{p.grupo}</p>
                         </div>
-                        <p className="text-slate-500 font-bold">No se encontraron proyectos.</p>
-                        <button
-                          onClick={() => { setSearch(''); setEstado(''); setPage(1); }}
-                          className="text-blue-500 text-xs font-black hover:underline uppercase tracking-widest"
-                        >
-                          Restablecer Filtros
-                        </button>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-blue-100/50">
+                          {p.categoria}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${cfg.bg} ${cfg.text}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} ${cfg.glow} animate-pulse`} />
+                          {p.estado}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col gap-1.5 min-w-[120px]">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black text-slate-700">
+                              {p.evaluacionesCompletadas}/{p.evaluacionesTotal} docentes
+                            </span>
+                            <span className="text-[10px] font-black text-slate-400">{Math.round(avancePct)}%</span>
+                          </div>
+                          <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                            <div
+                              style={{ width: `${avancePct}%` }}
+                              className={`h-1.5 rounded-full transition-all duration-700 ${avancePct === 100 ? 'bg-indigo-500' : 'bg-blue-500'}`}
+                            />
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-6 py-24 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+                        <Search className="w-8 h-8" />
                       </div>
-                    </td>
-                  </tr>
-                )}
-              </AnimatePresence>
+                      <p className="text-slate-500 font-bold">No se encontraron proyectos.</p>
+                      <button
+                        onClick={() => { setSearch(''); setEstado(''); setPage(1); }}
+                        className="text-blue-500 text-xs font-black hover:underline uppercase tracking-widest"
+                      >
+                        Restablecer Filtros
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -356,11 +349,10 @@ export default function ProyectosPage() {
                 <button
                   key={n}
                   onClick={() => setPage(n)}
-                  className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${
-                    n === page
-                    ? 'bg-[#162748] text-white shadow-lg shadow-blue-900/20'
-                    : 'hover:bg-white text-slate-500 border border-transparent hover:border-slate-200'
-                  }`}
+                  className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${n === page
+                      ? 'bg-[#162748] text-white shadow-lg shadow-blue-900/20'
+                      : 'hover:bg-white text-slate-500 border border-transparent hover:border-slate-200'
+                    }`}
                 >
                   {n}
                 </button>

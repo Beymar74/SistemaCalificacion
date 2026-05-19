@@ -13,6 +13,7 @@ import {
   Layers,
   PowerOff,
   Power,
+  Trash2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HelpBanner from '@/components/HelpBanner';
@@ -49,6 +50,14 @@ export default function GestionProyectosPage() {
   const [filterAssignment, setFilterAssignment] = useState<'all' | 'assigned' | 'unassigned'>('all');
   const [filterState, setFilterState] = useState<'all' | 'active' | 'inactive'>('active');
 
+  // ── buscador dentro del modal de asignación ──
+  const [evalSearchTerm, setEvalSearchTerm] = useState('');
+
+  // ── NUEVO: modal de confirmación para eliminar asignación ──
+  const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [deletingEvalName, setDeletingEvalName] = useState<string>('');
+
   const [projectForm, setProjectForm] = useState({
     codigo: '',
     nombre: '',
@@ -61,6 +70,7 @@ export default function GestionProyectosPage() {
     setSelected(p);
     setAssignModal(true);
     setSelectedEval('');
+    setEvalSearchTerm('');
     const { data } = await supabase
       .from('asignaciones')
       .select('id_docente')
@@ -154,9 +164,21 @@ export default function GestionProyectosPage() {
     else { notify('Asignación exitosa', 'success'); setAssignModal(false); loadData(); }
   };
 
-  const handleRemoveAssignment = async (idAsignacion: string) => {
-    if (!confirm('¿Seguro que desea eliminar esta asignación?')) return;
-    const { error } = await eliminarAsignacion(idAsignacion);
+  // ── NUEVO: abrir modal de confirmación en lugar del confirm() nativo ──
+  const handleRemoveAssignment = (idAsignacion: string, nombre?: string) => {
+    setPendingDeleteId(idAsignacion);
+    setDeletingEvalName(nombre || 'este docente');
+    setConfirmDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!pendingDeleteId) return;
+    setConfirming(true);
+    const { error } = await eliminarAsignacion(pendingDeleteId);
+    setConfirming(false);
+    setConfirmDeleteModal(false);
+    setPendingDeleteId(null);
+    setDeletingEvalName('');
     if (error) notify(error.message, 'error');
     else { notify('Asignación eliminada', 'success'); loadData(); }
   };
@@ -165,18 +187,30 @@ export default function GestionProyectosPage() {
     const matchesSearch =
       p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.sector.toLowerCase().includes(searchTerm.toLowerCase());
+      p.sector.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.evaluadores.some(ev => ev.nombre.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesAttendance =
       filterAttendance === 'all' ? true :
-      filterAttendance === 'present' ? p.asistio : !p.asistio;
+        filterAttendance === 'present' ? p.asistio : !p.asistio;
     const matchesAssignment =
       filterAssignment === 'all' ? true :
-      filterAssignment === 'assigned' ? p.evaluadores.length > 0 : p.evaluadores.length === 0;
+        filterAssignment === 'assigned' ? p.evaluadores.length > 0 : p.evaluadores.length === 0;
     const matchesState =
       filterState === 'all' ? true :
-      filterState === 'active' ? (p.habilitado !== false) : (p.habilitado === false);
+        filterState === 'active' ? (p.habilitado !== false) : (p.habilitado === false);
     return matchesSearch && matchesAttendance && matchesAssignment && matchesState;
+  }).sort((a, b) => {
+    const numA = parseInt(a.codigo.replace(/\D/g, ''), 10);
+    const numB = parseInt(b.codigo.replace(/\D/g, ''), 10);
+    return numA - numB;
   });
+
+  // ── evaluadores filtrados por búsqueda en el modal ──
+  const filteredEvaluadores = evaluadores
+    .filter(ev => !assignedDocenteIds.includes(ev.id))
+    .filter(ev =>
+      ev.nombre.toLowerCase().includes(evalSearchTerm.toLowerCase())
+    );
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
@@ -237,7 +271,7 @@ export default function GestionProyectosPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Buscar por código o nombre..."
+                placeholder="Buscar por código, nombre o docente..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border-2 border-transparent rounded-xl text-sm focus:outline-none focus:border-blue-600/10 focus:bg-white transition-all font-medium"
@@ -252,33 +286,30 @@ export default function GestionProyectosPage() {
               <button
                 type="button"
                 onClick={() => setFilterAttendance('all')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                  filterAttendance === 'all'
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 font-bold'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterAttendance === 'all'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 font-bold'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                  }`}
               >
                 Todos
               </button>
               <button
                 type="button"
                 onClick={() => setFilterAttendance('present')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                  filterAttendance === 'present'
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 font-bold'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterAttendance === 'present'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 font-bold'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                  }`}
               >
                 Presentes
               </button>
               <button
                 type="button"
                 onClick={() => setFilterAttendance('absent')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                  filterAttendance === 'absent'
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 font-bold'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterAttendance === 'absent'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 font-bold'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                  }`}
               >
                 Ausentes
               </button>
@@ -292,33 +323,30 @@ export default function GestionProyectosPage() {
               <button
                 type="button"
                 onClick={() => setFilterAssignment('all')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                  filterAssignment === 'all'
-                    ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterAssignment === 'all'
+                  ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                  }`}
               >
                 Todos
               </button>
               <button
                 type="button"
                 onClick={() => setFilterAssignment('assigned')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                  filterAssignment === 'assigned'
-                    ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterAssignment === 'assigned'
+                  ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                  }`}
               >
                 Con Jurado
               </button>
               <button
                 type="button"
                 onClick={() => setFilterAssignment('unassigned')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                  filterAssignment === 'unassigned'
-                    ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterAssignment === 'unassigned'
+                  ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                  }`}
               >
                 Sin Jurado
               </button>
@@ -332,33 +360,30 @@ export default function GestionProyectosPage() {
               <button
                 type="button"
                 onClick={() => setFilterState('all')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                  filterState === 'all'
-                    ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterState === 'all'
+                  ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                  }`}
               >
                 Todos
               </button>
               <button
                 type="button"
                 onClick={() => setFilterState('active')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                  filterState === 'active'
-                    ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterState === 'active'
+                  ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                  }`}
               >
                 Habilitados
               </button>
               <button
                 type="button"
                 onClick={() => setFilterState('inactive')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                  filterState === 'inactive'
-                    ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterState === 'inactive'
+                  ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                  }`}
               >
                 Inhabilitados
               </button>
@@ -396,9 +421,8 @@ export default function GestionProyectosPage() {
                       <div>
                         <div className="flex items-center gap-2 mb-1.5">
                           <p className="text-sm font-black text-slate-800 leading-tight">{p.nombre}</p>
-                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest flex-shrink-0 ${
-                            p.evaluadores.length >= 4 ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500'
-                          }`}>
+                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest flex-shrink-0 ${p.evaluadores.length >= 4 ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500'
+                            }`}>
                             {p.evaluadores.length}/4
                           </span>
                         </div>
@@ -409,10 +433,10 @@ export default function GestionProyectosPage() {
                           {p.evaluadores.map(ev => (
                             <div
                               key={ev.idAsignacion}
-                              className="group/tag flex items-center gap-2 bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg transition-all hover:border-blue-200 hover:bg-white"
+                              className="group/tag flex items-center gap-2 bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg transition-all hover:border-red-200 hover:bg-red-50/40"
                             >
-                              <span className="text-[10px] font-bold text-slate-500 group-hover/tag:text-blue-600">{ev.nombre}</span>
-                              <button onClick={() => handleRemoveAssignment(ev.idAsignacion)} className="text-slate-300 hover:text-red-500 transition-colors">
+                              <span className="text-[10px] font-bold text-slate-500 group-hover/tag:text-red-500">{ev.nombre}</span>
+                              <button onClick={() => handleRemoveAssignment(ev.idAsignacion, ev.nombre)} className="text-slate-300 hover:text-red-500 transition-colors">
                                 <X className="w-3 h-3" />
                               </button>
                             </div>
@@ -435,19 +459,17 @@ export default function GestionProyectosPage() {
                     <td className="px-6 py-5 text-center">
                       <button
                         onClick={() => handleToggleAttendance(p)}
-                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider border transition-all ${
-                          p.asistio
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                            : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
-                        }`}
+                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider border transition-all ${p.asistio
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                          : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                          }`}
                       >
                         {p.asistio ? '✓ Presente' : '✗ Ausente'}
                       </button>
                     </td>
                     <td className="px-6 py-5 text-center">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                        estaHabilitado ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-100 text-slate-400 border-slate-200'
-                      }`}>
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${estaHabilitado ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-100 text-slate-400 border-slate-200'
+                        }`}>
                         {estaHabilitado ? 'Activo' : 'Baja'}
                       </span>
                     </td>
@@ -462,11 +484,10 @@ export default function GestionProyectosPage() {
                         </button>
                         <button
                           onClick={() => handleToggleHabilitado(p)}
-                          className={`p-2.5 rounded-xl transition-all ${
-                            estaHabilitado
-                              ? 'text-slate-300 hover:text-amber-600 hover:bg-amber-50'
-                              : 'text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50'
-                          }`}
+                          className={`p-2.5 rounded-xl transition-all ${estaHabilitado
+                            ? 'text-slate-300 hover:text-amber-600 hover:bg-amber-50'
+                            : 'text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50'
+                            }`}
                           title={estaHabilitado ? 'Deshabilitar proyecto' : 'Habilitar proyecto'}
                         >
                           {estaHabilitado ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
@@ -596,6 +617,20 @@ export default function GestionProyectosPage() {
                   <h3 className="text-base font-black text-[#162748] leading-tight">{selected.nombre}</h3>
                   <p className="text-xs text-blue-600 font-bold mt-0.5 uppercase tracking-tight">{selected.codigo} · {selected.sector}</p>
                 </div>
+
+                {/* buscador de docentes */}
+                {selected.evaluadores.length < 4 && (
+                  <div className="relative mt-4">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Buscar docente por nombre..."
+                      value={evalSearchTerm}
+                      onChange={e => { setEvalSearchTerm(e.target.value); setSelectedEval(''); }}
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-2xl text-sm focus:outline-none focus:border-blue-600/10 focus:bg-white transition-all font-medium"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex-1 overflow-y-auto px-8 py-4">
@@ -609,22 +644,26 @@ export default function GestionProyectosPage() {
                       <p className="text-xs text-slate-400 font-medium mt-1">Elimina una asignación antes de agregar otra.</p>
                     </div>
                   </div>
+                ) : filteredEvaluadores.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
+                    <Search className="w-8 h-8 text-slate-200" />
+                    <p className="text-sm font-black text-slate-400">Sin resultados</p>
+                    <p className="text-xs text-slate-300 font-medium">Intenta con otro nombre.</p>
+                  </div>
                 ) : (
                   <div className="space-y-3 pb-4">
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-3">Seleccionar Docente</label>
-                    {evaluadores.filter(ev => !assignedDocenteIds.includes(ev.id)).map(ev => (
+                    {filteredEvaluadores.map(ev => (
                       <button
                         key={ev.id}
                         onClick={() => setSelectedEval(ev.id)}
-                        className={`w-full flex items-center gap-5 p-4 rounded-3xl border-2 transition-all text-left group ${
-                          selectedEval === ev.id
-                            ? 'border-blue-600 bg-blue-50/50 shadow-xl shadow-blue-900/10'
-                            : 'border-slate-100 hover:border-slate-200 bg-slate-50/50'
-                        }`}
+                        className={`w-full flex items-center gap-5 p-4 rounded-3xl border-2 transition-all text-left group ${selectedEval === ev.id
+                          ? 'border-blue-600 bg-blue-50/50 shadow-xl shadow-blue-900/10'
+                          : 'border-slate-100 hover:border-slate-200 bg-slate-50/50'
+                          }`}
                       >
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base flex-shrink-0 transition-all ${
-                          selectedEval === ev.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-white text-slate-300 border border-slate-100'
-                        }`}>
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base flex-shrink-0 transition-all ${selectedEval === ev.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-white text-slate-300 border border-slate-100'
+                          }`}>
                           {ev.initials}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -633,9 +672,8 @@ export default function GestionProyectosPage() {
                           </p>
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-0.5">{ev.departamento}</p>
                         </div>
-                        <span className={`text-[9px] px-2.5 py-1 rounded-lg font-black uppercase tracking-wider ${
-                          (ev.asignaciones || 0) >= 5 ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500'
-                        }`}>
+                        <span className={`text-[9px] px-2.5 py-1 rounded-lg font-black uppercase tracking-wider ${(ev.asignaciones || 0) >= 5 ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500'
+                          }`}>
                           {ev.asignaciones || 0}/5
                         </span>
                       </button>
@@ -659,6 +697,61 @@ export default function GestionProyectosPage() {
         )}
       </AnimatePresence>
 
+      {/* ── NUEVO: Modal de confirmación para eliminar asignación ── */}
+      <AnimatePresence>
+        {confirmDeleteModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => { setConfirmDeleteModal(false); setPendingDeleteId(null); }}
+              className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85, y: 24 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.85, y: 24 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+              className="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden"
+            >
+              <div className="p-8">
+                {/* Icono */}
+                <div className="w-16 h-16 bg-red-50 rounded-[1.25rem] flex items-center justify-center mx-auto mb-6">
+                  <Trash2 className="w-8 h-8 text-red-500" />
+                </div>
+
+                {/* Texto */}
+                <div className="text-center mb-8">
+                  <h3 className="text-xl font-black text-[#162748] mb-2">Eliminar Asignación</h3>
+                  <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                    ¿Seguro que desea quitar a{' '}
+                    <span className="font-black text-slate-700">{deletingEvalName}</span>{' '}
+                    de este proyecto?
+                  </p>
+                </div>
+
+                {/* Botones */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => { setConfirmDeleteModal(false); setPendingDeleteId(null); }}
+                    className="flex-1 py-3.5 rounded-2xl border-2 border-slate-100 text-slate-500 font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleConfirmDelete}
+                    disabled={confirming}
+                    className="flex-1 py-3.5 rounded-2xl bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center justify-center gap-2 transition-all"
+                  >
+                    {confirming ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    {confirming ? 'Eliminando...' : 'Eliminar'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Feedback */}
       <AnimatePresence>
         {message && (
@@ -666,9 +759,8 @@ export default function GestionProyectosPage() {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className={`fixed bottom-8 right-8 p-6 rounded-[2rem] shadow-2xl z-[100] flex items-center gap-4 border ${
-              message.type === 'success' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-red-600 border-red-500 text-white'
-            }`}
+            className={`fixed bottom-8 right-8 p-6 rounded-[2rem] shadow-2xl z-[100] flex items-center gap-4 border ${message.type === 'success' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-red-600 border-red-500 text-white'
+              }`}
           >
             {message.type === 'success' ? <CheckCircle2 className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
             <div>
