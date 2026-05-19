@@ -497,6 +497,15 @@ export async function fetchDetalleProyectoEvaluaciones(idProyecto: string) {
   }));
 }
 
+export async function fetchProyectosHabilitados(): Promise<{ id: string; codigo_proyecto: string; nombre_proyecto: string; categoria: string }[]> {
+  const { data } = await supabase
+    .from('proyectos')
+    .select('id, codigo_proyecto, nombre_proyecto, categoria')
+    .eq('habilitado', true)
+    .order('codigo_proyecto');
+  return data || [];
+}
+
 export async function fetchAsignacionesDocente(idDocente: string): Promise<ProyectoAsignado[]> {
   const { data } = await supabase
     .from('asignaciones')
