@@ -53,7 +53,18 @@ export default function DocenteHome() {
       setPersona(personaData);
 
       const data = await fetchAsignacionesDocente(user.id);
-      setProyectos(data);
+
+      // Filtrar solo proyectos que asistieron (asistio !== false)
+      const ids = data.map(p => p.id).filter(Boolean);
+      const { data: proyectosInfo } = await supabase
+        .from('proyectos')
+        .select('id, asistio')
+        .in('id', ids);
+
+      const asistioMap = new Map(proyectosInfo?.map(p => [p.id, p.asistio]) || []);
+      const filtrados = data.filter(p => asistioMap.get(p.id) !== false);
+
+      setProyectos(filtrados);
       setLoading(false);
     };
 
