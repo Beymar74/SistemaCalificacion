@@ -72,6 +72,7 @@ export default function DocentesPage() {
   const [showConfirmDisable, setShowConfirmDisable] = useState<DocenteAdmin | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [generatedUsername, setGeneratedUsername] = useState('');
+  const [originalEmail, setOriginalEmail] = useState('');
 
   const cargarDatos = async () => {
     setLoading(true);
@@ -89,9 +90,7 @@ export default function DocentesPage() {
 
   const handleNombreChange = (nombre: string) => {
     setSelectedDocente(prev => ({ ...prev, nombre }));
-    if (!selectedDocente?.id) {
-      setGeneratedUsername(generarUsername(nombre));
-    }
+    setGeneratedUsername(generarUsername(nombre));
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -116,7 +115,7 @@ export default function DocentesPage() {
       }
     }
 
-    // 1. Si es nuevo, primero creamos el usuario en Auth para obtener el ID real
+    // 1. Si es nuevo, crear usuario en Auth; si es edición y cambió el email, actualizar Auth
     if (isNew) {
       try {
         const res = await fetch('/api/crear-usuario', {
@@ -133,8 +132,29 @@ export default function DocentesPage() {
           return;
         }
         userId = json.id;
-      } catch (err) {
+      } catch {
         setMessage({ text: 'Error de conexión al crear el usuario.', type: 'error' });
+        setIsSaving(false);
+        setTimeout(() => setMessage(null), 5000);
+        return;
+      }
+    } else if (selectedDocente.email?.toLowerCase().trim() !== originalEmail.toLowerCase().trim()) {
+      // Email cambió en edición — sincronizar con Supabase Auth
+      try {
+        const res = await fetch('/api/actualizar-usuario', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_usuario: userId, email: selectedDocente.email })
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          setMessage({ text: `Error al actualizar email en Auth: ${json.error}`, type: 'error' });
+          setIsSaving(false);
+          setTimeout(() => setMessage(null), 5000);
+          return;
+        }
+      } catch {
+        setMessage({ text: 'Error de conexión al actualizar el usuario.', type: 'error' });
         setIsSaving(false);
         setTimeout(() => setMessage(null), 5000);
         return;
@@ -370,7 +390,7 @@ export default function DocentesPage() {
                   </td>
                   <td className="px-6 py-5 text-right space-x-2">
                     <button
-                      onClick={() => { setSelectedDocente(d); setGeneratedUsername(d.codigo || ''); setModalOpen(true); }}
+                      onClick={() => { setSelectedDocente(d); setGeneratedUsername(d.codigo || ''); setOriginalEmail(d.email || ''); setModalOpen(true); }}
                       className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
                       title="Editar"
                     >
@@ -445,15 +465,13 @@ export default function DocentesPage() {
                   </button>
                 </div>
 
-                {!selectedDocente?.id && (
-                  <div className="mb-5 p-3.5 bg-blue-50 border border-blue-100 rounded-2xl flex items-start gap-3">
-                    <Key className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Contraseña por defecto</p>
-                      <p className="text-sm font-bold text-blue-900">{DEFAULT_PASSWORD}</p>
-                    </div>
+                <div className="mb-5 p-3.5 bg-blue-50 border border-blue-100 rounded-2xl flex items-start gap-3">
+                  <Key className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Contraseña por defecto</p>
+                    <p className="text-sm font-bold text-blue-900">{DEFAULT_PASSWORD}</p>
                   </div>
-                )}
+                </div>
 
                 <form onSubmit={handleSave} className="space-y-4">
                   <div>
@@ -483,11 +501,8 @@ export default function DocentesPage() {
                       </label>
                       <input
                         type="text" placeholder="Auto"
-                        value={selectedDocente?.id ? (selectedDocente.codigo || '') : generatedUsername}
-                        onChange={e => {
-                          if (selectedDocente?.id) setSelectedDocente({ ...selectedDocente, codigo: e.target.value });
-                          else setGeneratedUsername(e.target.value);
-                        }}
+                        value={generatedUsername}
+                        onChange={e => setGeneratedUsername(e.target.value)}
                         className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-2.5 focus:bg-white focus:border-indigo-600/10 font-black text-sm outline-none transition-all text-indigo-700"
                       />
                     </div>
@@ -526,18 +541,16 @@ export default function DocentesPage() {
                     </div>
                   </div>
 
-                  {!selectedDocente?.id && (
-                    <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-3">
-                      <Eye className="w-4 h-4 text-slate-400" />
-                      <div className="flex-1">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Credenciales asignadas</p>
-                        <p className="text-xs font-bold text-slate-700 mt-0.5">
-                          User: <span className="text-indigo-600">{generatedUsername || '—'}</span>
-                          {' '}· Pass: <span className="text-indigo-600">{DEFAULT_PASSWORD}</span>
-                        </p>
-                      </div>
+                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-3">
+                    <Eye className="w-4 h-4 text-slate-400" />
+                    <div className="flex-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Credenciales asignadas</p>
+                      <p className="text-xs font-bold text-slate-700 mt-0.5">
+                        User: <span className="text-indigo-600">{generatedUsername || '—'}</span>
+                        {' '}· Pass: <span className="text-indigo-600">{DEFAULT_PASSWORD}</span>
+                      </p>
                     </div>
-                  )}
+                  </div>
 
                   <div className="pt-2">
                     <button
