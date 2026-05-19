@@ -7,11 +7,11 @@ import {
     CheckCircle2,
     LayoutGrid,
     Clock,
-    LogOut
+    LogOut,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../../../lib/supabase';
-import { fetchAsignacionesDocente } from '@/lib/db';
+import { fetchProyectosHabilitados } from '@/lib/db';
 import type { ProyectoAsignado } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 
@@ -33,6 +33,12 @@ interface Persona {
     grado: string;
 }
 
+const NUM_PROYECTOS = 5;
+
+function asignacionKey(userId: string) {
+    return `visitante_proyectos_${userId}`;
+}
+
 export default function VisitanteHome() {
     const [persona, setPersona] = useState<Persona | null>(null);
     const [proyectos, setProyectos] = useState<ProyectoAsignado[]>([]);
@@ -52,16 +58,49 @@ export default function VisitanteHome() {
 
             setPersona(personaData);
 
-            const data = await fetchAsignacionesDocente(user.id);
+            // Recuperar IDs guardados en localStorage (asignación aleatoria persistida)
+            const storageKey = asignacionKey(user.id);
+            let proyectoIds: string[] = [];
 
-            // Estado desde localStorage, no de la BD
-            const proyectosConEstado = data.map(p => {
+            const stored = localStorage.getItem(storageKey);
+            if (stored) {
+                try {
+                    proyectoIds = JSON.parse(stored);
+                } catch {
+                    localStorage.removeItem(storageKey);
+                }
+            }
+
+            if (proyectoIds.length === 0) {
+                // Primera vez: obtener todos los proyectos y elegir N al azar
+                const todos = await fetchProyectosHabilitados();
+                const shuffled = [...todos].sort(() => Math.random() - 0.5);
+                const seleccionados = shuffled.slice(0, NUM_PROYECTOS);
+                proyectoIds = seleccionados.map(p => p.id);
+                localStorage.setItem(storageKey, JSON.stringify(proyectoIds));
+            }
+
+            // Cargar los proyectos asignados desde Supabase por sus IDs
+            const { data: proyectosData } = await supabase
+                .from('proyectos')
+                .select('id, codigo_proyecto, nombre_proyecto, categoria')
+                .in('id', proyectoIds);
+
+            const proyectosConEstado: ProyectoAsignado[] = (proyectosData || []).map(p => {
                 const yaEvaluo = localStorage.getItem(`visitante_eval_${user.id}_${p.id}`);
                 return {
-                    ...p,
-                    estado: yaEvaluo ? 'Calificado' : 'Pendiente'
-                } as ProyectoAsignado;
+                    id: p.id,
+                    stand: p.codigo_proyecto,
+                    categoria: p.categoria || '',
+                    nombre: p.nombre_proyecto,
+                    estado: (yaEvaluo ? 'Calificado' : 'Pendiente') as ProyectoAsignado['estado'],
+                };
             });
+
+            // Mantener el orden original de la asignación aleatoria
+            proyectosConEstado.sort(
+                (a, b) => proyectoIds.indexOf(a.id) - proyectoIds.indexOf(b.id)
+            );
 
             setProyectos(proyectosConEstado);
             setLoading(false);
@@ -115,13 +154,18 @@ export default function VisitanteHome() {
 
             {/* Main Content */}
             <main className="px-6 py-8 max-w-4xl mx-auto">
-                <section className="mb-10">
+
+                {/* Bienvenida + credenciales */}
+                <section className="mb-8">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-col md:flex-row md:items-end justify-between gap-4"
+                        className="flex flex-col md:flex-row md:items-end justify-between gap-6"
                     >
                         <div>
+                            <p className="text-[11px] font-black text-blue-500 uppercase tracking-widest mb-1">
+                                Modo Visitante
+                            </p>
                             <h1 className="text-3xl md:text-4xl font-extrabold text-[#162748] tracking-tight">
                                 Hola, <span className="text-blue-600">
                                     {persona?.grado} {persona?.nombre_completo}
@@ -129,10 +173,11 @@ export default function VisitanteHome() {
                             </h1>
                             <p className="text-slate-500 mt-2 font-medium">
                                 Tienes <span className="text-slate-900 font-bold">{pendientes} evaluaciones pendientes</span>.
+                                Tu calificación es de práctica y no afecta el resultado oficial.
                             </p>
                         </div>
 
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 flex-shrink-0">
                             <div className="bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full bg-emerald-500" />
                                 <span className="text-xs font-bold text-slate-600">{calificados} Calificados</span>
@@ -145,6 +190,8 @@ export default function VisitanteHome() {
                     </motion.div>
                 </section>
 
+
+                {/* Lista de proyectos */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <motion.div
                         className="col-span-full mb-2 flex items-center"
@@ -153,7 +200,7 @@ export default function VisitanteHome() {
                     >
                         <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                             <LayoutGrid className="w-4 h-4" />
-                            Proyectos Asignados
+                            Proyectos Asignados ({NUM_PROYECTOS} aleatorios)
                         </h2>
                     </motion.div>
 
