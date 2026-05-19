@@ -252,12 +252,13 @@ export default function AdminDashboard() {
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {proyectosRecientes.map((p) => (
                 <div key={p.id} className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100/80 rounded-2xl transition-all group cursor-default">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-[#162748] shadow-sm text-xs border border-slate-100 group-hover:scale-110 transition-transform">
-                      {p.codigo.split('-')[1]}
+                    {/* ── DISEÑO: cuadrito uniforme, tamaño fijo, texto centrado, no depende del formato del código ── */}
+                    <div className="w-11 h-11 min-w-[2.75rem] bg-white rounded-xl flex items-center justify-center font-black text-[#162748] shadow-sm border border-slate-100 group-hover:scale-110 transition-transform text-xs leading-none">
+                      {p.codigo}
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-slate-800 line-clamp-1">{p.nombre}</h4>

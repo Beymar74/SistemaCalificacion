@@ -74,6 +74,9 @@ export default function DocentesPage() {
   const [generatedUsername, setGeneratedUsername] = useState('');
   const [originalEmail, setOriginalEmail] = useState('');
 
+  // ── NUEVO: modal de correo duplicado ──
+  const [duplicateEmailModal, setDuplicateEmailModal] = useState(false);
+
   const cargarDatos = async () => {
     setLoading(true);
     try {
@@ -108,9 +111,8 @@ export default function DocentesPage() {
         d => d.email.toLowerCase().trim() === (selectedDocente.email || '').toLowerCase().trim()
       );
       if (emailYaExiste) {
-        setMessage({ text: 'Este correo electrónico ya está registrado en el sistema.', type: 'error' });
         setIsSaving(false);
-        setTimeout(() => setMessage(null), 5000);
+        setDuplicateEmailModal(true); // ── NUEVO: abre modal en lugar de notify ──
         return;
       }
     }
@@ -228,7 +230,7 @@ export default function DocentesPage() {
         filterWorkload === 'all' ? (d.estado === 'Activo' || d.estado === 'Visitante') :
           filterWorkload === 'assigned' ? ((d.estado === 'Activo' || d.estado === 'Visitante') && d.proyectosAsignados > 0) :
             filterWorkload === 'unassigned' ? ((d.estado === 'Activo' || d.estado === 'Visitante') && d.proyectosAsignados === 0) :
-              filterWorkload === 'saturated' ? ((d.estado === 'Activo' || d.estado === 'Visitante') && d.proyectosAsignados >= 5) :
+              filterWorkload === 'saturated' ? ((d.estado === 'Activo' || d.estado === 'Visitante') && d.proyectosAsignados >= 10) :
                 filterWorkload === 'inactive' ? d.estado === 'Inactivo' :
                   filterWorkload === 'visitors' ? d.estado === 'Visitante' : true;
       return matchesSearch && matchesWorkload;
@@ -368,14 +370,14 @@ export default function DocentesPage() {
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex flex-col gap-1.5 min-w-[140px]">
-                      <span className={`text-[10px] font-black uppercase tracking-tight ${d.proyectosAsignados >= 5 ? 'text-red-600' : d.proyectosAsignados >= 3 ? 'text-amber-600' : 'text-slate-600'
+                      <span className={`text-[10px] font-black uppercase tracking-tight ${d.proyectosAsignados >= 10 ? 'text-red-600' : d.proyectosAsignados >= 3 ? 'text-amber-600' : 'text-slate-600'
                         }`}>
-                        {d.proyectosAsignados} / 5 Proyectos
+                        {d.proyectosAsignados} / 10 Proyectos
                       </span>
                       <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                         <div
-                          className={`h-full ${d.proyectosAsignados >= 5 ? 'bg-red-600' : d.proyectosAsignados >= 3 ? 'bg-amber-500' : 'bg-emerald-500'}`}
-                          style={{ width: `${Math.min((d.proyectosAsignados / 5) * 100, 100)}%` }}
+                          className={`h-full ${d.proyectosAsignados >= 10 ? 'bg-red-600' : d.proyectosAsignados >= 3 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                          style={{ width: `${Math.min((d.proyectosAsignados / 10) * 100, 100)}%` }}
                         />
                       </div>
                     </div>
@@ -602,6 +604,48 @@ export default function DocentesPage() {
                   className="flex-1 py-4 bg-amber-500 text-white font-black rounded-2xl shadow-lg text-xs uppercase tracking-widest"
                 >
                   Dar de Baja
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NUEVO: Modal de correo duplicado ── */}
+      <AnimatePresence>
+        {duplicateEmailModal && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setDuplicateEmailModal(false)}
+              className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85, y: 24 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.85, y: 24 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+              className="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden"
+            >
+              <div className="p-8">
+                <div className="w-16 h-16 bg-amber-50 rounded-[1.25rem] flex items-center justify-center mx-auto mb-6">
+                  <AlertTriangle className="w-8 h-8 text-amber-500" />
+                </div>
+                <div className="text-center mb-8">
+                  <h3 className="text-xl font-black text-[#162748] mb-2">Correo ya registrado</h3>
+                  <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                    El correo{' '}
+                    <span className="font-black text-[#162748] bg-slate-100 px-2 py-0.5 rounded-lg break-all">
+                      {selectedDocente?.email}
+                    </span>{' '}
+                    ya pertenece a otro docente. Por favor ingrese un correo diferente.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setDuplicateEmailModal(false)}
+                  className="w-full py-3.5 rounded-2xl bg-[#162748] hover:bg-black text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-900/20 transition-all"
+                >
+                  Entendido, cambiar correo
                 </button>
               </div>
             </motion.div>

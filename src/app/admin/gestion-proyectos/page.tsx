@@ -14,6 +14,7 @@ import {
   PowerOff,
   Power,
   Trash2,
+  AlertTriangle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HelpBanner from '@/components/HelpBanner';
@@ -50,13 +51,15 @@ export default function GestionProyectosPage() {
   const [filterAssignment, setFilterAssignment] = useState<'all' | 'assigned' | 'unassigned'>('all');
   const [filterState, setFilterState] = useState<'all' | 'active' | 'inactive'>('active');
 
-  // ── buscador dentro del modal de asignación ──
+  const [quickFilterIncomplete, setQuickFilterIncomplete] = useState(false);
   const [evalSearchTerm, setEvalSearchTerm] = useState('');
 
-  // ── NUEVO: modal de confirmación para eliminar asignación ──
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deletingEvalName, setDeletingEvalName] = useState<string>('');
+
+  // ── NUEVO: modal de código duplicado ──
+  const [duplicateCodeModal, setDuplicateCodeModal] = useState(false);
 
   const [projectForm, setProjectForm] = useState({
     codigo: '',
@@ -100,6 +103,19 @@ export default function GestionProyectosPage() {
 
   const handleSaveProject = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // ── NUEVO: validación de código duplicado al crear ──
+    if (!isEditing) {
+      const codigoNormalizado = projectForm.codigo.trim().toLowerCase();
+      const existe = proyectos.some(
+        p => p.codigo.trim().toLowerCase() === codigoNormalizado
+      );
+      if (existe) {
+        setDuplicateCodeModal(true);
+        return;
+      }
+    }
+
     setConfirming(true);
     let res;
     if (isEditing && selected) {
@@ -164,7 +180,6 @@ export default function GestionProyectosPage() {
     else { notify('Asignación exitosa', 'success'); setAssignModal(false); loadData(); }
   };
 
-  // ── NUEVO: abrir modal de confirmación en lugar del confirm() nativo ──
   const handleRemoveAssignment = (idAsignacion: string, nombre?: string) => {
     setPendingDeleteId(idAsignacion);
     setDeletingEvalName(nombre || 'este docente');
@@ -183,6 +198,8 @@ export default function GestionProyectosPage() {
     else { notify('Asignación eliminada', 'success'); loadData(); }
   };
 
+  const incompletos = proyectos.filter(p => p.habilitado !== false && p.evaluadores.length < 4).length;
+
   const filteredProyectos = proyectos.filter(p => {
     const matchesSearch =
       p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -198,14 +215,16 @@ export default function GestionProyectosPage() {
     const matchesState =
       filterState === 'all' ? true :
         filterState === 'active' ? (p.habilitado !== false) : (p.habilitado === false);
-    return matchesSearch && matchesAttendance && matchesAssignment && matchesState;
+    const matchesIncomplete = quickFilterIncomplete
+      ? p.habilitado !== false && p.evaluadores.length < 4
+      : true;
+    return matchesSearch && matchesAttendance && matchesAssignment && matchesState && matchesIncomplete;
   }).sort((a, b) => {
     const numA = parseInt(a.codigo.replace(/\D/g, ''), 10);
     const numB = parseInt(b.codigo.replace(/\D/g, ''), 10);
     return numA - numB;
   });
 
-  // ── evaluadores filtrados por búsqueda en el modal ──
   const filteredEvaluadores = evaluadores
     .filter(ev => !assignedDocenteIds.includes(ev.id))
     .filter(ev =>
@@ -246,7 +265,7 @@ export default function GestionProyectosPage() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Proyectos</p>
           <p className="text-2xl font-black text-[#162748]">{proyectos.length}</p>
@@ -259,7 +278,56 @@ export default function GestionProyectosPage() {
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Gestión Activa</p>
           <p className="text-2xl font-black text-blue-600">{new Date().getFullYear()}</p>
         </div>
+
+        <button
+          onClick={() => setQuickFilterIncomplete(prev => !prev)}
+          className={`p-6 rounded-[2rem] border-2 shadow-sm text-left transition-all active:scale-95 ${quickFilterIncomplete
+            ? 'bg-amber-500 border-amber-400 shadow-amber-900/10'
+            : incompletos > 0
+              ? 'bg-white border-amber-200 hover:border-amber-300 hover:bg-amber-50/40'
+              : 'bg-white border-slate-100 hover:bg-slate-50'
+            }`}
+        >
+          <div className="flex items-center justify-between mb-1">
+            <p className={`text-[10px] font-black uppercase tracking-widest ${quickFilterIncomplete ? 'text-amber-100' : 'text-slate-400'}`}>
+              Sin Completar
+            </p>
+            <AlertTriangle className={`w-4 h-4 ${quickFilterIncomplete ? 'text-amber-100' : incompletos > 0 ? 'text-amber-400' : 'text-slate-300'}`} />
+          </div>
+          <p className={`text-2xl font-black ${quickFilterIncomplete ? 'text-white' : incompletos > 0 ? 'text-amber-500' : 'text-slate-300'}`}>
+            {incompletos}
+          </p>
+          <p className={`text-[10px] font-bold mt-1 ${quickFilterIncomplete ? 'text-amber-100' : 'text-slate-400'}`}>
+            {quickFilterIncomplete ? 'Mostrando incompletos' : 'proyectos sin 4 jurados'}
+          </p>
+        </button>
       </div>
+
+      {/* Banner filtro rápido */}
+      <AnimatePresence>
+        {quickFilterIncomplete && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3"
+          >
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+              <p className="text-xs font-bold text-amber-700">
+                Mostrando solo los <span className="font-black">{incompletos}</span> proyectos habilitados con menos de 4 jurados asignados.
+              </p>
+            </div>
+            <button
+              onClick={() => setQuickFilterIncomplete(false)}
+              className="flex items-center gap-1.5 text-[10px] font-black text-amber-600 hover:text-amber-800 uppercase tracking-widest transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+              Quitar filtro
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Table */}
       <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
@@ -421,7 +489,7 @@ export default function GestionProyectosPage() {
                       <div>
                         <div className="flex items-center gap-2 mb-1.5">
                           <p className="text-sm font-black text-slate-800 leading-tight">{p.nombre}</p>
-                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest flex-shrink-0 ${p.evaluadores.length >= 4 ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500'
+                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest flex-shrink-0 ${p.evaluadores.length >= 4 ? 'bg-indigo-100 text-indigo-600' : 'bg-amber-100 text-amber-600'
                             }`}>
                             {p.evaluadores.length}/4
                           </span>
@@ -529,7 +597,7 @@ export default function GestionProyectosPage() {
                     <div>
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Código</label>
                       <input
-                        required type="text" placeholder="Ej: P-19"
+                        required type="text" placeholder="Ej: P-38"
                         value={projectForm.codigo}
                         onChange={e => setProjectForm({ ...projectForm, codigo: e.target.value })}
                         className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-3 focus:bg-white focus:border-blue-600/10 font-bold text-sm outline-none transition-all"
@@ -618,7 +686,6 @@ export default function GestionProyectosPage() {
                   <p className="text-xs text-blue-600 font-bold mt-0.5 uppercase tracking-tight">{selected.codigo} · {selected.sector}</p>
                 </div>
 
-                {/* buscador de docentes */}
                 {selected.evaluadores.length < 4 && (
                   <div className="relative mt-4">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -697,7 +764,7 @@ export default function GestionProyectosPage() {
         )}
       </AnimatePresence>
 
-      {/* ── NUEVO: Modal de confirmación para eliminar asignación ── */}
+      {/* Modal de confirmación para eliminar asignación */}
       <AnimatePresence>
         {confirmDeleteModal && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -714,12 +781,9 @@ export default function GestionProyectosPage() {
               className="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden"
             >
               <div className="p-8">
-                {/* Icono */}
                 <div className="w-16 h-16 bg-red-50 rounded-[1.25rem] flex items-center justify-center mx-auto mb-6">
                   <Trash2 className="w-8 h-8 text-red-500" />
                 </div>
-
-                {/* Texto */}
                 <div className="text-center mb-8">
                   <h3 className="text-xl font-black text-[#162748] mb-2">Eliminar Asignación</h3>
                   <p className="text-sm text-slate-500 font-medium leading-relaxed">
@@ -728,8 +792,6 @@ export default function GestionProyectosPage() {
                     de este proyecto?
                   </p>
                 </div>
-
-                {/* Botones */}
                 <div className="flex gap-3">
                   <button
                     onClick={() => { setConfirmDeleteModal(false); setPendingDeleteId(null); }}
@@ -746,6 +808,48 @@ export default function GestionProyectosPage() {
                     {confirming ? 'Eliminando...' : 'Eliminar'}
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NUEVO: Modal de código duplicado ── */}
+      <AnimatePresence>
+        {duplicateCodeModal && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setDuplicateCodeModal(false)}
+              className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85, y: 24 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.85, y: 24 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+              className="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden"
+            >
+              <div className="p-8">
+                <div className="w-16 h-16 bg-amber-50 rounded-[1.25rem] flex items-center justify-center mx-auto mb-6">
+                  <AlertTriangle className="w-8 h-8 text-amber-500" />
+                </div>
+                <div className="text-center mb-8">
+                  <h3 className="text-xl font-black text-[#162748] mb-2">Código ya registrado</h3>
+                  <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                    El código{' '}
+                    <span className="font-black text-[#162748] bg-slate-100 px-2 py-0.5 rounded-lg">
+                      {projectForm.codigo}
+                    </span>{' '}
+                    ya pertenece a otro proyecto. Por favor ingrese un código diferente.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setDuplicateCodeModal(false)}
+                  className="w-full py-3.5 rounded-2xl bg-[#162748] hover:bg-black text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-900/20 transition-all"
+                >
+                  Entendido, cambiar código
+                </button>
               </div>
             </motion.div>
           </div>

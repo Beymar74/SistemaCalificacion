@@ -81,21 +81,24 @@ export default function VisitanteHome() {
             }
 
             // Cargar los proyectos asignados desde Supabase por sus IDs
+            // El filtro asistio !== false excluye proyectos que no se presentaron
             const { data: proyectosData } = await supabase
                 .from('proyectos')
-                .select('id, codigo_proyecto, nombre_proyecto, categoria')
+                .select('id, codigo_proyecto, nombre_proyecto, categoria, asistio')
                 .in('id', proyectoIds);
 
-            const proyectosConEstado: ProyectoAsignado[] = (proyectosData || []).map(p => {
-                const yaEvaluo = localStorage.getItem(`visitante_eval_${user.id}_${p.id}`);
-                return {
-                    id: p.id,
-                    stand: p.codigo_proyecto,
-                    categoria: p.categoria || '',
-                    nombre: p.nombre_proyecto,
-                    estado: (yaEvaluo ? 'Calificado' : 'Pendiente') as ProyectoAsignado['estado'],
-                };
-            });
+            const proyectosConEstado: ProyectoAsignado[] = (proyectosData || [])
+                .filter(p => p.asistio !== false)
+                .map(p => {
+                    const yaEvaluo = localStorage.getItem(`visitante_eval_${user.id}_${p.id}`);
+                    return {
+                        id: p.id,
+                        stand: p.codigo_proyecto,
+                        categoria: p.categoria || '',
+                        nombre: p.nombre_proyecto,
+                        estado: (yaEvaluo ? 'Calificado' : 'Pendiente') as ProyectoAsignado['estado'],
+                    };
+                });
 
             // Mantener el orden original de la asignación aleatoria
             proyectosConEstado.sort(
@@ -164,7 +167,7 @@ export default function VisitanteHome() {
                     >
                         <div>
                             <p className="text-[11px] font-black text-blue-500 uppercase tracking-widest mb-1">
-                                Modo Visitante
+                                
                             </p>
                             <h1 className="text-3xl md:text-4xl font-extrabold text-[#162748] tracking-tight">
                                 Hola, <span className="text-blue-600">
@@ -173,7 +176,7 @@ export default function VisitanteHome() {
                             </h1>
                             <p className="text-slate-500 mt-2 font-medium">
                                 Tienes <span className="text-slate-900 font-bold">{pendientes} evaluaciones pendientes</span>.
-                                Tu calificación es de práctica y no afecta el resultado oficial.
+                                
                             </p>
                         </div>
 
@@ -190,7 +193,6 @@ export default function VisitanteHome() {
                     </motion.div>
                 </section>
 
-
                 {/* Lista de proyectos */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <motion.div
@@ -200,7 +202,7 @@ export default function VisitanteHome() {
                     >
                         <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                             <LayoutGrid className="w-4 h-4" />
-                            Proyectos Asignados ({NUM_PROYECTOS} aleatorios)
+                            Proyectos Asignados ({NUM_PROYECTOS})
                         </h2>
                     </motion.div>
 
