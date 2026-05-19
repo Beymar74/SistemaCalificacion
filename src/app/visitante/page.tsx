@@ -100,7 +100,7 @@ export default function VisitanteHome() {
                         className="flex items-center gap-3"
                     >
                         <img src="/logo/logocarrera.png" alt="Logo Carrera" className="w-10 h-10 object-contain" />
-                        <span className="text-lg font-black text-[#162748] tracking-tight">SCEITI</span>
+                        <span className="text-lg font-black text-[#162748] tracking-tight">SCEITII</span>
                     </motion.div>
 
                     <button

@@ -103,6 +103,19 @@ export default function DocentesPage() {
     const username = generatedUsername || selectedDocente.codigo || '';
     let userId = selectedDocente.id;
 
+    // ── Validación: email ya registrado en docentes existentes ──
+    if (isNew) {
+      const emailYaExiste = docentesData.some(
+        d => d.email.toLowerCase().trim() === (selectedDocente.email || '').toLowerCase().trim()
+      );
+      if (emailYaExiste) {
+        setMessage({ text: 'Este correo electrónico ya está registrado en el sistema.', type: 'error' });
+        setIsSaving(false);
+        setTimeout(() => setMessage(null), 5000);
+        return;
+      }
+    }
+
     // 1. Si es nuevo, primero creamos el usuario en Auth para obtener el ID real
     if (isNew) {
       try {
@@ -112,7 +125,7 @@ export default function DocentesPage() {
           body: JSON.stringify({ email: selectedDocente.email, nombre: selectedDocente.nombre, username })
         });
         const json = await res.json();
-        
+
         if (!res.ok) {
           setMessage({ text: `Error al crear acceso: ${json.error}`, type: 'error' });
           setIsSaving(false);
@@ -193,11 +206,11 @@ export default function DocentesPage() {
         d.especialidad.toLowerCase().includes(search.toLowerCase());
       const matchesWorkload =
         filterWorkload === 'all' ? (d.estado === 'Activo' || d.estado === 'Visitante') :
-        filterWorkload === 'assigned' ? ((d.estado === 'Activo' || d.estado === 'Visitante') && d.proyectosAsignados > 0) :
-        filterWorkload === 'unassigned' ? ((d.estado === 'Activo' || d.estado === 'Visitante') && d.proyectosAsignados === 0) :
-        filterWorkload === 'saturated' ? ((d.estado === 'Activo' || d.estado === 'Visitante') && d.proyectosAsignados >= 5) :
-        filterWorkload === 'inactive' ? d.estado === 'Inactivo' :
-        filterWorkload === 'visitors' ? d.estado === 'Visitante' : true;
+          filterWorkload === 'assigned' ? ((d.estado === 'Activo' || d.estado === 'Visitante') && d.proyectosAsignados > 0) :
+            filterWorkload === 'unassigned' ? ((d.estado === 'Activo' || d.estado === 'Visitante') && d.proyectosAsignados === 0) :
+              filterWorkload === 'saturated' ? ((d.estado === 'Activo' || d.estado === 'Visitante') && d.proyectosAsignados >= 5) :
+                filterWorkload === 'inactive' ? d.estado === 'Inactivo' :
+                  filterWorkload === 'visitors' ? d.estado === 'Visitante' : true;
       return matchesSearch && matchesWorkload;
     });
   }, [docentesData, search, filterWorkload]);
@@ -280,9 +293,8 @@ export default function DocentesPage() {
               <button
                 key={f.id}
                 onClick={() => setFilterWorkload(f.id as 'all' | 'assigned' | 'unassigned' | 'saturated' | 'inactive' | 'visitors')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-none ${
-                  filterWorkload === f.id ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-none ${filterWorkload === f.id ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
+                  }`}
               >
                 <f.icon className="w-3.5 h-3.5" />
                 {f.label}
@@ -336,9 +348,8 @@ export default function DocentesPage() {
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex flex-col gap-1.5 min-w-[140px]">
-                      <span className={`text-[10px] font-black uppercase tracking-tight ${
-                        d.proyectosAsignados >= 5 ? 'text-red-600' : d.proyectosAsignados >= 3 ? 'text-amber-600' : 'text-slate-600'
-                      }`}>
+                      <span className={`text-[10px] font-black uppercase tracking-tight ${d.proyectosAsignados >= 5 ? 'text-red-600' : d.proyectosAsignados >= 3 ? 'text-amber-600' : 'text-slate-600'
+                        }`}>
                         {d.proyectosAsignados} / 5 Proyectos
                       </span>
                       <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
@@ -350,11 +361,10 @@ export default function DocentesPage() {
                     </div>
                   </td>
                   <td className="px-6 py-5">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                      d.estado === 'Activo' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                      d.estado === 'Visitante' ? 'bg-purple-50 text-purple-600 border-purple-100' :
-                      'bg-slate-50 text-slate-500 border-slate-200'
-                    }`}>
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${d.estado === 'Activo' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                        d.estado === 'Visitante' ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                          'bg-slate-50 text-slate-500 border-slate-200'
+                      }`}>
                       {d.estado}
                     </span>
                   </td>
@@ -401,9 +411,8 @@ export default function DocentesPage() {
             <button
               key={i}
               onClick={() => setPage(i + 1)}
-              className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${
-                page === i + 1 ? 'bg-[#162748] text-white shadow-xl shadow-blue-900/20' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'
-              }`}
+              className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${page === i + 1 ? 'bg-[#162748] text-white shadow-xl shadow-blue-900/20' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'
+                }`}
             >
               {i + 1}
             </button>
@@ -592,9 +601,8 @@ export default function DocentesPage() {
         {message && (
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-            className={`fixed bottom-8 right-8 p-6 rounded-[2rem] shadow-2xl z-[100] border max-w-sm ${
-              message.type === 'success' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-red-600 border-red-500 text-white'
-            }`}
+            className={`fixed bottom-8 right-8 p-6 rounded-[2rem] shadow-2xl z-[100] border max-w-sm ${message.type === 'success' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-red-600 border-red-500 text-white'
+              }`}
           >
             <p className="text-xs font-black uppercase tracking-widest mb-1">Notificación</p>
             <p className="text-sm font-medium">{message.text}</p>
