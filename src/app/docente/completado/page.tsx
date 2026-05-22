@@ -1,60 +1,78 @@
 'use client';
 
 import Link from 'next/link';
-import { LayoutGrid } from 'lucide-react';
+import { LayoutGrid, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function CompletadoPage() {
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-100/40 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-indigo-100/40 rounded-full blur-3xl -z-10 -translate-x-1/2 translate-y-1/2" />
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 relative overflow-hidden flex flex-col">
+      {/* Background blobs */}
+      <div className="pointer-events-none fixed top-0 right-0 w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] bg-emerald-100/40 rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/3" />
+      <div className="pointer-events-none fixed bottom-0 left-0 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] bg-blue-100/40 rounded-full blur-3xl -z-10 -translate-x-1/3 translate-y-1/3" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 px-6 py-4">
-        <div className="max-w-4xl mx-auto flex items-center">
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/70 px-4 sm:px-6 py-2 sm:py-3">
+        <div className="max-w-7xl mx-auto flex items-center gap-2 sm:gap-3">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3"
+            className="flex items-center gap-2 sm:gap-3"
           >
-            <img src="/logo/logocarrera.png" alt="Logo Carrera" className="w-10 h-10 object-contain" />
-            <span className="text-lg font-black text-[#162748] tracking-tight">SCEITI</span>
+            <img
+              src="/logo/logocarrera.png"
+              alt="Logo Carrera"
+              className="w-10 h-10 sm:w-12 sm:h-12 object-contain flex-shrink-0"
+            />
+            <span className="text-lg sm:text-xl font-black text-[#162748] tracking-tight">
+              SCEITII
+            </span>
           </motion.div>
         </div>
       </header>
 
-      <main className="px-6 py-8 max-w-4xl mx-auto">
+      {/* Main */}
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-10 sm:py-14">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-3xl border border-slate-200/60 shadow-sm p-12 flex flex-col items-center text-center mt-10"
+          initial={{ opacity: 0, y: 30, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ delay: 0.1, duration: 0.45, ease: 'easeOut' }}
+          className="w-full max-w-md bg-white rounded-[1.75rem] border border-slate-200/60 shadow-lg p-6 sm:p-8 flex flex-col items-center text-center relative overflow-hidden"
         >
-          <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-6">
-            <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-4.5M7.5 18.75v-4.5m9-9.75a6 6 0 01-12 0V4.5h12v4.5z" />
-            </svg>
+          {/* Decorative element inside card */}
+          <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-bl from-emerald-50 to-transparent opacity-50 pointer-events-none" />
+
+          {/* Ícono de éxito */}
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.5rem] bg-emerald-50 flex items-center justify-center mb-5 sm:mb-6 border border-emerald-100 shadow-inner relative z-10">
+            <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-500" strokeWidth={1.5} />
           </div>
 
-          <h2 className="text-2xl font-extrabold text-slate-800 mb-3">
+          {/* Título */}
+          <h1 className="text-xl sm:text-2xl font-black text-[#162748] mb-2.5 sm:mb-3 leading-tight relative z-10">
             ¡Evaluación Completada!
-          </h2>
-          <p className="text-sm text-slate-400 font-medium max-w-xs leading-relaxed mb-8">
-            La evaluación fue registrada exitosamente. ¡Buen trabajo!
+          </h1>
+
+          {/* Descripción */}
+          <p className="text-sm sm:text-base text-slate-500 font-medium max-w-[16rem] sm:max-w-xs leading-relaxed mb-6 sm:mb-8 relative z-10">
+            La evaluación fue registrada exitosamente en el sistema de calificaciones. ¡Buen trabajo!
           </p>
 
+          {/* Separador decorativo */}
+          <div className="w-12 h-1 bg-slate-100 rounded-full mb-6 sm:mb-8 relative z-10" />
+
+          {/* Botón de regreso */}
           <Link
             href="/docente"
-            className="inline-flex items-center gap-2 px-7 py-3.5 bg-[#162748] text-white rounded-2xl text-sm font-bold hover:bg-[#1e3460] hover:shadow-xl hover:shadow-blue-900/20 transition-all active:scale-[0.98]"
+            className="inline-flex items-center justify-center gap-2 w-full px-6 py-3 sm:py-3.5 bg-[#162748] text-white rounded-[1.5rem] text-sm font-black hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-900/20 transition-all active:scale-[0.98] min-h-[48px] relative z-10 group"
           >
-            <LayoutGrid className="w-4 h-4" />
+            <LayoutGrid className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Volver a Proyectos
           </Link>
         </motion.div>
       </main>
 
-      <footer className="mt-auto px-6 py-10 text-center opacity-40">
+      {/* Footer */}
+      <footer className="px-4 sm:px-6 py-6 sm:py-8 text-center opacity-40">
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
           Feria de Innovación Tecnológica · 2026
         </p>
