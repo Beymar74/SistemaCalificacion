@@ -22,6 +22,7 @@ import {
   fetchProyectosParaGestion,
   fetchEvaluadoresDisponibles,
   crearAsignacion,
+  autoAsignarDocentes,
   actualizarProyecto,
   deshabilitarProyecto,
   habilitarProyecto,
@@ -57,6 +58,7 @@ export default function GestionProyectosPage() {
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deletingEvalName, setDeletingEvalName] = useState<string>('');
+  const [confirmAutoAssign, setConfirmAutoAssign] = useState(false);
 
   // ── NUEVO: modal de código duplicado ──
   const [duplicateCodeModal, setDuplicateCodeModal] = useState(false);
@@ -198,7 +200,20 @@ export default function GestionProyectosPage() {
     else { notify('Asignación eliminada', 'success'); loadData(); }
   };
 
-  const incompletos = proyectos.filter(p => p.habilitado !== false && p.evaluadores.length < 4).length;
+  const handleAutoAssignConfirm = async () => {
+    setConfirming(true);
+    const { success, count, error } = await autoAsignarDocentes();
+    setConfirming(false);
+    setConfirmAutoAssign(false);
+    if (!success) {
+      notify(error || 'Error en la asignación automática', 'error');
+    } else {
+      notify(`Se realizaron ${count} asignaciones automáticas exitosamente.`, 'success');
+      loadData();
+    }
+  };
+
+  const incompletos = proyectos.filter(p => p.habilitado !== false && p.evaluadores.length < 3).length;
 
   const filteredProyectos = proyectos.filter(p => {
     const matchesSearch =
@@ -216,7 +231,7 @@ export default function GestionProyectosPage() {
       filterState === 'all' ? true :
         filterState === 'active' ? (p.habilitado !== false) : (p.habilitado === false);
     const matchesIncomplete = quickFilterIncomplete
-      ? p.habilitado !== false && p.evaluadores.length < 4
+      ? p.habilitado !== false && p.evaluadores.length < 3
       : true;
     return matchesSearch && matchesAttendance && matchesAssignment && matchesState && matchesIncomplete;
   }).sort((a, b) => {
@@ -248,6 +263,13 @@ export default function GestionProyectosPage() {
             <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
           </button>
           <button
+            onClick={() => setConfirmAutoAssign(true)}
+            className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black px-6 py-3.5 rounded-2xl shadow-xl shadow-indigo-900/10 transition-all active:scale-95"
+          >
+            <Users className="w-5 h-5" />
+            <span>Asignación Automática</span>
+          </button>
+          <button
             onClick={() => { setIsEditing(false); setProjectForm({ codigo: '', nombre: '', categoria: 'General', sociedad: '', gestion: new Date().getFullYear().toString() }); setProjectModal(true); }}
             className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-black px-6 py-3.5 rounded-2xl shadow-xl shadow-blue-900/10 transition-all active:scale-95"
           >
@@ -261,7 +283,7 @@ export default function GestionProyectosPage() {
       <HelpBanner
         storageKey="gestion-proyectos"
         title="Guía de Operaciones: Gestión y Asignación de Proyectos"
-        description="Configure el núcleo de la feria. Desde esta pantalla puede registrar nuevos proyectos, controlar la asistencia de los grupos en los stands (Presente/Ausente) y asignar exactamente a los 4 jurados evaluadores por cada proyecto basándose en su carga actual. Si es necesario, puede dar de baja proyectos o remover asignaciones."
+        description="Configure el núcleo de la feria. Desde esta pantalla puede registrar nuevos proyectos, controlar la asistencia de los grupos en los stands (Presente/Ausente) y asignar exactamente a los 3 jurados evaluadores por cada proyecto basándose en su carga actual. Si es necesario, puede dar de baja proyectos o remover asignaciones."
       />
 
       {/* Stats */}
@@ -298,7 +320,7 @@ export default function GestionProyectosPage() {
             {incompletos}
           </p>
           <p className={`text-[10px] font-bold mt-1 ${quickFilterIncomplete ? 'text-amber-100' : 'text-slate-400'}`}>
-            {quickFilterIncomplete ? 'Mostrando incompletos' : 'proyectos sin 4 jurados'}
+            {quickFilterIncomplete ? 'Mostrando incompletos' : 'proyectos sin 3 jurados'}
           </p>
         </button>
       </div>
@@ -315,7 +337,7 @@ export default function GestionProyectosPage() {
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
               <p className="text-xs font-bold text-amber-700">
-                Mostrando solo los <span className="font-black">{incompletos}</span> proyectos habilitados con menos de 4 jurados asignados.
+                Mostrando solo los <span className="font-black">{incompletos}</span> proyectos habilitados con menos de 3 jurados asignados.
               </p>
             </div>
             <button
@@ -489,9 +511,9 @@ export default function GestionProyectosPage() {
                       <div>
                         <div className="flex items-center gap-2 mb-1.5">
                           <p className="text-sm font-black text-slate-800 leading-tight">{p.nombre}</p>
-                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest flex-shrink-0 ${p.evaluadores.length >= 4 ? 'bg-indigo-100 text-indigo-600' : 'bg-amber-100 text-amber-600'
+                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest flex-shrink-0 ${p.evaluadores.length >= 3 ? 'bg-indigo-100 text-indigo-600' : 'bg-amber-100 text-amber-600'
                             }`}>
-                            {p.evaluadores.length}/4
+                            {p.evaluadores.length}/3
                           </span>
                         </div>
                         {p.sociedad && (
@@ -509,7 +531,7 @@ export default function GestionProyectosPage() {
                               </button>
                             </div>
                           ))}
-                          {p.evaluadores.length < 4 && estaHabilitado ? (
+                          {p.evaluadores.length < 3 && estaHabilitado ? (
                             <button
                               onClick={() => handleOpenAssign(p)}
                               className="flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 border border-blue-100 hover:border-blue-200 text-blue-600 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
@@ -686,7 +708,7 @@ export default function GestionProyectosPage() {
                   <p className="text-xs text-blue-600 font-bold mt-0.5 uppercase tracking-tight">{selected.codigo} · {selected.sector}</p>
                 </div>
 
-                {selected.evaluadores.length < 4 && (
+                {selected.evaluadores.length < 3 && (
                   <div className="relative mt-4">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
@@ -701,13 +723,13 @@ export default function GestionProyectosPage() {
               </div>
 
               <div className="flex-1 overflow-y-auto px-8 py-4">
-                {selected.evaluadores.length >= 4 ? (
+                {selected.evaluadores.length >= 3 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center gap-4">
                     <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center">
                       <CheckCircle2 className="w-8 h-8 text-indigo-500" />
                     </div>
                     <div>
-                      <p className="text-sm font-black text-[#162748]">Cupo completo (4/4)</p>
+                      <p className="text-sm font-black text-[#162748]">Cupo completo (3/3)</p>
                       <p className="text-xs text-slate-400 font-medium mt-1">Elimina una asignación antes de agregar otra.</p>
                     </div>
                   </div>
@@ -806,6 +828,57 @@ export default function GestionProyectosPage() {
                   >
                     {confirming ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                     {confirming ? 'Eliminando...' : 'Eliminar'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de confirmación para asignación automática */}
+      <AnimatePresence>
+        {confirmAutoAssign && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setConfirmAutoAssign(false)}
+              className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85, y: 24 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.85, y: 24 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+              className="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden"
+            >
+              <div className="p-8">
+                <div className="w-16 h-16 bg-indigo-50 rounded-[1.25rem] flex items-center justify-center mx-auto mb-6">
+                  <Users className="w-8 h-8 text-indigo-600" />
+                </div>
+                <div className="text-center mb-8">
+                  <h3 className="text-xl font-black text-[#162748] mb-2">Asignación Automática</h3>
+                  <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                    ¿Deseas asignar automáticamente <strong className="text-slate-800">3 jurados evaluadores</strong> a todos los proyectos habilitados que falten?
+                  </p>
+                  <p className="text-[11px] text-indigo-500 font-bold mt-2 leading-relaxed">
+                    La carga de proyectos se distribuirá equitativamente entre los docentes activos. Las asignaciones existentes no se alterarán.
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setConfirmAutoAssign(false)}
+                    className="flex-1 py-3.5 rounded-2xl border-2 border-slate-100 text-slate-500 font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleAutoAssignConfirm}
+                    disabled={confirming}
+                    className="flex-1 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-900/20 flex items-center justify-center gap-2 transition-all"
+                  >
+                    {confirming ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />}
+                    {confirming ? 'Procesando...' : 'Confirmar'}
                   </button>
                 </div>
               </div>

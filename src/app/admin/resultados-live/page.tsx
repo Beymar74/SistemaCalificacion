@@ -228,8 +228,8 @@ export default function ResultadosLivePage() {
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-center">
-                                <span className={`text-sm font-black ${r.evaluacionesConfirmadas >= 4 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                                  {r.evaluacionesConfirmadas}/4
+                                <span className={`text-sm font-black ${r.evaluacionesConfirmadas >= 3 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                  {r.evaluacionesConfirmadas}/3
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-right">

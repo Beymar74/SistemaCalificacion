@@ -14,6 +14,10 @@ export interface DocenteAdmin {
   proyectosTotal: number;
   estado: 'Activo' | 'Inactivo' | 'Visitante';
   initials: string;
+  proyectosEvaluados: number;
+  proyectosPendientes: number;
+  avancePorcentaje: number;
+  estadoEvaluacion: 'Pendiente' | 'En Progreso' | 'Completado';
 }
 
 export interface EvaluadorDisponible {
@@ -89,8 +93,8 @@ export async function fetchProyectosAdmin(): Promise<Proyecto[]> {
     const confirmadas = projectEvals.filter((e: any) => e.confirmada).length;
 
     const asignados = asigCountMap.get(p.id) || 0;
-    // Si tiene jurados asignados, el total esperado es la cantidad asignada. Si no, por defecto es 4.
-    const total = asignados > 0 ? asignados : 4;
+    // Si tiene jurados asignados, el total esperado es la cantidad asignada. Si no, por defecto es 3.
+    const total = asignados > 0 ? asignados : 3;
 
     let estado: EstadoProyecto = 'Pendiente';
     if (confirmadas >= total && total > 0) {
@@ -140,23 +144,55 @@ export async function fetchDocentesAdmin(): Promise<DocenteAdmin[]> {
     .select('id_docente')
     .in('id_docente', ids);
 
+  const { data: evals } = await supabase
+    .from('evaluaciones')
+    .select('id_docente, confirmada')
+    .in('id_docente', ids);
+
   const countMap: Record<string, number> = {};
   (asigs ?? []).forEach((a: any) => {
     countMap[a.id_docente] = (countMap[a.id_docente] ?? 0) + 1;
   });
 
-  return data.map((d: any) => ({
-    id: d.id_usuario,
-    codigo: d.username ?? 'S/C',
-    nombre: d.nombre_completo,
-    email: d.email,
-    departamento: d.materia ?? 'General',
-    especialidad: d.grado ?? 'Especialista',
-    proyectosAsignados: countMap[d.id_usuario] ?? 0,
-    proyectosTotal: 10,
-    estado: d.estado === true ? 'Activo' : d.estado === false ? 'Inactivo' : 'Visitante',
-    initials: getInitials(d.nombre_completo),
-  }));
+  const evalsConfirmadasMap: Record<string, number> = {};
+  (evals ?? []).forEach((e: any) => {
+    if (e.confirmada) {
+      evalsConfirmadasMap[e.id_docente] = (evalsConfirmadasMap[e.id_docente] ?? 0) + 1;
+    }
+  });
+
+  return data.map((d: any) => {
+    const asignados = countMap[d.id_usuario] ?? 0;
+    const evaluados = evalsConfirmadasMap[d.id_usuario] ?? 0;
+    const pendientes = Math.max(0, asignados - evaluados);
+    const avance = asignados > 0 ? Math.round((evaluados / asignados) * 100) : 0;
+    
+    let estadoEvaluacion: 'Pendiente' | 'En Progreso' | 'Completado' = 'Pendiente';
+    if (asignados > 0) {
+      if (evaluados === asignados) {
+        estadoEvaluacion = 'Completado';
+      } else if (evaluados > 0) {
+        estadoEvaluacion = 'En Progreso';
+      }
+    }
+
+    return {
+      id: d.id_usuario,
+      codigo: d.username ?? 'S/C',
+      nombre: d.nombre_completo,
+      email: d.email,
+      departamento: d.materia ?? 'General',
+      especialidad: d.grado ?? 'Especialista',
+      proyectosAsignados: asignados,
+      proyectosTotal: 10,
+      estado: d.estado === true ? 'Activo' : d.estado === false ? 'Inactivo' : 'Visitante',
+      initials: getInitials(d.nombre_completo),
+      proyectosEvaluados: evaluados,
+      proyectosPendientes: pendientes,
+      avancePorcentaje: avance,
+      estadoEvaluacion
+    };
+  });
 }
 
 export async function fetchEvaluadoresDisponibles(): Promise<EvaluadorDisponible[]> {
@@ -232,7 +268,7 @@ export async function fetchProyectosParaGestion(): Promise<ProyectoGestion[]> {
     asistio: p.asistio ?? true,
     habilitado: p.habilitado ?? true,
     evaluadores: asigsByProy.get(p.id) || [],
-    accion: (asigsByProy.get(p.id)?.length || 0) >= 4 ? 'Completo' : 'Asignar',
+    accion: (asigsByProy.get(p.id)?.length || 0) >= 3 ? 'Completo' : 'Asignar',
   }));
 }
 
@@ -275,6 +311,99 @@ export async function crearAsignacion(idProyecto: string, idDocente: string) {
   return await supabase
     .from('asignaciones')
     .insert([{ id_proyecto: idProyecto, id_docente: idDocente }]);
+}
+
+export async function autoAsignarDocentes(): Promise<{ success: boolean; count?: number; error?: string }> {
+  try {
+    // 1. Obtener todos los proyectos habilitados
+    const { data: proys, error: proyError } = await supabase
+      .from('proyectos')
+      .select('id, codigo_proyecto, nombre_proyecto')
+      .eq('habilitado', true);
+
+    if (proyError || !proys) throw new Error(proyError?.message || 'No se pudieron obtener los proyectos');
+
+    // 2. Obtener todos los docentes activos (o visitantes, que también evalúan)
+    const { data: docs, error: docError } = await supabase
+      .from('personas')
+      .select('id_usuario, nombre_completo')
+      .eq('rol', 'docente')
+      .or('estado.eq.true,estado.is.null');
+
+    if (docError || !docs) throw new Error(docError?.message || 'No se pudieron obtener los docentes');
+    if (docs.length < 3) throw new Error('Se necesitan al menos 3 docentes activos para realizar la asignación.');
+
+    // 3. Obtener las asignaciones existentes
+    const { data: asigs, error: asigError } = await supabase
+      .from('asignaciones')
+      .select('id, id_proyecto, id_docente');
+
+    if (asigError) throw new Error(asigError.message);
+
+    // Mapear asignaciones existentes por proyecto y docente
+    const asigMap = new Map<string, Set<string>>(); // id_proyecto -> Set of id_docente
+    const docAsigCount: Record<string, number> = {}; // id_docente -> count of assignments
+
+    // Inicializar contadores para todos los docentes activos en 0
+    docs.forEach(d => {
+      docAsigCount[d.id_usuario] = 0;
+    });
+
+    (asigs ?? []).forEach(a => {
+      if (!asigMap.has(a.id_proyecto)) {
+        asigMap.set(a.id_proyecto, new Set());
+      }
+      asigMap.get(a.id_proyecto)!.add(a.id_docente);
+      
+      // Incrementar contador si el docente está entre los activos
+      if (a.id_docente in docAsigCount) {
+        docAsigCount[a.id_docente]++;
+      }
+    });
+
+    const nuevasAsignaciones: { id_proyecto: string; id_docente: string }[] = [];
+
+    // 4. Para cada proyecto, rellenar hasta tener 3 evaluadores
+    for (const p of proys) {
+      const asignados = asigMap.get(p.id) || new Set<string>();
+      
+      while (asignados.size < 3) {
+        // Encontrar docentes que no estén asignados a este proyecto
+        const candidatos = docs.filter(d => !asignados.has(d.id_usuario));
+        if (candidatos.length === 0) break; // No hay más docentes disponibles para este proyecto
+
+        // Ordenar candidatos por cantidad de asignaciones (ascendente) para balancear la carga
+        candidatos.sort((a, b) => docAsigCount[a.id_usuario] - docAsigCount[b.id_usuario]);
+
+        // Tomar el docente con menor carga
+        const elegido = candidatos[0];
+        
+        // Agregar la asignación localmente
+        asignados.add(elegido.id_usuario);
+        docAsigCount[elegido.id_usuario]++;
+        
+        // Guardar para inserción masiva
+        nuevasAsignaciones.push({
+          id_proyecto: p.id,
+          id_docente: elegido.id_usuario
+        });
+      }
+    }
+
+    // 5. Insertar nuevas asignaciones en la base de datos si hay alguna
+    if (nuevasAsignaciones.length > 0) {
+      const { error: insertError } = await supabase
+        .from('asignaciones')
+        .insert(nuevasAsignaciones);
+
+      if (insertError) throw new Error(insertError.message);
+    }
+
+    return { success: true, count: nuevasAsignaciones.length };
+  } catch (error: any) {
+    console.error('Error en autoAsignarDocentes:', error);
+    return { success: false, error: error.message || 'Error desconocido' };
+  }
 }
 
 export async function actualizarProyecto(id: string, data: any) {

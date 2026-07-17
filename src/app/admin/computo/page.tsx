@@ -40,8 +40,8 @@ export default function ComputoPage() {
     setTimeout(() => setMessage(null), 3000);
   };
 
-  const evaluados = proyectos.filter(p => p.evaluacionesConfirmadas >= 4);
-  const enProceso = proyectos.filter(p => p.evaluacionesConfirmadas > 0 && p.evaluacionesConfirmadas < 4);
+  const evaluados = proyectos.filter(p => p.evaluacionesConfirmadas >= 3);
+  const enProceso = proyectos.filter(p => p.evaluacionesConfirmadas > 0 && p.evaluacionesConfirmadas < 3);
   const pendientes = proyectos.filter(p => p.evaluacionesConfirmadas === 0);
 
   if (loading) return (
@@ -81,7 +81,7 @@ export default function ComputoPage() {
       <HelpBanner
         storageKey="computo"
         title="Guía de Auditoría: Cómputo de Calificaciones"
-        description="Revise la distribución de notas finales y promedios detallados para auditar el proceso de calificación. Permite identificar proyectos completados (con 4 evaluaciones), en proceso o con evaluaciones pendientes para garantizar la transparencia y equidad del certamen antes del cierre."
+        description="Revise la distribución de notas finales y promedios detallados para auditar el proceso de calificación. Permite identificar proyectos completados (con 3 evaluaciones), en proceso o con evaluaciones pendientes para garantizar la transparencia y equidad del certamen antes del cierre."
       />
 
       {/* Summary Cards */}
@@ -92,7 +92,7 @@ export default function ComputoPage() {
             <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Completados</span>
           </div>
           <p className="text-3xl font-black text-emerald-700">{evaluados.length}</p>
-          <p className="text-xs text-emerald-600 font-medium mt-1">proyectos con 4/4 evaluaciones</p>
+          <p className="text-xs text-emerald-600 font-medium mt-1">proyectos con 3/3 evaluaciones</p>
         </div>
         <div className="bg-amber-50 border border-amber-100 rounded-[2rem] p-6">
           <div className="flex items-center gap-3 mb-2">
@@ -122,7 +122,7 @@ export default function ComputoPage() {
           </div>
         ) : proyectos.map((p, idx) => {
           const isExpanded = expandedId === p.id;
-          const statusColor = p.evaluacionesConfirmadas >= 4
+          const statusColor = p.evaluacionesConfirmadas >= 3
             ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
             : p.evaluacionesConfirmadas > 0
             ? 'bg-amber-50 text-amber-700 border-amber-100'
@@ -162,14 +162,14 @@ export default function ComputoPage() {
                 <div className="hidden md:flex items-center gap-6 flex-shrink-0">
                   <div className="text-right">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Evaluaciones</p>
-                    <p className="text-lg font-black text-[#162748]">{p.evaluacionesConfirmadas}/4</p>
+                    <p className="text-lg font-black text-[#162748]">{p.evaluacionesConfirmadas}/3</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Promedio</p>
                     <p className="text-2xl font-black text-blue-600">{p.promedio > 0 ? p.promedio.toFixed(2) : '—'}</p>
                   </div>
                   <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${statusColor}`}>
-                    {p.evaluacionesConfirmadas >= 4 ? 'Completo' : p.evaluacionesConfirmadas > 0 ? `${p.evaluacionesConfirmadas}/4` : 'Pendiente'}
+                    {p.evaluacionesConfirmadas >= 3 ? 'Completo' : p.evaluacionesConfirmadas > 0 ? `${p.evaluacionesConfirmadas}/3` : 'Pendiente'}
                   </span>
                 </div>
 

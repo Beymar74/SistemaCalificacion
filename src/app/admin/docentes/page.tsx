@@ -59,6 +59,7 @@ const StatCard = ({ title, value, icon: Icon, color, delay }: {
 );
 
 export default function DocentesPage() {
+  const [activeTab, setActiveTab] = useState<'cuentas' | 'progreso'>('cuentas');
   const [docentesData, setDocentesData] = useState<DocenteAdmin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -289,6 +290,30 @@ export default function DocentesPage() {
         <StatCard title="Carga Global" value={stats.totalProyectos} icon={Briefcase} color="bg-indigo-500" delay={0.3} />
       </div>
 
+      {/* Tabs */}
+      <div className="flex bg-slate-100 p-1.5 rounded-2xl w-full sm:w-fit border border-slate-200/50 shadow-inner">
+        <button
+          onClick={() => setActiveTab('cuentas')}
+          className={`flex-1 sm:flex-initial px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+            activeTab === 'cuentas'
+              ? 'bg-[#162748] text-white shadow-lg shadow-blue-900/10'
+              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50/50'
+          }`}
+        >
+          Gestión de Cuentas
+        </button>
+        <button
+          onClick={() => setActiveTab('progreso')}
+          className={`flex-1 sm:flex-initial px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+            activeTab === 'progreso'
+              ? 'bg-[#162748] text-white shadow-lg shadow-blue-900/10'
+              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50/50'
+          }`}
+        >
+          Seguimiento de Evaluaciones
+        </button>
+      </div>
+
       {/* Table */}
       <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-50 flex flex-wrap items-center gap-4 bg-slate-50/30">
@@ -328,96 +353,164 @@ export default function DocentesPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50/50">
-              <tr>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Docente</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Usuario / Email</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Especialidad</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Proyectos</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Estado</th>
-                <th className="px-6 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Acciones</th>
-              </tr>
+              {activeTab === 'cuentas' ? (
+                <tr>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Docente</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Usuario / Email</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Especialidad</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Proyectos</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Estado</th>
+                  <th className="px-6 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Acciones</th>
+                </tr>
+              ) : (
+                <tr>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Docente</th>
+                  <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Proyectos Asignados</th>
+                  <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Proyectos Evaluados</th>
+                  <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Proyectos Pendientes</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Progreso de Evaluación</th>
+                  <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Estado</th>
+                </tr>
+              )}
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center">
+                  <td colSpan={activeTab === 'cuentas' ? 6 : 6} className="px-6 py-20 text-center">
                     <div className="w-8 h-8 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
                     <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Cargando datos...</p>
                   </td>
                 </tr>
               ) : error ? (
-                <tr><td colSpan={6} className="px-6 py-20 text-center"><p className="text-red-500 font-bold text-sm">{error}</p></td></tr>
+                <tr><td colSpan={activeTab === 'cuentas' ? 6 : 6} className="px-6 py-20 text-center"><p className="text-red-500 font-bold text-sm">{error}</p></td></tr>
               ) : paginated.length === 0 ? (
-                <tr><td colSpan={6} className="px-6 py-20 text-center"><p className="text-slate-400 font-bold text-xs uppercase tracking-widest">No hay docentes registrados.</p></td></tr>
-              ) : paginated.map(d => (
-                <tr key={d.id} className={`hover:bg-slate-50/80 transition-colors group ${d.estado === 'Inactivo' ? 'opacity-50 grayscale' : ''}`}>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center text-xs font-black text-indigo-600 border border-indigo-100">
-                        {d.initials}
+                <tr><td colSpan={activeTab === 'cuentas' ? 6 : 6} className="px-6 py-20 text-center"><p className="text-slate-400 font-bold text-xs uppercase tracking-widest">No hay docentes registrados.</p></td></tr>
+              ) : activeTab === 'cuentas' ? (
+                paginated.map(d => (
+                  <tr key={d.id} className={`hover:bg-slate-50/80 transition-colors group ${d.estado === 'Inactivo' ? 'opacity-50 grayscale' : ''}`}>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center text-xs font-black text-indigo-600 border border-indigo-100">
+                          {d.initials}
+                        </div>
+                        <p className="text-sm font-bold text-slate-800">{d.nombre}</p>
                       </div>
-                      <p className="text-sm font-bold text-slate-800">{d.nombre}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5">
-                    <p className="text-xs font-black text-slate-700 uppercase">{d.codigo || '—'}</p>
-                    <p className="text-[10px] text-slate-400">{d.email}</p>
-                  </td>
-                  <td className="px-6 py-5">
-                    <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
-                      {d.especialidad}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5">
-                    <div className="flex flex-col gap-1.5 min-w-[140px]">
-                      <span className={`text-[10px] font-black uppercase tracking-tight ${d.proyectosAsignados >= 10 ? 'text-red-600' : d.proyectosAsignados >= 3 ? 'text-amber-600' : 'text-slate-600'
-                        }`}>
-                        {d.proyectosAsignados} / 10 Proyectos
+                    </td>
+                    <td className="px-6 py-5">
+                      <p className="text-xs font-black text-slate-700 uppercase">{d.codigo || '—'}</p>
+                      <p className="text-[10px] text-slate-400">{d.email}</p>
+                    </td>
+                    <td className="px-6 py-5">
+                      <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                        {d.especialidad}
                       </span>
-                      <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${d.proyectosAsignados >= 10 ? 'bg-red-600' : d.proyectosAsignados >= 3 ? 'bg-amber-500' : 'bg-emerald-500'}`}
-                          style={{ width: `${Math.min((d.proyectosAsignados / 10) * 100, 100)}%` }}
-                        />
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex flex-col gap-1.5 min-w-[140px]">
+                        <span className={`text-[10px] font-black uppercase tracking-tight ${d.proyectosAsignados >= 10 ? 'text-red-600' : d.proyectosAsignados >= 3 ? 'text-amber-600' : 'text-slate-600'
+                          }`}>
+                          {d.proyectosAsignados} / 10 Proyectos
+                        </span>
+                        <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${d.proyectosAsignados >= 10 ? 'bg-red-600' : d.proyectosAsignados >= 3 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                            style={{ width: `${Math.min((d.proyectosAsignados / 10) * 100, 100)}%` }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${d.estado === 'Activo' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                        d.estado === 'Visitante' ? 'bg-purple-50 text-purple-600 border-purple-100' :
-                          'bg-slate-50 text-slate-500 border-slate-200'
+                    </td>
+                    <td className="px-6 py-5">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${d.estado === 'Activo' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                          d.estado === 'Visitante' ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                            'bg-slate-50 text-slate-500 border-slate-200'
+                        }`}>
+                        {d.estado}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5 text-right space-x-2">
+                      <button
+                        onClick={() => { setSelectedDocente(d); setGeneratedUsername(d.codigo || ''); setOriginalEmail(d.email || ''); setModalOpen(true); }}
+                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                        title="Editar"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+                      {d.estado !== 'Inactivo' ? (
+                        <button
+                          onClick={() => setShowConfirmDisable(d)}
+                          className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
+                          title="Dar de baja"
+                        >
+                          <UserMinus className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleEnable(d)}
+                          className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
+                          title="Activar de nuevo"
+                        >
+                          <UserCheck className="w-4 h-4" />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                paginated.map(d => (
+                  <tr key={d.id} className={`hover:bg-slate-50/80 transition-colors group ${d.estado === 'Inactivo' ? 'opacity-50 grayscale' : ''}`}>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center text-xs font-black text-indigo-600 border border-indigo-100">
+                          {d.initials}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-800">{d.nombre}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{d.departamento}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <span className="text-sm font-black text-[#162748]">{d.proyectosAsignados}</span>
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <span className="text-sm font-black text-emerald-600">{d.proyectosEvaluados}</span>
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <span className="text-sm font-black text-amber-500">{d.proyectosPendientes}</span>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-3 min-w-[200px]">
+                        <span className="text-xs font-black text-slate-600 w-9 text-right">{d.avancePorcentaje}%</span>
+                        <div className="flex-1 bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-500 ${
+                              d.avancePorcentaje === 100 
+                                ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
+                                : d.avancePorcentaje > 0 
+                                ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]' 
+                                : 'bg-slate-300'
+                            }`}
+                            style={{ width: `${d.avancePorcentaje}%` }}
+                          />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                        d.proyectosAsignados === 0 
+                          ? 'bg-slate-100 text-slate-400 border-slate-200' 
+                          : d.estadoEvaluacion === 'Completado' 
+                          ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                          : d.estadoEvaluacion === 'En Progreso' 
+                          ? 'bg-blue-50 text-blue-600 border-blue-100' 
+                          : 'bg-amber-50 text-amber-600 border-amber-100'
                       }`}>
-                      {d.estado}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5 text-right space-x-2">
-                    <button
-                      onClick={() => { setSelectedDocente(d); setGeneratedUsername(d.codigo || ''); setOriginalEmail(d.email || ''); setModalOpen(true); }}
-                      className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
-                      title="Editar"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
-                    {d.estado !== 'Inactivo' ? (
-                      <button
-                        onClick={() => setShowConfirmDisable(d)}
-                        className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
-                        title="Dar de baja"
-                      >
-                        <UserMinus className="w-4 h-4" />
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleEnable(d)}
-                        className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
-                        title="Activar de nuevo"
-                      >
-                        <UserCheck className="w-4 h-4" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                        {d.proyectosAsignados === 0 ? 'Sin Proyectos' : d.estadoEvaluacion}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
