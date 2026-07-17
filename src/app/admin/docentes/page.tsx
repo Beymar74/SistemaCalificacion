@@ -406,19 +406,19 @@ export default function DocentesPage() {
                       </span>
                     </td>
                     <td className="px-6 py-5">
-                      <div className="flex flex-col gap-1.5 min-w-[140px]">
-                        <span className={`text-[10px] font-black uppercase tracking-tight ${d.proyectosAsignados >= 10 ? 'text-red-600' : d.proyectosAsignados >= 3 ? 'text-amber-600' : 'text-slate-600'
-                          }`}>
-                          {d.proyectosAsignados} / 10 Proyectos
-                        </span>
-                        <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full ${d.proyectosAsignados >= 10 ? 'bg-red-600' : d.proyectosAsignados >= 3 ? 'bg-amber-500' : 'bg-emerald-500'}`}
-                            style={{ width: `${Math.min((d.proyectosAsignados / 10) * 100, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                    </td>
+                       <div className="flex flex-col gap-1.5 min-w-[140px]">
+                         <span className={`text-[10px] font-black uppercase tracking-tight ${d.proyectosAsignados >= 3 ? 'text-red-600' : d.proyectosAsignados >= 1 ? 'text-amber-600' : 'text-slate-600'
+                           }`}>
+                           {d.proyectosAsignados} / 3 Proyectos
+                         </span>
+                         <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                           <div
+                             className={`h-full ${d.proyectosAsignados >= 3 ? 'bg-red-600' : d.proyectosAsignados >= 1 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                             style={{ width: `${Math.min((d.proyectosAsignados / 3) * 100, 100)}%` }}
+                           />
+                         </div>
+                       </div>
+                     </td>
                     <td className="px-6 py-5">
                       <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${d.estado === 'Activo' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                           d.estado === 'Visitante' ? 'bg-purple-50 text-purple-600 border-purple-100' :

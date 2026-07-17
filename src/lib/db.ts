@@ -184,7 +184,7 @@ export async function fetchDocentesAdmin(): Promise<DocenteAdmin[]> {
       departamento: d.materia ?? 'General',
       especialidad: d.grado ?? 'Especialista',
       proyectosAsignados: asignados,
-      proyectosTotal: 10,
+      proyectosTotal: 3,
       estado: d.estado === true ? 'Activo' : d.estado === false ? 'Inactivo' : 'Visitante',
       initials: getInitials(d.nombre_completo),
       proyectosEvaluados: evaluados,
