@@ -33,7 +33,7 @@ interface Persona {
     grado: string;
 }
 
-const NUM_PROYECTOS = 5;
+const NUM_PROYECTOS = 2;
 
 function asignacionKey(userId: string) {
     return `visitante_proyectos_${userId}`;
