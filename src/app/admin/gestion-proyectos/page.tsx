@@ -32,6 +32,14 @@ import {
 } from '@/lib/db';
 import { supabase } from '../../../lib/supabase';
 import type { ProyectoGestion } from '../../../lib/data';
+import {
+  CATEGORIAS,
+  CARRERAS_INGENIERIAS,
+  CARRERAS_TECNICOS,
+  CATEGORIA_DEFAULT,
+  CARRERA_DEFAULT,
+} from '@/lib/constants';
+import CarreraBadge from '@/components/CarreraBadge';
 
 export default function GestionProyectosPage() {
   const [proyectos, setProyectos] = useState<ProyectoGestion[]>([]);
@@ -51,6 +59,8 @@ export default function GestionProyectosPage() {
   const [filterAttendance, setFilterAttendance] = useState<'all' | 'present' | 'absent'>('all');
   const [filterAssignment, setFilterAssignment] = useState<'all' | 'assigned' | 'unassigned'>('all');
   const [filterState, setFilterState] = useState<'all' | 'active' | 'inactive'>('active');
+  const [filterCategoria, setFilterCategoria] = useState<string>('all');
+  const [filterCarrera, setFilterCarrera] = useState<string>('all');
 
   const [quickFilterIncomplete, setQuickFilterIncomplete] = useState(false);
   const [evalSearchTerm, setEvalSearchTerm] = useState('');
@@ -66,7 +76,8 @@ export default function GestionProyectosPage() {
   const [projectForm, setProjectForm] = useState({
     codigo: '',
     nombre: '',
-    categoria: 'General',
+    categoria: CATEGORIA_DEFAULT as string,
+    carrera: CARRERA_DEFAULT as string,
     sociedad: '',
     gestion: new Date().getFullYear().toString()
   });
@@ -127,7 +138,7 @@ export default function GestionProyectosPage() {
         codigo_proyecto: projectForm.codigo,
         nombre_proyecto: projectForm.nombre,
         categoria: projectForm.categoria,
-        sociedad: projectForm.sociedad,
+        sociedad: projectForm.carrera || projectForm.sociedad,
         gestion: projectForm.gestion
       }]);
     }
@@ -137,7 +148,7 @@ export default function GestionProyectosPage() {
     } else {
       notify(isEditing ? 'Proyecto actualizado' : 'Proyecto creado', 'success');
       setProjectModal(false);
-      setProjectForm({ codigo: '', nombre: '', categoria: 'General', sociedad: '', gestion: new Date().getFullYear().toString() });
+      setProjectForm({ codigo: '', nombre: '', categoria: CATEGORIA_DEFAULT, carrera: CARRERA_DEFAULT, sociedad: '', gestion: new Date().getFullYear().toString() });
       loadData();
     }
   };
@@ -147,7 +158,8 @@ export default function GestionProyectosPage() {
     setProjectForm({
       codigo: p.codigo,
       nombre: p.nombre,
-      categoria: p.sector || 'General',
+      categoria: p.sector || CATEGORIA_DEFAULT,
+      carrera: p.carrera || p.sociedad || CARRERA_DEFAULT,
       sociedad: p.sociedad || '',
       gestion: new Date().getFullYear().toString()
     });
@@ -220,6 +232,7 @@ export default function GestionProyectosPage() {
       p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.sector.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.carrera || p.sociedad || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.evaluadores.some(ev => ev.nombre.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesAttendance =
       filterAttendance === 'all' ? true :
@@ -230,10 +243,14 @@ export default function GestionProyectosPage() {
     const matchesState =
       filterState === 'all' ? true :
         filterState === 'active' ? (p.habilitado !== false) : (p.habilitado === false);
+    const matchesCategoria =
+      filterCategoria === 'all' ? true : p.sector === filterCategoria;
+    const matchesCarrera =
+      filterCarrera === 'all' ? true : (p.carrera || p.sociedad) === filterCarrera;
     const matchesIncomplete = quickFilterIncomplete
       ? p.habilitado !== false && p.evaluadores.length < 3
       : true;
-    return matchesSearch && matchesAttendance && matchesAssignment && matchesState && matchesIncomplete;
+    return matchesSearch && matchesAttendance && matchesAssignment && matchesState && matchesCategoria && matchesCarrera && matchesIncomplete;
   }).sort((a, b) => {
     const numA = parseInt(a.codigo.replace(/\D/g, ''), 10);
     const numB = parseInt(b.codigo.replace(/\D/g, ''), 10);
@@ -270,7 +287,7 @@ export default function GestionProyectosPage() {
             <span>Asignación Automática</span>
           </button>
           <button
-            onClick={() => { setIsEditing(false); setProjectForm({ codigo: '', nombre: '', categoria: 'General', sociedad: '', gestion: new Date().getFullYear().toString() }); setProjectModal(true); }}
+            onClick={() => { setIsEditing(false); setProjectForm({ codigo: '', nombre: '', categoria: CATEGORIA_DEFAULT, carrera: CARRERA_DEFAULT, sociedad: '', gestion: new Date().getFullYear().toString() }); setProjectModal(true); }}
             className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-black px-6 py-3.5 rounded-2xl shadow-xl shadow-blue-900/10 transition-all active:scale-95"
           >
             <Plus className="w-5 h-5" />
@@ -367,6 +384,43 @@ export default function GestionProyectosPage() {
                 className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border-2 border-transparent rounded-xl text-sm focus:outline-none focus:border-blue-600/10 focus:bg-white transition-all font-medium"
               />
             </div>
+          </div>
+
+          {/* Categoría */}
+          <div className="flex flex-col gap-1.5 min-w-[150px]">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Categoría</span>
+            <select
+              value={filterCategoria}
+              onChange={e => setFilterCategoria(e.target.value)}
+              className="bg-slate-50 border border-slate-100 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-blue-600/20"
+            >
+              <option value="all">Todas las Categorías</option>
+              {CATEGORIAS.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Carrera */}
+          <div className="flex flex-col gap-1.5 min-w-[200px]">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Carrera</span>
+            <select
+              value={filterCarrera}
+              onChange={e => setFilterCarrera(e.target.value)}
+              className="bg-slate-50 border border-slate-100 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-blue-600/20"
+            >
+              <option value="all">Todas las Carreras</option>
+              <optgroup label="Ingenierías">
+                {CARRERAS_INGENIERIAS.map(car => (
+                  <option key={car} value={car}>{car}</option>
+                ))}
+              </optgroup>
+              <optgroup label="Técnicos Superiores">
+                {CARRERAS_TECNICOS.map(car => (
+                  <option key={car} value={car}>{car}</option>
+                ))}
+              </optgroup>
+            </select>
           </div>
 
           {/* Asistencia */}
@@ -486,7 +540,8 @@ export default function GestionProyectosPage() {
             <thead className="bg-slate-50/50">
               <tr>
                 <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Código</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Proyecto / Sociedad</th>
+                <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Proyecto / Carrera</th>
+                <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Categoría</th>
                 <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Asistencia</th>
                 <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Estado</th>
                 <th className="px-6 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Acciones</th>
@@ -495,13 +550,14 @@ export default function GestionProyectosPage() {
             <tbody className="divide-y divide-slate-50">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-20 text-center">
+                  <td colSpan={6} className="px-6 py-20 text-center">
                     <div className="w-8 h-8 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
                     <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Actualizando lista...</p>
                   </td>
                 </tr>
               ) : filteredProyectos.map(p => {
                 const estaHabilitado = p.habilitado !== false;
+                const carreraNombre = p.carrera || p.sociedad;
                 return (
                   <tr key={p.id} className={`hover:bg-slate-50/80 transition-colors group ${!estaHabilitado ? 'opacity-40 grayscale' : ''}`}>
                     <td className="px-6 py-5">
@@ -516,8 +572,10 @@ export default function GestionProyectosPage() {
                             {p.evaluadores.length}/3
                           </span>
                         </div>
-                        {p.sociedad && (
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-2">{p.sociedad}</p>
+                        {carreraNombre && (
+                          <div className="mb-2">
+                            <CarreraBadge carrera={carreraNombre} size="xs" />
+                          </div>
                         )}
                         <div className="flex flex-wrap items-center gap-2">
                           {p.evaluadores.map(ev => (
@@ -545,6 +603,11 @@ export default function GestionProyectosPage() {
                           ) : null}
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <span className="px-3 py-1 bg-slate-100 text-slate-700 font-black text-[10px] rounded-lg border border-slate-200 uppercase tracking-wider inline-block">
+                        {p.sector}
+                      </span>
                     </td>
                     <td className="px-6 py-5 text-center">
                       <button
@@ -644,24 +707,39 @@ export default function GestionProyectosPage() {
                       className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-3 focus:bg-white focus:border-blue-600/10 font-bold text-sm outline-none transition-all"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Categoría</label>
-                      <input
-                        required type="text" placeholder="Ej: Tecnología"
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Categoría *</label>
+                      <select
+                        required
                         value={projectForm.categoria}
                         onChange={e => setProjectForm({ ...projectForm, categoria: e.target.value })}
                         className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-3 focus:bg-white focus:border-blue-600/10 font-bold text-sm outline-none transition-all"
-                      />
+                      >
+                        {CATEGORIAS.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Sociedad</label>
-                      <input
-                        type="text" placeholder="Ej: Soc. Científica"
-                        value={projectForm.sociedad}
-                        onChange={e => setProjectForm({ ...projectForm, sociedad: e.target.value })}
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Carrera *</label>
+                      <select
+                        required
+                        value={projectForm.carrera}
+                        onChange={e => setProjectForm({ ...projectForm, carrera: e.target.value })}
                         className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-3 focus:bg-white focus:border-blue-600/10 font-bold text-sm outline-none transition-all"
-                      />
+                      >
+                        <optgroup label="Ingenierías">
+                          {CARRERAS_INGENIERIAS.map(car => (
+                            <option key={car} value={car}>{car}</option>
+                          ))}
+                        </optgroup>
+                        <optgroup label="Técnicos Superiores">
+                          {CARRERAS_TECNICOS.map(car => (
+                            <option key={car} value={car}>{car}</option>
+                          ))}
+                        </optgroup>
+                      </select>
                     </div>
                   </div>
                   <div className="pt-4">

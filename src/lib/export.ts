@@ -30,7 +30,7 @@ export async function exportToExcel(data: ExportRow[], fileName: string) {
   // 1. Banner Superior de Título Corporativo (Filas 2 y 3)
   worksheet.mergeCells(`A2:${lastColLetter}3`);
   const titleCell = worksheet.getCell('A2');
-  titleCell.value = 'CARRERA DE INGENIERÍA INDUSTRIAL\nSISTEMA DE EVALUACIONES Y CALIFICACIONES';
+  titleCell.value = 'UICYT · UNIDAD DE INVESTIGACIÓN CIENCIA Y TECNOLOGÍA\nSISTEMA DE EVALUACIONES Y CALIFICACIONES';
   titleCell.font = {
     name: 'Segoe UI',
     size: 13,
@@ -199,11 +199,17 @@ export async function exportToExcel(data: ExportRow[], fileName: string) {
 export async function exportToPDF(title: string, columns: string[], data: (string | number)[][], fileName: string) {
   const doc = new jsPDF();
   
-  doc.setFontSize(18);
-  doc.text(title, 14, 22);
-  doc.setFontSize(11);
+  doc.setFontSize(16);
+  doc.setTextColor(22, 39, 72); // #162748
+  doc.text('UICYT · UNIDAD DE INVESTIGACIÓN CIENCIA Y TECNOLOGÍA', 14, 18);
+  
+  doc.setFontSize(13);
+  doc.setTextColor(30, 41, 59); // slate-800
+  doc.text(title, 14, 26);
+  
+  doc.setFontSize(9.5);
   doc.setTextColor(100);
-  doc.text(`Generado el: ${new Date().toLocaleDateString()}`, 14, 30);
+  doc.text(`Generado el: ${new Date().toLocaleDateString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}`, 14, 33);
 
   autoTable(doc, {
     startY: 40,

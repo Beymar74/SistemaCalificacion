@@ -8,8 +8,8 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "IE TechFair – Sistema de Evaluación",
-  description: "Plataforma de gestión y evaluación de proyectos – Feria Tecnológica Universitaria",
+  title: "UICYT – Sistema de Evaluación",
+  description: "UICYT · Unidad de Investigación, Ciencia y Tecnología – Plataforma de Gestión y Evaluación de Proyectos",
 };
 
 export default function RootLayout({

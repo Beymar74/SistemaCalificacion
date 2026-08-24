@@ -88,11 +88,11 @@ export default function LoginPage() {
               >
                 <div className="absolute inset-0 bg-blue-900/10 blur-2xl opacity-30 rounded-full" />
                 <Image
-                  src="/logo/logocarrera.png"
-                  alt="Logo Carrera"
-                  width={80}
-                  height={80}
-                  className="object-contain relative z-10 drop-shadow-md"
+                  src="/logo/uicyt-logo.png"
+                  alt="Logo UICYT"
+                  width={110}
+                  height={110}
+                  className="object-contain relative z-10 rounded-2xl drop-shadow-md"
                 />
               </motion.div>
 
@@ -102,15 +102,16 @@ export default function LoginPage() {
                 transition={{ delay: 0.3 }}
                 className="text-center"
               >
-                <h1 className="text-3xl font-black text-[#1e3a5f] tracking-tight leading-tight mb-2">
-                  SCEITII
+                <h1 className="text-3xl font-black text-[#1e3a5f] tracking-tight leading-tight mb-1">
+                  UICYT
                 </h1>
-                <div className="flex items-center justify-center gap-2">
-                  <span className="h-px w-8 bg-[#1e3a5f]/30" />
-                  <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.2em]">
-                    Feria de Innovación EMI
+                <div className="flex flex-col items-center justify-center gap-1">
+                  <p className="text-[#162748] text-xs font-black uppercase tracking-wider max-w-[280px] leading-tight">
+                    Unidad de Investigación Ciencia y Tecnología
                   </p>
-                  <span className="h-px w-8 bg-[#1e3a5f]/30" />
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">
+                    Sistema de Calificación y Evaluación
+                  </p>
                 </div>
               </motion.div>
             </div>

@@ -14,6 +14,7 @@ import { supabase } from '../../../lib/supabase';
 import { fetchProyectosHabilitados } from '@/lib/db';
 import type { ProyectoAsignado } from '@/lib/data';
 import { useRouter } from 'next/navigation';
+import CarreraBadge from '@/components/CarreraBadge';
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -84,7 +85,7 @@ export default function VisitanteHome() {
             // El filtro asistio !== false excluye proyectos que no se presentaron
             const { data: proyectosData } = await supabase
                 .from('proyectos')
-                .select('id, codigo_proyecto, nombre_proyecto, categoria, asistio')
+                .select('id, codigo_proyecto, nombre_proyecto, categoria, sociedad, asistio')
                 .in('id', proyectoIds);
 
             const proyectosConEstado: ProyectoAsignado[] = (proyectosData || [])
@@ -95,6 +96,7 @@ export default function VisitanteHome() {
                         id: p.id,
                         stand: p.codigo_proyecto,
                         categoria: p.categoria || '',
+                        carrera: p.sociedad || '',
                         nombre: p.nombre_proyecto,
                         estado: (yaEvaluo ? 'Calificado' : 'Pendiente') as ProyectoAsignado['estado'],
                     };
@@ -141,8 +143,8 @@ export default function VisitanteHome() {
                         animate={{ opacity: 1, x: 0 }}
                         className="flex items-center gap-3"
                     >
-                        <img src="/logo/logocarrera.png" alt="Logo Carrera" className="w-10 h-10 object-contain" />
-                        <span className="text-lg font-black text-[#162748] tracking-tight">SCEITII</span>
+                        <img src="/logo/uicyt-logo.png" alt="Logo UICYT" className="w-10 h-10 rounded-lg object-contain" />
+                        <span className="text-lg font-black text-[#162748] tracking-tight">UICYT</span>
                     </motion.div>
 
                     <button
@@ -242,11 +244,16 @@ export default function VisitanteHome() {
                                         )}
                                     </div>
 
-                                    {p.categoria && (
-                                        <p className="text-[11px] font-bold text-blue-500 uppercase tracking-widest mb-1">
-                                            {p.categoria}
-                                        </p>
-                                    )}
+                                    <div className="flex items-center gap-2 flex-wrap mb-2">
+                                        {p.categoria && (
+                                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">
+                                                {p.categoria}
+                                            </span>
+                                        )}
+                                        {p.carrera && (
+                                            <CarreraBadge carrera={p.carrera} size="xs" />
+                                        )}
+                                    </div>
 
                                     <h3 className="text-lg font-bold text-slate-800 leading-tight mb-4 line-clamp-2 group-hover:text-blue-600 transition-colors">
                                         {p.nombre}

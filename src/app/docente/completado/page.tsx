@@ -20,12 +20,12 @@ export default function CompletadoPage() {
             className="flex items-center gap-2 sm:gap-3"
           >
             <img
-              src="/logo/logocarrera.png"
-              alt="Logo Carrera"
-              className="w-10 h-10 sm:w-12 sm:h-12 object-contain flex-shrink-0"
+              src="/logo/uicyt-logo.png"
+              alt="Logo UICYT"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg object-contain flex-shrink-0"
             />
             <span className="text-lg sm:text-xl font-black text-[#162748] tracking-tight">
-              SCEITII
+              UICYT
             </span>
           </motion.div>
         </div>

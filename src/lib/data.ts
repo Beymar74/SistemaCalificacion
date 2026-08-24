@@ -8,6 +8,7 @@ export interface Proyecto {
   nombre: string;
   grupo: string;
   categoria: string;
+  carrera?: string;
   estado: EstadoProyecto;
   evaluacionesCompletadas: number;
   evaluacionesTotal: number;
@@ -30,6 +31,7 @@ export interface ProyectoGestion {
   codigo: string;
   nombre: string;
   sector: string;
+  carrera?: string;
   asistio: boolean;
   habilitado?: boolean;
   sociedad?: string;
@@ -41,6 +43,7 @@ export interface ProyectoAsignado {
   id: string;
   stand: string;
   categoria: string;
+  carrera?: string;
   nombre: string;
   estado: EstadoAsignado;
 }
@@ -57,6 +60,7 @@ export interface ProyectoDetalle {
   nombre: string;
   stand: string;
   categoria: string;
+  carrera?: string;
   equipo: string;
   descripcion: string;
 }
@@ -64,7 +68,10 @@ export interface ProyectoDetalle {
 export interface ResultadoTop {
   id?: string;
   posicion: number;
+  codigo?: string;
   nombre: string;
+  categoria?: string;
+  carrera?: string;
   puntajeFinal: number;
   evaluaciones: number;
   criterios?: { nombre: string; puntaje: number }[];

@@ -49,18 +49,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="px-5 py-6 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-3 overflow-hidden">
             <img 
-              src="/logo/logocarrera.png" 
-              alt="Logo Carrera" 
-              className="w-8 h-8 object-contain flex-shrink-0"
+              src="/logo/uicyt-logo.png" 
+              alt="Logo UICYT" 
+              className="w-9 h-9 rounded-lg object-contain flex-shrink-0"
             />
             {!isCollapsed && (
-              <motion.span 
+              <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-lg font-black text-[#162748] tracking-tight whitespace-nowrap"
+                className="flex flex-col min-w-0"
               >
-                SCEITII
-              </motion.span>
+                <span className="text-base font-black text-[#162748] tracking-tight leading-none">
+                  UICYT
+                </span>
+                <span className="text-[8px] font-extrabold text-slate-400 uppercase tracking-tighter truncate leading-tight mt-0.5">
+                  Ciencia y Tecnología
+                </span>
+              </motion.div>
             )}
           </div>
           <button 
@@ -73,8 +78,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* User info */}
         <div className="px-5 py-4 flex items-center gap-3 border-b border-slate-100 overflow-hidden">
-          <div className="w-9 h-9 rounded-full bg-[#162748] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-            UA
+          <div className="w-9 h-9 rounded-full bg-[#162748] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+            UI
           </div>
           {!isCollapsed && (
             <motion.div 
@@ -83,7 +88,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className="min-w-0"
             >
               <p className="text-sm font-semibold text-slate-800 truncate">Portal Admin</p>
-              <p className="text-xs text-slate-500 truncate">Depto. de Ingeniería</p>
+              <p className="text-xs text-slate-500 truncate">UICYT</p>
             </motion.div>
           )}
         </div>

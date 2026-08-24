@@ -130,6 +130,7 @@ export default function ReportesPage() {
         rows.push({
           'Código Proyecto': p.codigo,
           'Nombre del Proyecto': p.nombre,
+          'Carrera': p.carrera || '—',
           'Categoría': p.categoria,
           'Jurado Evaluador': '—',
           'Nota Otorgada': '—',
@@ -142,6 +143,7 @@ export default function ReportesPage() {
           rows.push({
             'Código Proyecto': p.codigo,
             'Nombre del Proyecto': p.nombre,
+            'Carrera': p.carrera || '—',
             'Categoría': p.categoria,
             'Jurado Evaluador': ev.docente,
             'Nota Otorgada': ev.nota,
@@ -160,6 +162,7 @@ export default function ReportesPage() {
     const pdfRows = data.map(p => [
       p.codigo,
       p.nombre,
+      p.carrera || '—',
       p.categoria,
       p.evaluacionesConfirmadas.toString(),
       p.promedio > 0 ? p.promedio.toFixed(2) : '0.00',
@@ -167,7 +170,7 @@ export default function ReportesPage() {
     ]);
     await exportToPDF(
       'SCEITII - Reporte General de Calificaciones',
-      ['Código', 'Proyecto', 'Categoría', 'Evals', 'Promedio', 'Ranking'],
+      ['Código', 'Proyecto', 'Carrera', 'Categoría', 'Evals', 'Promedio', 'Ranking'],
       pdfRows,
       `SCEITII_Reporte_General_${new Date().toISOString().split('T')[0]}`
     );
@@ -184,6 +187,7 @@ export default function ReportesPage() {
       'Posición / Ranking': p.ranking,
       'Código Proyecto': p.codigo,
       'Nombre del Proyecto': p.nombre,
+      'Carrera': p.carrera || '—',
       'Categoría': p.categoria,
       'Evaluaciones Recibidas': p.evaluacionesConfirmadas,
       'Puntaje Acumulado': p.puntajeAcumulado,
@@ -202,13 +206,14 @@ export default function ReportesPage() {
       p.ranking.toString(),
       p.codigo,
       p.nombre,
+      p.carrera || '—',
       p.categoria,
       p.evaluacionesConfirmadas.toString(),
       p.promedio.toFixed(2)
     ]);
     await exportToPDF(
       'SCEITII - Cuadro de Honor y Clasificaciones',
-      ['Posición', 'Código', 'Proyecto', 'Categoría', 'Evals', 'Promedio Final'],
+      ['Posición', 'Código', 'Proyecto', 'Carrera', 'Categoría', 'Evals', 'Promedio Final'],
       pdfRows,
       `SCEITII_Cuadro_Honor_${new Date().getFullYear()}`
     );
@@ -253,8 +258,8 @@ export default function ReportesPage() {
     const rows = data.map(p => ({
       'Código Proyecto': p.codigo,
       'Nombre del Proyecto': p.nombre,
-      'Categoría Sector': p.sector,
-      'Sociedad': p.sociedad || 'Sin sociedad',
+      'Carrera': p.carrera || p.sociedad || '—',
+      'Categoría': p.sector,
       'Estado Asistencia': p.asistio ? 'Presente en Stand' : 'Ausente / Pendiente',
       'Estado de Proyecto': p.habilitado !== false ? 'Habilitado para Calificar' : 'Inhabilitado'
     }));
@@ -266,14 +271,14 @@ export default function ReportesPage() {
     const pdfRows = data.map(p => [
       p.codigo,
       p.nombre,
+      p.carrera || p.sociedad || '—',
       p.sector,
-      p.sociedad || '—',
       p.asistio ? 'Presente' : 'Ausente',
       p.habilitado !== false ? 'Habilitado' : 'Inhabilitado'
     ]);
     await exportToPDF(
       'SCEITII - Planilla de Control de Stands y Asistencia',
-      ['Código', 'Proyecto', 'Categoría', 'Sociedad', 'Asistencia', 'Habilitado'],
+      ['Código', 'Proyecto', 'Carrera', 'Categoría', 'Asistencia', 'Habilitado'],
       pdfRows,
       `SCEITII_Control_Stands_${new Date().getFullYear()}`
     );

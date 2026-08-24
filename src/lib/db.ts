@@ -59,7 +59,7 @@ export async function fetchProyectosAdmin(): Promise<Proyecto[]> {
   // 1. Obtener todos los proyectos
   const { data: proys, error: proyError } = await supabase
     .from('proyectos')
-    .select('id, codigo_proyecto, nombre_proyecto, categoria')
+    .select('id, codigo_proyecto, nombre_proyecto, categoria, sociedad')
     .order('codigo_proyecto');
 
   if (proyError || !proys) return [];
@@ -108,7 +108,8 @@ export async function fetchProyectosAdmin(): Promise<Proyecto[]> {
       codigo: p.codigo_proyecto,
       nombre: p.nombre_proyecto,
       grupo: '',
-      categoria: p.categoria || 'General',
+      categoria: p.categoria || 'Categoría 1',
+      carrera: p.carrera || p.sociedad || '',
       estado,
       evaluacionesCompletadas: completadas,
       evaluacionesTotal: total,
@@ -229,7 +230,7 @@ export async function fetchEvaluadoresDisponibles(): Promise<EvaluadorDisponible
 export async function fetchProyectosParaGestion(): Promise<ProyectoGestion[]> {
   const { data: proys } = await supabase
     .from('proyectos')
-    .select('id, codigo_proyecto, nombre_proyecto, categoria, asistio, habilitado')
+    .select('id, codigo_proyecto, nombre_proyecto, categoria, sociedad, asistio, habilitado')
     .order('codigo_proyecto');
 
   if (!proys) return [];
@@ -264,7 +265,9 @@ export async function fetchProyectosParaGestion(): Promise<ProyectoGestion[]> {
     id: p.id,
     codigo: p.codigo_proyecto,
     nombre: p.nombre_proyecto,
-    sector: p.categoria || 'General',
+    sector: p.categoria || 'Categoría 1',
+    carrera: p.carrera || p.sociedad || '',
+    sociedad: p.sociedad || '',
     asistio: p.asistio ?? true,
     habilitado: p.habilitado ?? true,
     evaluadores: asigsByProy.get(p.id) || [],
@@ -407,14 +410,16 @@ export async function autoAsignarDocentes(): Promise<{ success: boolean; count?:
 }
 
 export async function actualizarProyecto(id: string, data: any) {
+  const payload: any = {
+    codigo_proyecto: data.codigo,
+    nombre_proyecto: data.nombre,
+    categoria: data.categoria || 'Categoría 1',
+    sociedad: data.carrera || data.sociedad || '',
+    gestion: data.gestion || new Date().getFullYear().toString()
+  };
   return await supabase
     .from('proyectos')
-    .update({
-      codigo_proyecto: data.codigo,
-      nombre_proyecto: data.nombre,
-      categoria: data.categoria,
-      gestion: data.gestion || new Date().getFullYear().toString()
-    })
+    .update(payload)
     .eq('id', id);
 }
 
@@ -428,7 +433,7 @@ export async function cambiarAsistenciaProyecto(id: string, asistio: boolean) {
 
 // ─── RESULTADOS ───────────────────────────────────────────────────────────────
 
-export async function fetchResultadosTop(limit: number = 5): Promise<ResultadoTop[]> {
+export async function fetchResultadosTop(limit: number = 50): Promise<ResultadoTop[]> {
   const { data, error } = await supabase
     .from('resultados_proyectos')
     .select(`
@@ -437,7 +442,9 @@ export async function fetchResultadosTop(limit: number = 5): Promise<ResultadoTo
       id_proyecto,
       proyectos:id_proyecto (
         codigo_proyecto,
-        nombre_proyecto
+        nombre_proyecto,
+        categoria,
+        sociedad
       )
     `)
     .order('ranking_posicion', { ascending: true })
@@ -460,7 +467,10 @@ export async function fetchResultadosTop(limit: number = 5): Promise<ResultadoTo
   return data.map((r: any) => ({
     id: r.id_proyecto,
     posicion: r.ranking_posicion,
+    codigo: r.proyectos?.codigo_proyecto || 'S/C',
     nombre: r.proyectos?.nombre_proyecto || 'Proyecto Desconocido',
+    categoria: r.proyectos?.categoria || 'Categoría 1',
+    carrera: r.proyectos?.carrera || r.proyectos?.sociedad || '',
     puntajeFinal: Number(r.promedio_final) || 0,
     evaluaciones: evalCount[r.id_proyecto] || 0,
   }));
@@ -626,13 +636,19 @@ export async function fetchDetalleProyectoEvaluaciones(idProyecto: string) {
   }));
 }
 
-export async function fetchProyectosHabilitados(): Promise<{ id: string; codigo_proyecto: string; nombre_proyecto: string; categoria: string }[]> {
+export async function fetchProyectosHabilitados(): Promise<{ id: string; codigo_proyecto: string; nombre_proyecto: string; categoria: string; carrera?: string }[]> {
   const { data } = await supabase
     .from('proyectos')
-    .select('id, codigo_proyecto, nombre_proyecto, categoria')
+    .select('id, codigo_proyecto, nombre_proyecto, categoria, sociedad')
     .eq('habilitado', true)
     .order('codigo_proyecto');
-  return data || [];
+  return (data || []).map((p: any) => ({
+    id: p.id,
+    codigo_proyecto: p.codigo_proyecto,
+    nombre_proyecto: p.nombre_proyecto,
+    categoria: p.categoria || 'Categoría 1',
+    carrera: p.carrera || p.sociedad || ''
+  }));
 }
 
 export async function fetchAsignacionesDocente(idDocente: string): Promise<ProyectoAsignado[]> {
@@ -644,7 +660,9 @@ export async function fetchAsignacionesDocente(idDocente: string): Promise<Proye
       proyectos:id_proyecto (
         id,
         codigo_proyecto,
-        nombre_proyecto
+        nombre_proyecto,
+        categoria,
+        sociedad
       )
     `)
     .eq('id_docente', idDocente);
@@ -661,7 +679,8 @@ export async function fetchAsignacionesDocente(idDocente: string): Promise<Proye
   return data.map((a: any) => ({
     id: a.proyectos?.id || '',
     stand: a.proyectos?.codigo_proyecto || 'S/N',
-    categoria: '',
+    categoria: a.proyectos?.categoria || 'Categoría 1',
+    carrera: a.proyectos?.carrera || a.proyectos?.sociedad || '',
     nombre: a.proyectos?.nombre_proyecto || 'Desconocido',
     estado: evalMap.get(a.id_proyecto) ? 'Calificado' : 'Pendiente' as EstadoAsignado,
   }));
@@ -726,6 +745,7 @@ export interface ProyectoComputo {
   codigo: string;
   nombre: string;
   categoria: string;
+  carrera?: string;
   evaluacionesConfirmadas: number;
   puntajeAcumulado: number;
   promedio: number;
@@ -736,7 +756,7 @@ export interface ProyectoComputo {
 export async function fetchComputoProyectos(): Promise<ProyectoComputo[]> {
   const { data: proys } = await supabase
     .from('proyectos')
-    .select('id, codigo_proyecto, nombre_proyecto, categoria')
+    .select('id, codigo_proyecto, nombre_proyecto, categoria, sociedad')
     .order('codigo_proyecto');
 
   if (!proys) return [];
@@ -772,7 +792,8 @@ export async function fetchComputoProyectos(): Promise<ProyectoComputo[]> {
       id: p.id,
       codigo: p.codigo_proyecto,
       nombre: p.nombre_proyecto,
-      categoria: p.categoria || 'General',
+      categoria: p.categoria || 'Categoría 1',
+      carrera: p.carrera || p.sociedad || '',
       evaluacionesConfirmadas: confirmadas.length,
       puntajeAcumulado: res ? Number(res.puntaje_acumulado) : 0,
       promedio: res ? Number(res.promedio_final) : 0,
@@ -894,6 +915,7 @@ export interface ResultadoLive {
   codigo: string;
   nombre: string;
   categoria: string;
+  carrera?: string;
   promedio: number;
   evaluacionesConfirmadas: number;
 }
@@ -909,11 +931,11 @@ export async function fetchResultadosLive(): Promise<ResultadoLive[]> {
   const proyIds = resultados.map((r: any) => r.id_proyecto);
 
   const [{ data: proys }, { data: evals }] = await Promise.all([
-    supabase.from('proyectos').select('id, codigo_proyecto, nombre_proyecto, categoria').in('id', proyIds),
+    supabase.from('proyectos').select('id, codigo_proyecto, nombre_proyecto, categoria, sociedad').in('id', proyIds),
     supabase.from('evaluaciones').select('id_proyecto').in('id_proyecto', proyIds).eq('confirmada', true)
   ]);
 
-  const proysMap = new Map(proys?.map(p => [p.id, p]) || []);
+  const proysMap = new Map<string, any>(proys?.map((p: any) => [p.id, p]) || []);
   const evalCount: Record<string, number> = {};
   evals?.forEach((e: any) => { evalCount[e.id_proyecto] = (evalCount[e.id_proyecto] || 0) + 1; });
 
@@ -924,7 +946,8 @@ export async function fetchResultadosLive(): Promise<ResultadoLive[]> {
       id: r.id_proyecto,
       codigo: p?.codigo_proyecto || 'S/C',
       nombre: p?.nombre_proyecto || 'Proyecto Desconocido',
-      categoria: p?.categoria || 'General',
+      categoria: p?.categoria || 'Categoría 1',
+      carrera: (p as any)?.carrera || p?.sociedad || '',
       promedio: Number(r.promedio_final) || 0,
       evaluacionesConfirmadas: evalCount[r.id_proyecto] || 0
     };

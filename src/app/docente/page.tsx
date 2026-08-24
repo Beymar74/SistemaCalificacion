@@ -15,6 +15,7 @@ import { supabase } from '../../../lib/supabase';
 import { fetchAsignacionesDocente } from '@/lib/db';
 import type { ProyectoAsignado } from '@/lib/data';
 import { useRouter } from 'next/navigation';
+import CarreraBadge from '@/components/CarreraBadge';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -114,13 +115,13 @@ export default function DocenteHome() {
             className="flex items-center gap-3 sm:gap-4 min-w-0"
           >
             <img
-              src="/logo/logocarrera.png"
-              alt="Logo Carrera"
-              className="w-14 h-14 sm:w-20 sm:h-20 object-contain flex-shrink-0 drop-shadow-md"
+              src="/logo/uicyt-logo.png"
+              alt="Logo UICYT"
+              className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-contain flex-shrink-0 drop-shadow-sm"
             />
             <div className="flex flex-col justify-center">
               <span className="text-base sm:text-xl font-black text-[#162748] tracking-tight leading-none">
-                SCEITII
+                UICYT
               </span>
               <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-widest hidden sm:block mt-1">
                 Evaluación Docente
@@ -286,12 +287,17 @@ export default function DocenteHome() {
                     )}
                   </div>
 
-                  {/* Categoría */}
-                  {p.categoria && (
-                    <p className="text-[10px] sm:text-[11px] font-bold text-blue-500 uppercase tracking-widest mb-2">
-                      {p.categoria}
-                    </p>
-                  )}
+                  {/* Categoría y Carrera */}
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    {p.categoria && (
+                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-600 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">
+                        {p.categoria}
+                      </span>
+                    )}
+                    {p.carrera && (
+                      <CarreraBadge carrera={p.carrera} size="xs" />
+                    )}
+                  </div>
 
                   {/* Nombre del proyecto */}
                   <h3 className="text-base sm:text-lg font-bold text-slate-800 leading-snug mb-6 line-clamp-3 group-hover:text-blue-600 transition-colors">

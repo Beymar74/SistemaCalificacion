@@ -19,6 +19,12 @@ import HelpBanner from '@/components/HelpBanner';
 import { fetchProyectosAdmin, fetchDocentesSummary } from '@/lib/db';
 import type { EstadoProyecto } from '@/lib/data';
 import type { Proyecto } from '@/lib/data';
+import {
+  CATEGORIAS,
+  CARRERAS_INGENIERIAS,
+  CARRERAS_TECNICOS,
+} from '@/lib/constants';
+import CarreraBadge from '@/components/CarreraBadge';
 
 const estadoConfig: Record<EstadoProyecto, { bg: string; text: string; dot: string; glow: string }> = {
   Evaluado: {
@@ -79,6 +85,8 @@ export default function ProyectosPage() {
 
   const [search, setSearch] = useState('');
   const [estado, setEstado] = useState('');
+  const [categoria, setCategoria] = useState('');
+  const [carrera, setCarrera] = useState('');
 
   const cargarDatos = () => {
     setLoading(true);
@@ -104,17 +112,22 @@ export default function ProyectosPage() {
     return proyectosData
       .filter(p => {
         const q = search.toLowerCase();
-        return (
-          (!q || p.nombre.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q)) &&
-          (!estado || p.estado === estado)
-        );
+        const matchSearch =
+          !q ||
+          p.nombre.toLowerCase().includes(q) ||
+          p.codigo.toLowerCase().includes(q) ||
+          (p.carrera || '').toLowerCase().includes(q);
+        const matchEstado = !estado || p.estado === estado;
+        const matchCat = !categoria || (p.categoria || 'Categoría 1') === categoria;
+        const matchCar = !carrera || (p.carrera || '') === carrera;
+        return matchSearch && matchEstado && matchCat && matchCar;
       })
       .sort((a, b) => {
         const numA = parseInt(a.codigo.replace(/\D/g, ''), 10);
         const numB = parseInt(b.codigo.replace(/\D/g, ''), 10);
         return numA - numB;
       });
-  }, [proyectosData, search, estado]);
+  }, [proyectosData, search, estado, categoria, carrera]);
 
   const stats = useMemo(() => {
     const total = proyectosData.length;
@@ -194,7 +207,7 @@ export default function ProyectosPage() {
         storageKey="proyectos"
         title="Guía del Módulo: Proyectos Registrados"
         className="mb-8"
-        description="Monitoree el avance individual de cada proyecto en la feria. Puede filtrar por estado y categoría para identificar rápidamente cuáles proyectos ya fueron calificados por sus 4 jurados correspondientes, cuáles están en proceso y cuáles no han recibido ninguna evaluación."
+        description="Monitoree el avance individual de cada proyecto en la feria. Puede filtrar por estado, categoría y carrera para identificar rápidamente el progreso de calificación."
       />
 
       {/* Stats Summary */}
@@ -220,25 +233,54 @@ export default function ProyectosPage() {
         className="bg-white rounded-3xl shadow-sm border border-slate-200/60 overflow-hidden"
       >
         {/* Toolbar */}
-        <div className="p-5 flex flex-wrap items-center gap-4 border-b border-slate-100 bg-white backdrop-blur-sm relative z-10">
-          <div className="relative flex-1 min-w-[300px] group">
+        <div className="p-5 flex flex-wrap items-center gap-3 border-b border-slate-100 bg-white backdrop-blur-sm relative z-10">
+          <div className="relative flex-1 min-w-[240px] group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
             <input
               type="text"
-              placeholder="Buscar por código o nombre..."
+              placeholder="Buscar por código, nombre o carrera..."
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }}
-              className="w-full pl-11 pr-4 py-3 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:text-slate-400 font-medium outline-none"
+              className="w-full pl-11 pr-4 py-3 bg-slate-50 border-none rounded-2xl text-xs focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:text-slate-400 font-medium outline-none"
             />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <select
+              value={categoria}
+              onChange={e => { setCategoria(e.target.value); setPage(1); }}
+              className="bg-slate-50 border-none rounded-2xl px-4 py-3 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer hover:bg-slate-100 transition-colors"
+            >
+              <option value="">Todas las Categorías</option>
+              {CATEGORIAS.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+
+            <select
+              value={carrera}
+              onChange={e => { setCarrera(e.target.value); setPage(1); }}
+              className="bg-slate-50 border-none rounded-2xl px-4 py-3 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer hover:bg-slate-100 transition-colors max-w-[200px]"
+            >
+              <option value="">Todas las Carreras</option>
+              <optgroup label="Ingenierías">
+                {CARRERAS_INGENIERIAS.map(car => (
+                  <option key={car} value={car}>{car}</option>
+                ))}
+              </optgroup>
+              <optgroup label="Técnicos Superiores">
+                {CARRERAS_TECNICOS.map(car => (
+                  <option key={car} value={car}>{car}</option>
+                ))}
+              </optgroup>
+            </select>
+
             <select
               value={estado}
               onChange={e => { setEstado(e.target.value); setPage(1); }}
-              className="bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm font-bold text-slate-600 focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer hover:bg-slate-100 transition-colors"
+              className="bg-slate-50 border-none rounded-2xl px-4 py-3 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer hover:bg-slate-100 transition-colors"
             >
-              <option value="">Estados</option>
+              <option value="">Todos los Estados</option>
               <option value="Evaluado">Evaluado</option>
               <option value="En Proceso">En Proceso</option>
               <option value="Pendiente">Pendiente</option>
@@ -251,7 +293,7 @@ export default function ProyectosPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50/50">
-                {['Código', 'Información del Proyecto', 'Categoría', 'Estado', 'Evaluaciones (4 Docentes)'].map((h) => (
+                {['Código', 'Información del Proyecto', 'Categoría', 'Estado', 'Evaluaciones (3 Jurados)'].map((h) => (
                   <th key={h} className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
                     {h}
                   </th>
@@ -275,12 +317,19 @@ export default function ProyectosPage() {
                       <td className="px-6 py-5">
                         <div>
                           <p className="text-sm font-bold text-slate-800 leading-snug group-hover:text-blue-600 transition-colors">{p.nombre}</p>
-                          <p className="text-[11px] text-slate-400 mt-1 font-bold uppercase tracking-wider">{p.grupo}</p>
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            {p.carrera && (
+                              <CarreraBadge carrera={p.carrera} size="xs" />
+                            )}
+                            {p.grupo && (
+                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">· {p.grupo}</span>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-5">
                         <span className="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-blue-100/50">
-                          {p.categoria}
+                          {p.categoria || 'Categoría 1'}
                         </span>
                       </td>
                       <td className="px-6 py-5">
@@ -299,8 +348,11 @@ export default function ProyectosPage() {
                           </div>
                           <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                             <div
+                              className={`h-full rounded-full transition-all duration-500 ${
+                                p.estado === 'Evaluado' ? 'bg-indigo-600' :
+                                p.estado === 'En Proceso' ? 'bg-amber-500' : 'bg-rose-500'
+                              }`}
                               style={{ width: `${avancePct}%` }}
-                              className={`h-1.5 rounded-full transition-all duration-700 ${avancePct === 100 ? 'bg-indigo-500' : 'bg-blue-500'}`}
                             />
                           </div>
                         </div>
@@ -310,19 +362,8 @@ export default function ProyectosPage() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-6 py-24 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
-                        <Search className="w-8 h-8" />
-                      </div>
-                      <p className="text-slate-500 font-bold">No se encontraron proyectos.</p>
-                      <button
-                        onClick={() => { setSearch(''); setEstado(''); setPage(1); }}
-                        className="text-blue-500 text-xs font-black hover:underline uppercase tracking-widest"
-                      >
-                        Restablecer Filtros
-                      </button>
-                    </div>
+                  <td colSpan={5} className="px-6 py-12 text-center text-slate-400 font-medium">
+                    No se encontraron proyectos con los filtros seleccionados.
                   </td>
                 </tr>
               )}

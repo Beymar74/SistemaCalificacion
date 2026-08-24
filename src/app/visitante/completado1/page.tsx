@@ -18,8 +18,8 @@ export default function CompletadoVisitantePage() {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-3"
           >
-            <img src="/logo/logocarrera.png" alt="Logo Carrera" className="w-10 h-10 object-contain" />
-            <span className="text-lg font-black text-[#162748] tracking-tight">SCEITI</span>
+            <img src="/logo/uicyt-logo.png" alt="Logo UICYT" className="w-10 h-10 rounded-lg object-contain" />
+            <span className="text-lg font-black text-[#162748] tracking-tight">UICYT</span>
           </motion.div>
         </div>
       </header>
