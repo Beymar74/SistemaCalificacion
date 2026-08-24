@@ -557,17 +557,31 @@ export async function sincronizarTodosLosResultados() {
 export async function recalcularTodoElRanking() {
   const { data: resultados } = await supabase
     .from('resultados_proyectos')
-    .select('id_proyecto, promedio_final')
-    .order('promedio_final', { ascending: false });
+    .select('id_proyecto, promedio_final, proyectos:id_proyecto (categoria, sociedad)');
 
   if (!resultados || resultados.length === 0) return;
 
-  // Actualizar posiciones secuencialmente
-  for (let i = 0; i < resultados.length; i++) {
-    await supabase
-      .from('resultados_proyectos')
-      .update({ ranking_posicion: i + 1 })
-      .eq('id_proyecto', resultados[i].id_proyecto);
+  const porCategoria = new Map<string, any[]>();
+  resultados.forEach((r: any) => {
+    const rawCat = r.proyectos?.categoria;
+    const carrera = r.proyectos?.carrera || r.proyectos?.sociedad || '';
+    const categoria = (rawCat && rawCat !== 'General' && !rawCat.startsWith('Categoría'))
+      ? rawCat
+      : getCategoriaPorCarrera(carrera);
+
+    const lista = porCategoria.get(categoria) || [];
+    lista.push(r);
+    porCategoria.set(categoria, lista);
+  });
+
+  for (const [, grupo] of porCategoria) {
+    const ordenados = grupo.sort((a, b) => b.promedio_final - a.promedio_final);
+    for (let i = 0; i < ordenados.length; i++) {
+      await supabase
+        .from('resultados_proyectos')
+        .update({ ranking_posicion: i + 1 })
+        .eq('id_proyecto', ordenados[i].id_proyecto);
+    }
   }
 }
 

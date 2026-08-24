@@ -9,60 +9,51 @@ import { sincronizarResultadosProyecto } from '@/lib/db';
 type Step = 1 | 2 | 3;
 
 const BLOQUE1 = [
-  { key: 'doc_ind1', label: 'Ind. 1 — Cap. I · Calidad del Documento', peso: '10%', desc: 'Presenta claramente la introducción (problema, objetivo y resultados esperados); contextualiza los antecedentes con bibliografía actualizada e identifica vacíos en el estado del arte.' },
-  { key: 'doc_ind2', label: 'Ind. 2 — Cap. I · Formulación del Problema', peso: '10%', desc: 'Formula el problema mediante análisis causa-efecto; define objetivos con estructura verbo+objeto+finalidad y establece el alcance temático, geográfico y temporal.' },
-  { key: 'doc_ind3', label: 'Ind. 3 — Cap. II · Innovación y Creatividad', peso: '20%', desc: 'Justifica el proyecto en los niveles técnico-científico, social y económico; señala beneficiarios, novedad, originalidad e impacto potencial.' },
-  { key: 'doc_ind4', label: 'Ind. 4 — Cap. II · Calidad del Documento', peso: '10%', desc: 'Desarrolla los conceptos y definiciones necesarios con contenido conciso, bien citado y de fácil interpretación.' },
-  { key: 'doc_ind5', label: 'Ind. 5 — Cap. III · Innovación y Creatividad', peso: '20%', desc: 'Describe la metodología con rigor: universo de estudio, tipo de investigación, instrumentos y plan de trabajo.' },
-  { key: 'doc_ind6', label: 'Ind. 6 — Cap. III · Innovación y Creatividad', peso: '20%', desc: 'Desarrolla cada objetivo específico de forma coherente, evidenciando que el conjunto alcanza el objetivo general con resultados validados.' },
-  { key: 'doc_ind7', label: 'Ind. 7 — Cap. IV · Calidad del Documento', peso: '10%', desc: 'Presenta conclusiones y recomendaciones acordes a los resultados.' },
+  { key: 'doc_ind1', criterio: 'Originalidad del Trabajo I', label: 'Existe innovación.' },
+  { key: 'doc_ind2', criterio: 'Originalidad del Trabajo II', label: 'Contrasta y argumenta con revisión bibliográfica.' },
+  { key: 'doc_ind3', criterio: 'Enfoque Científico I', label: 'Aporte al análisis metodológico, conocimiento, ciencia y cultura.' },
+  { key: 'doc_ind4', criterio: 'Enfoque Científico II', label: 'Aporte a la solución del problema específico.' },
+  { key: 'doc_ind5', criterio: 'Interpretación y Aplicación de Resultados I', label: 'Coherencia de los objetivos con los resultados obtenidos.' },
+  { key: 'doc_ind6', criterio: 'Interpretación y Aplicación de Resultados II', label: 'Existe orientación a nuevos estudios.' },
 ];
 
 const BLOQUE2 = [
-  { key: 'exp_ind1', label: 'Ind. 1 — Dominio del Tema · Funcionalidad Técnica', peso: '20%', desc: 'Sustenta con solidez el conocimiento del tema; maneja con precisión la terminología técnica industrial.' },
-  { key: 'exp_ind2', label: 'Ind. 2 — Dominio del Tema · Claridad Metodológica', peso: '20%', desc: 'Explica con claridad la metodología científica empleada y justifica la selección de métodos y herramientas.' },
-  { key: 'exp_ind3', label: 'Ind. 3 — Calidad de la Exposición · Presentación', peso: '20%', desc: 'Expone con coherencia, fluidez y precisión; organiza el tiempo de forma eficiente.' },
-  { key: 'exp_ind4', label: 'Ind. 4 — Calidad de la Exposición · Recursos', peso: '20%', desc: 'Utiliza eficientemente los recursos de apoyo; el stand refleja planificación y señalética clara.' },
-  { key: 'exp_ind5', label: 'Ind. 5 — Impacto Industrial', peso: '20%', desc: 'Vincula los resultados con su impacto en procesos industriales y argumenta la viabilidad económica.' },
-  { key: 'exp_ind6', label: 'Ind. 6 — Análisis Técnico', peso: '20%', desc: 'Efectúa análisis crítico de los resultados e identifica elementos con potencial de patente.' },
-  { key: 'exp_ind7', label: 'Ind. 7 — Defensa del Proyecto', peso: '10%', desc: 'Responde con solvencia las preguntas técnicas del evaluador; demuestra dominio integral del proyecto.' },
+  { key: 'exp_ind1', criterio: 'Interpretación y Aplicación de Resultados I', label: 'Coherencia de los objetivos con los resultados obtenidos.' },
+  { key: 'exp_ind2', criterio: 'Interpretación y Aplicación de Resultados II', label: 'Sugiere aplicaciones de los resultados obtenidos.' },
+  { key: 'exp_ind3', criterio: 'Utilización Eficiente de los Recursos', label: 'Montaje del material de apoyo en la exposición.' },
+  { key: 'exp_ind4', criterio: 'Calidad de la Presentación I', label: 'Precisión en el lenguaje científico tecnológico.' },
+  { key: 'exp_ind5', criterio: 'Calidad de la Presentación II', label: 'Calidad de exposición, apoyos audiovisuales.' },
+  { key: 'exp_ind6', criterio: 'Defensa del Proyecto I', label: 'Dominio del tema.' },
+  { key: 'exp_ind7', criterio: 'Defensa del Proyecto II', label: 'Calidad de respuestas.' },
 ];
 
-const LABELS: Record<number, string> = {
-  0: 'No presenta',
-  1: 'Deficiente',
-  2: 'Regular',
-  3: 'Bueno',
-  4: 'Muy Bueno',
-  5: 'Excelente',
-};
+const NIVELES = ['Deficiente', 'Malo', 'Regular', 'Bueno', 'Excelente'];
 
 type Scores = Record<string, number>;
 
 interface Proyecto { id: string; codigo_proyecto: string; nombre_proyecto: string; }
 
 function SliderCard({
-  ind, value, onChange, accentColor, trackEmptyColor = '#e2e8f0'
+  ind, value, onChange, accentColor, trackEmptyColor = '#e2e8f0', valores
 }: {
-  ind: { key: string; label: string; peso: string; desc: string };
+  ind: { key: string; criterio: string; label: string };
   value: number;
   onChange: (v: number) => void;
   accentColor: string;
   trackEmptyColor?: string;
+  valores: number[];
 }) {
-  const fillPct = (value / 5) * 100;
+  const currentIndex = Math.max(0, valores.indexOf(value));
+  const fillPct = (currentIndex / (valores.length - 1)) * 100;
+  const nivelLabel = NIVELES[currentIndex] || NIVELES[0];
+  const maxVal = valores[valores.length - 1];
 
   return (
     <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm p-5 sm:p-6 mb-4 sm:mb-5 transition-shadow hover:shadow-md lg:flex lg:gap-8 lg:items-center group">
       {/* Texto de Criterio */}
       <div className="flex-1 mb-5 lg:mb-0 lg:pr-4">
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <p className="text-base sm:text-lg font-bold text-slate-800 leading-snug group-hover:text-[#162748] transition-colors">{ind.label}</p>
-          <span className="bg-slate-100 rounded-xl px-2.5 py-1 text-[10px] sm:text-xs font-bold text-slate-500 whitespace-nowrap flex-shrink-0 border border-slate-200">
-            Peso: {ind.peso}
-          </span>
-        </div>
-        <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">{ind.desc}</p>
+        <p className="text-[13px] sm:text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">{ind.criterio}</p>
+        <p className="text-base sm:text-lg font-bold text-slate-800 leading-snug group-hover:text-[#162748] transition-colors">{ind.label}</p>
       </div>
 
       {/* Control Interactivo */}
@@ -80,14 +71,14 @@ function SliderCard({
             </div>
           </div>
           <div className="text-right">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Selección</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Puntaje</p>
             <div className="flex items-baseline gap-1 justify-end">
               <span className="text-4xl sm:text-5xl font-black leading-none tracking-tighter" style={{ color: accentColor }}>
                 {value}
               </span>
-              <span className="text-sm font-bold text-slate-400">/ 5</span>
+              <span className="text-sm font-bold text-slate-400">/ {maxVal}</span>
             </div>
-            <p className="text-[11px] font-bold uppercase tracking-wider mt-1" style={{ color: accentColor }}>{LABELS[value]}</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider mt-1" style={{ color: accentColor }}>{nivelLabel}</p>
           </div>
         </div>
 
@@ -110,20 +101,20 @@ function SliderCard({
             <input
               type="range"
               min={0}
-              max={5}
+              max={valores.length - 1}
               step={1}
-              value={value}
-              onChange={e => onChange(Number(e.target.value))}
+              value={currentIndex}
+              onChange={e => onChange(valores[Number(e.target.value)])}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 m-0 p-0"
               style={{ touchAction: 'none' }}
             />
           </div>
           <div className="flex justify-between mt-3 px-1">
-            {[0, 1, 2, 3, 4, 5].map(v => (
+            {valores.map((v, i) => (
               <span
                 key={v}
-                className="text-[11px] sm:text-xs w-5 text-center transition-colors"
-                style={{ color: v <= value ? accentColor : '#94a3b8', fontWeight: v <= value ? 800 : 500 }}
+                className="text-[11px] sm:text-xs w-8 text-center transition-colors"
+                style={{ color: i <= currentIndex ? accentColor : '#94a3b8', fontWeight: i <= currentIndex ? 800 : 500 }}
               >
                 {v}
               </span>
@@ -133,11 +124,11 @@ function SliderCard({
 
         {/* Versión Desktop: Botones */}
         <div className="hidden lg:flex gap-1.5 xl:gap-2">
-          {[0, 1, 2, 3, 4, 5].map(v => (
+          {valores.map((v, i) => (
             <button
               key={v}
               onClick={() => onChange(v)}
-              className={`flex-1 h-12 rounded-xl text-lg font-black transition-all ${
+              className={`flex-1 h-12 rounded-xl text-base font-black transition-all ${
                 value === v 
                   ? 'text-white shadow-md scale-105' 
                   : 'bg-white text-slate-400 border border-slate-200 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-600'
@@ -224,7 +215,8 @@ export default function EvaluarProyecto() {
   const [idDocente, setIdDocente] = useState<string | null>(null);
   const [scores, setScores] = useState<Scores>(() => {
     const init: Scores = {};
-    [...BLOQUE1, ...BLOQUE2].forEach(i => { init[i.key] = 0; });
+    BLOQUE1.forEach(i => { init[i.key] = 1; });
+    BLOQUE2.forEach(i => { init[i.key] = 2; });
     return init;
   });
   const [observations, setObservations] = useState('');
@@ -262,15 +254,9 @@ export default function EvaluarProyecto() {
   const formatTime = (s: number) =>
     `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
-  // ── Cálculos según diccionario ────────────────────────────────────────────
-  const doc_innov = (scores.doc_ind3 + scores.doc_ind5 + scores.doc_ind6) * (20 / 15);
-  const doc_calidad = (scores.doc_ind1 + scores.doc_ind2 + scores.doc_ind4 + scores.doc_ind7) * (10 / 20);
-  const total_bloque1 = doc_innov + doc_calidad;
-  const exp_dominio = (scores.exp_ind1 + scores.exp_ind2) * 2;
-  const exp_calidad = (scores.exp_ind3 + scores.exp_ind4) * 2;
-  const exp_impacto = (scores.exp_ind5 + scores.exp_ind6) * 2;
-  const exp_defensa = scores.exp_ind7 * 2;
-  const total_bloque2 = exp_dominio + exp_calidad + exp_impacto + exp_defensa;
+  // ── Cálculos: suma directa según Anexo C (sin ponderación, ya viene incorporada en la escala) ──
+  const total_bloque1 = BLOQUE1.reduce((sum, i) => sum + scores[i.key], 0);
+  const total_bloque2 = BLOQUE2.reduce((sum, i) => sum + scores[i.key], 0);
   const puntaje_final = total_bloque1 + total_bloque2;
 
   const setScore = (key: string, val: number) => setScores(prev => ({ ...prev, [key]: val }));
@@ -290,7 +276,7 @@ export default function EvaluarProyecto() {
       doc_ind4: scores.doc_ind4,
       doc_ind5: scores.doc_ind5,
       doc_ind6: scores.doc_ind6,
-      doc_ind7: scores.doc_ind7,
+      doc_ind7: 0,
       exp_ind1: scores.exp_ind1,
       exp_ind2: scores.exp_ind2,
       exp_ind3: scores.exp_ind3,
@@ -409,7 +395,7 @@ export default function EvaluarProyecto() {
             Módulo de Criterios
           </h1>
           <p className="text-sm text-slate-500 font-medium">
-            Ajuste el deslizador para asignar una puntuación de 0 a 5 para cada criterio.
+            Ajuste el deslizador para asignar el puntaje según Deficiente, Malo, Regular, Bueno o Excelente.
           </p>
         </div>
 
@@ -435,6 +421,7 @@ export default function EvaluarProyecto() {
               onChange={v => setScore(ind.key, v)}
               accentColor="#162748"
               trackEmptyColor="#e2e8f0"
+              valores={[1, 2, 3, 4, 5]}
             />
           ))}
         </div>
@@ -461,6 +448,7 @@ export default function EvaluarProyecto() {
               onChange={v => setScore(ind.key, v)}
               accentColor="#2563eb"
               trackEmptyColor="#bfdbfe"
+              valores={[2, 4, 6, 8, 10]}
             />
           ))}
         </div>
@@ -596,11 +584,11 @@ export default function EvaluarProyecto() {
                       <div className="flex-1 h-1.5 rounded-full bg-blue-50 overflow-hidden">
                         <div
                           className="h-full rounded-full bg-blue-500 transition-all duration-500 ease-out"
-                          style={{ width: `${(scores[ind.key] / 5) * 100}%` }}
+                          style={{ width: `${(scores[ind.key] / 10) * 100}%` }}
                         />
                       </div>
                       <span className="text-xs font-black text-blue-600 w-8 text-right flex-shrink-0">
-                        {scores[ind.key]}/5
+                        {scores[ind.key]}/10
                       </span>
                     </div>
                   ))}

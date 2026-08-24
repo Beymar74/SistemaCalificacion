@@ -80,7 +80,7 @@ export default function CompletadoPage() {
       {/* Footer */}
       <footer className="px-4 sm:px-6 py-6 sm:py-8 text-center opacity-40">
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-          Feria de Innovación Tecnológica · 2026
+          Expociencia Regional EMI - UALP · 2026
         </p>
       </footer>
     </div>
