@@ -1,9 +1,10 @@
 export const CATEGORIAS = [
-  'Categoría 1',
-  'Categoría 2',
-  'Categoría 3',
-  'Categoría 4',
-  'Categoría 5',
+  'Carreras Tecnológicas',
+  'Carreras de la Tierra',
+  'Carreras de Producción',
+  'Carreras Económicas',
+  'Carreras Jurídicas',
+  'Carreras del Tecnológico',
 ] as const;
 
 export type CategoriaTipo = (typeof CATEGORIAS)[number];
@@ -41,8 +42,53 @@ export const CARRERAS = [
 
 export type CarreraTipo = (typeof CARRERAS)[number];
 
-export const CATEGORIA_DEFAULT = 'Categoría 1';
+export const CATEGORIA_DEFAULT = 'Carreras Tecnológicas';
 export const CARRERA_DEFAULT = 'Ingeniería de Sistemas';
+
+/**
+ * Mapeo oficial de carreras a su categoría correspondiente
+ */
+export const CARRERA_CATEGORIA_MAP: Record<string, CategoriaTipo> = {
+  'Ingeniería de Sistemas': 'Carreras Tecnológicas',
+  'Ingeniería Mecatrónica': 'Carreras Tecnológicas',
+  'Ingeniería en Mecatrónica': 'Carreras Tecnológicas',
+  'Ingeniería en Telecomunicaciones': 'Carreras Tecnológicas',
+  'Ingeniería en Sistemas Electrónicos': 'Carreras Tecnológicas',
+  'Ingeniería Electrónica': 'Carreras Tecnológicas',
+
+  'Ingeniería Ambiental': 'Carreras de la Tierra',
+  'Ingeniería Civil': 'Carreras de la Tierra',
+  'Ingeniería Geográfica': 'Carreras de la Tierra',
+  'Ingeniería Agronómica': 'Carreras de la Tierra',
+
+  'Ingeniería Industrial': 'Carreras de Producción',
+  'Ingeniería Petrolera': 'Carreras de Producción',
+  'Ingeniería Agroindustrial': 'Carreras de Producción',
+
+  'Ingeniería Comercial': 'Carreras Económicas',
+  'Ingeniería Financiera': 'Carreras Económicas',
+  'Ingeniería Económica': 'Carreras Económicas',
+
+  'Derecho': 'Carreras Jurídicas',
+
+  'Técnico Superior en Informática': 'Carreras del Tecnológico',
+  'Técnico Superior en Construcción Civil': 'Carreras del Tecnológico',
+  'Técnico Superior en Energías Renovables': 'Carreras del Tecnológico',
+  'Técnico Superior en Sistemas Electrónicos': 'Carreras del Tecnológico',
+  'Técnico Superior en Análisis de Sistemas / Diseño Gráfico': 'Carreras del Tecnológico',
+};
+
+export function getCategoriaPorCarrera(carrera?: string): CategoriaTipo {
+  if (!carrera) return CATEGORIA_DEFAULT;
+  if (CARRERA_CATEGORIA_MAP[carrera]) return CARRERA_CATEGORIA_MAP[carrera];
+  const lower = carrera.toLowerCase();
+  for (const [key, cat] of Object.entries(CARRERA_CATEGORIA_MAP)) {
+    if (lower.includes(key.toLowerCase()) || key.toLowerCase().includes(lower)) {
+      return cat;
+    }
+  }
+  return CATEGORIA_DEFAULT;
+}
 
 /**
  * Colores oficiales de las carreras escaneados y calibrados por OCR desde la gráfica institucional.

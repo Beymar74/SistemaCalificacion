@@ -58,7 +58,7 @@ export default function ComputoPage() {
         p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (p.carrera || '').toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCat = filterCategoria === 'all' || (p.categoria || 'Categoría 1') === filterCategoria;
+      const matchesCat = filterCategoria === 'all' || p.categoria === filterCategoria;
       const matchesCar = filterCarrera === 'all' || (p.carrera || '') === filterCarrera;
       return matchesSearch && matchesCat && matchesCar;
     });
@@ -238,7 +238,7 @@ export default function ComputoPage() {
                   </div>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <span className="text-[10px] text-slate-500 font-bold uppercase bg-slate-100 px-2 py-0.5 rounded">
-                      {p.categoria || 'Categoría 1'}
+                      {p.categoria}
                     </span>
                     {p.carrera && (
                       <CarreraBadge carrera={p.carrera} size="xs" />

@@ -16,6 +16,7 @@ import { fetchAsignacionesDocente } from '@/lib/db';
 import type { ProyectoAsignado } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import CarreraBadge from '@/components/CarreraBadge';
+import { getCarreraConfig } from '@/lib/constants';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -114,13 +115,21 @@ export default function DocenteHome() {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-3 sm:gap-4 min-w-0"
           >
-            <img
-              src="/logo/uicyt-logo.png"
-              alt="Logo UICYT"
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-contain flex-shrink-0 drop-shadow-sm"
-            />
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <img
+                src="/logo/Emi logo.png"
+                alt="Logo EMI"
+                className="w-10 h-10 sm:w-12 sm:h-12 object-contain flex-shrink-0"
+              />
+              <div className="w-px h-7 bg-slate-200" />
+              <img
+                src="/logo/uicyt-logo.png"
+                alt="Logo UICYT"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-contain flex-shrink-0 drop-shadow-sm"
+              />
+            </div>
             <div className="flex flex-col justify-center">
-              <span className="text-base sm:text-xl font-black text-[#162748] tracking-tight leading-none">
+              <span className="text-base sm:text-xl font-black text-[#094e8f] tracking-tight leading-none">
                 UICYT
               </span>
               <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-widest hidden sm:block mt-1">
@@ -247,86 +256,95 @@ export default function DocenteHome() {
             animate="visible"
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6"
           >
-            {proyectos.map(p => (
-              <motion.div
-                key={p.id}
-                variants={itemVariants}
-                whileHover={{ y: -6, boxShadow: '0 25px 50px -12px rgba(22,39,72,0.1)' }}
-                className="group bg-white rounded-[2rem] border border-slate-200/60 shadow-sm overflow-hidden flex flex-col transition-all relative h-full"
-              >
-                {/* Glow de hover (subtle) */}
-                <div className="absolute inset-0 bg-gradient-to-b from-white to-slate-50/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            {proyectos.map(p => {
+              const cfg = getCarreraConfig(p.carrera);
+              return (
+                <motion.div
+                  key={p.id}
+                  variants={itemVariants}
+                  whileHover={{ y: -6, boxShadow: `0 25px 50px -12px ${cfg.hex}33` }}
+                  className="group bg-white rounded-[2rem] border shadow-sm overflow-hidden flex flex-col transition-all relative h-full"
+                  style={{ borderColor: cfg.border }}
+                >
+                  {/* Barra superior de acento con color de la carrera */}
+                  <div className="h-2 w-full" style={{ backgroundColor: cfg.hex }} />
 
-                <div className="p-5 sm:p-6 flex flex-col flex-1 relative z-10">
-                  {/* Header de la card */}
-                  <div className="flex items-start justify-between gap-3 mb-5">
-                    {/* Badge de stand */}
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Stand</span>
-                      <span className={`
-                        px-4 py-1.5 text-base sm:text-lg font-black rounded-xl uppercase tracking-wider flex-shrink-0 inline-flex items-center justify-center
-                        ${p.estado === 'Calificado'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                          : 'bg-[#162748] text-white shadow-sm shadow-blue-900/20'}
-                      `}>
-                        {p.stand}
-                      </span>
+                  {/* Glow de hover */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-white to-slate-50/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+                  <div className="p-5 sm:p-6 flex flex-col flex-1 relative z-10">
+                    {/* Header de la card */}
+                    <div className="flex items-start justify-between gap-3 mb-5">
+                      {/* Badge de stand con color de carrera */}
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Stand</span>
+                        <span 
+                          className="px-4 py-1.5 text-base sm:text-lg font-black rounded-xl uppercase tracking-wider flex-shrink-0 inline-flex items-center justify-center border"
+                          style={{
+                            backgroundColor: cfg.bg,
+                            color: cfg.text,
+                            borderColor: cfg.border,
+                          }}
+                        >
+                          {p.stand}
+                        </span>
+                      </div>
+
+                      {/* Badge de estado */}
+                      {p.estado === 'Calificado' ? (
+                        <span className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider border border-emerald-100 flex-shrink-0">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Completado
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5 text-blue-700 bg-blue-50 px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider border border-blue-100 flex-shrink-0">
+                          <Clock className="w-3.5 h-3.5" />
+                          Pendiente
+                        </span>
+                      )}
                     </div>
 
-                    {/* Badge de estado */}
-                    {p.estado === 'Calificado' ? (
-                      <span className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider border border-emerald-100 flex-shrink-0">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        Completado
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5 text-blue-700 bg-blue-50 px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider border border-blue-100 flex-shrink-0">
-                        <Clock className="w-3.5 h-3.5" />
-                        Pendiente
-                      </span>
-                    )}
-                  </div>
+                    {/* Categoría y Carrera */}
+                    <div className="flex items-center gap-2 flex-wrap mb-2">
+                      {p.categoria && (
+                        <span className="text-[10px] sm:text-[11px] font-bold text-slate-600 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">
+                          {p.categoria}
+                        </span>
+                      )}
+                      {p.carrera && (
+                        <CarreraBadge carrera={p.carrera} size="xs" />
+                      )}
+                    </div>
 
-                  {/* Categoría y Carrera */}
-                  <div className="flex items-center gap-2 flex-wrap mb-2">
-                    {p.categoria && (
-                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-600 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">
-                        {p.categoria}
-                      </span>
-                    )}
-                    {p.carrera && (
-                      <CarreraBadge carrera={p.carrera} size="xs" />
-                    )}
-                  </div>
+                    {/* Nombre del proyecto */}
+                    <h3 className="text-base sm:text-lg font-bold text-slate-800 leading-snug mb-6 line-clamp-3 group-hover:text-[#094e8f] transition-colors">
+                      {p.nombre}
+                    </h3>
 
-                  {/* Nombre del proyecto */}
-                  <h3 className="text-base sm:text-lg font-bold text-slate-800 leading-snug mb-6 line-clamp-3 group-hover:text-blue-600 transition-colors">
-                    {p.nombre}
-                  </h3>
-
-                  {/* Botón CTA */}
-                  <div className="mt-auto pt-4">
-                    {p.estado === 'Calificado' ? (
-                      <button
-                        disabled
-                        className="w-full flex items-center justify-center gap-2 py-4 bg-slate-50/80 text-slate-400 rounded-2xl text-xs sm:text-sm font-bold border border-slate-100 cursor-not-allowed min-h-[52px]"
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                        RESULTADO ENVIADO
-                      </button>
-                    ) : (
-                      <Link
-                        href={`/docente/evaluar/${p.id}`}
-                        className="w-full flex items-center justify-center gap-2 py-4 bg-[#162748] text-white rounded-2xl text-xs sm:text-sm font-bold transition-all hover:bg-[#1e3460] hover:shadow-xl hover:shadow-blue-900/20 active:scale-[0.98] min-h-[52px] group-hover:bg-blue-600"
-                      >
-                        <ClipboardList className="w-4 h-4" />
-                        INICIAR EVALUACIÓN
-                      </Link>
-                    )}
+                    {/* Botón CTA */}
+                    <div className="mt-auto pt-4">
+                      {p.estado === 'Calificado' ? (
+                        <button
+                          disabled
+                          className="w-full flex items-center justify-center gap-2 py-4 bg-slate-50/80 text-slate-400 rounded-2xl text-xs sm:text-sm font-bold border border-slate-100 cursor-not-allowed min-h-[52px]"
+                        >
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                          RESULTADO ENVIADO
+                        </button>
+                      ) : (
+                        <Link
+                          href={`/docente/evaluar/${p.id}`}
+                          className="w-full flex items-center justify-center gap-2 py-4 bg-[#094e8f] hover:bg-[#073b6d] text-white rounded-2xl text-xs sm:text-sm font-black transition-all shadow-md shadow-blue-900/15 active:scale-[0.98] min-h-[52px]"
+                        >
+                          <ClipboardList className="w-4 h-4 text-[#f0d114]" />
+                          INICIAR EVALUACIÓN
+                        </Link>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </motion.div>
         </div>
       </main>

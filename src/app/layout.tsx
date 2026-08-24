@@ -10,6 +10,11 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: "UICYT – Sistema de Evaluación",
   description: "UICYT · Unidad de Investigación, Ciencia y Tecnología – Plataforma de Gestión y Evaluación de Proyectos",
+  icons: {
+    icon: "/logo/uicyt-emblem.png",
+    shortcut: "/logo/uicyt-emblem.png",
+    apple: "/logo/uicyt-emblem.png",
+  },
 };
 
 export default function RootLayout({

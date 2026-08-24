@@ -45,13 +45,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         animate={{ width: isCollapsed ? 80 : 240 }}
         className="bg-white border-r border-slate-200 flex flex-col fixed left-0 top-0 bottom-0 z-50 overflow-hidden"
       >
-        {/* Brand */}
+        {/* Header / Logo */}
         <div className="px-5 py-6 border-b border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-3 overflow-hidden">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <img 
+              src="/logo/Emi logo.png" 
+              alt="Logo EMI" 
+              className="w-8 h-8 object-contain flex-shrink-0"
+            />
             <img 
               src="/logo/uicyt-logo.png" 
               alt="Logo UICYT" 
-              className="w-9 h-9 rounded-lg object-contain flex-shrink-0"
+              className="w-8 h-8 rounded-lg object-contain flex-shrink-0"
             />
             {!isCollapsed && (
               <motion.div 
@@ -59,7 +64,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 animate={{ opacity: 1 }}
                 className="flex flex-col min-w-0"
               >
-                <span className="text-base font-black text-[#162748] tracking-tight leading-none">
+                <span className="text-base font-black text-[#094e8f] tracking-tight leading-none">
                   UICYT
                 </span>
                 <span className="text-[8px] font-extrabold text-slate-400 uppercase tracking-tighter truncate leading-tight mt-0.5">
@@ -78,7 +83,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* User info */}
         <div className="px-5 py-4 flex items-center gap-3 border-b border-slate-100 overflow-hidden">
-          <div className="w-9 h-9 rounded-full bg-[#162748] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+          <div className="w-9 h-9 rounded-full bg-[#094e8f] text-white flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-sm shadow-blue-900/20">
             UI
           </div>
           {!isCollapsed && (
@@ -87,8 +92,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               animate={{ opacity: 1 }}
               className="min-w-0"
             >
-              <p className="text-sm font-semibold text-slate-800 truncate">Portal Admin</p>
-              <p className="text-xs text-slate-500 truncate">UICYT</p>
+              <p className="text-sm font-bold text-slate-800 truncate">Portal Admin</p>
+              <p className="text-xs text-[#094e8f] font-bold truncate">2026 Carrera de Ingeniería de Sistemas</p>
             </motion.div>
           )}
         </div>
@@ -102,13 +107,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 key={href}
                 href={href}
                 title={isCollapsed ? label : ''}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors relative group ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all relative group ${
                   isActive
-                    ? 'bg-blue-50 text-blue-600'
+                    ? 'bg-[#094e8f] text-white shadow-md shadow-blue-900/15'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
-                <Icon className="w-4 h-4 flex-shrink-0" />
+                <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-[#f0d114]' : ''}`} />
                 {!isCollapsed && (
                   <motion.span
                     initial={{ opacity: 0 }}
@@ -119,7 +124,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </motion.span>
                 )}
                 {isCollapsed && (
-                  <div className="absolute left-full ml-2 px-2 py-1 bg-[#162748] text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+                  <div className="absolute left-full ml-2 px-2.5 py-1 bg-[#094e8f] text-white text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg">
                     {label}
                   </div>
                 )}

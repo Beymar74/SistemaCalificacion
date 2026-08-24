@@ -16,10 +16,12 @@ export default function CompletadoVisitantePage() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3"
+            className="flex items-center gap-2.5"
           >
-            <img src="/logo/uicyt-logo.png" alt="Logo UICYT" className="w-10 h-10 rounded-lg object-contain" />
-            <span className="text-lg font-black text-[#162748] tracking-tight">UICYT</span>
+            <img src="/logo/Emi logo.png" alt="Logo EMI" className="w-9 h-9 object-contain" />
+            <div className="w-px h-6 bg-slate-200" />
+            <img src="/logo/uicyt-logo.png" alt="Logo UICYT" className="w-9 h-9 rounded-lg object-contain" />
+            <span className="text-lg font-black text-[#094e8f] tracking-tight">UICYT</span>
           </motion.div>
         </div>
       </header>

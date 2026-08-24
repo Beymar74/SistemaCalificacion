@@ -84,14 +84,22 @@ export default function LoginPage() {
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                className="relative mb-6"
+                className="flex items-center justify-center gap-4 mb-6 relative"
               >
                 <div className="absolute inset-0 bg-blue-900/10 blur-2xl opacity-30 rounded-full" />
                 <Image
+                  src="/logo/Emi logo.png"
+                  alt="Logo EMI"
+                  width={80}
+                  height={80}
+                  className="object-contain relative z-10 drop-shadow-md"
+                />
+                <div className="w-[1.5px] h-12 bg-slate-200 relative z-10" />
+                <Image
                   src="/logo/uicyt-logo.png"
                   alt="Logo UICYT"
-                  width={110}
-                  height={110}
+                  width={90}
+                  height={90}
                   className="object-contain relative z-10 rounded-2xl drop-shadow-md"
                 />
               </motion.div>
@@ -102,11 +110,11 @@ export default function LoginPage() {
                 transition={{ delay: 0.3 }}
                 className="text-center"
               >
-                <h1 className="text-3xl font-black text-[#1e3a5f] tracking-tight leading-tight mb-1">
+                <h1 className="text-3xl font-black text-[#094e8f] tracking-tight leading-tight mb-1">
                   UICYT
                 </h1>
                 <div className="flex flex-col items-center justify-center gap-1">
-                  <p className="text-[#162748] text-xs font-black uppercase tracking-wider max-w-[280px] leading-tight">
+                  <p className="text-slate-800 text-xs font-black uppercase tracking-wider max-w-[280px] leading-tight">
                     Unidad de Investigación Ciencia y Tecnología
                   </p>
                   <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">
@@ -189,7 +197,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full relative group overflow-hidden bg-[#1e3a5f] hover:bg-[#16304f] text-white font-black py-4.5 rounded-2xl shadow-[0_12px_24px_-8px_rgba(30,58,95,0.35)] hover:shadow-[0_16px_32px_-8px_rgba(30,58,95,0.45)] transition-all active:scale-[0.98] disabled:opacity-70"
+                  className="w-full relative group overflow-hidden bg-[#094e8f] hover:bg-[#073b6d] text-white font-black py-4.5 rounded-2xl shadow-[0_12px_24px_-8px_rgba(9,78,143,0.4)] hover:shadow-[0_16px_32px_-8px_rgba(9,78,143,0.5)] transition-all active:scale-[0.98] disabled:opacity-70"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
 
@@ -235,9 +243,9 @@ export default function LoginPage() {
               </button>
 
               <div className="flex items-center gap-2 px-3 py-1 bg-slate-50 border border-slate-100 rounded-full">
-                <Sparkles className="w-3 h-3 text-[#1e3a5f]" />
-                <span className="text-[9px] text-slate-400 font-black uppercase tracking-tighter">
-                  SCEITII · Gestión 2026
+                <Sparkles className="w-3 h-3 text-[#f0d114]" />
+                <span className="text-[9px] text-[#094e8f] font-black uppercase tracking-tighter">
+                  UICYT · Gestión 2026
                 </span>
               </div>
             </motion.div>
@@ -251,7 +259,7 @@ export default function LoginPage() {
           transition={{ delay: 1 }}
           className="mt-8 text-center text-[10px] text-slate-400 font-bold uppercase tracking-[0.4em]"
         >
-          © 2026 Carrera de Ingeniería Industrial
+          © 2026 Carrera de Ingeniería de Sistemas
         </motion.p>
       </motion.div>
     </div>

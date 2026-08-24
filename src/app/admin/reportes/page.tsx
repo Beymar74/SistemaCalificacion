@@ -154,7 +154,7 @@ export default function ReportesPage() {
         });
       }
     });
-    await exportToExcel(rows, `SCEITII_Reporte_General_Calificaciones_${new Date().toISOString().split('T')[0]}`);
+    await exportToExcel(rows, `UICYT_Reporte_General_Calificaciones_${new Date().toISOString().split('T')[0]}`);
   });
 
   const dlGeneralPDF = () => handleDownload('general', 'pdf', async () => {
@@ -169,10 +169,10 @@ export default function ReportesPage() {
       p.ranking > 0 ? p.ranking.toString() : '—'
     ]);
     await exportToPDF(
-      'SCEITII - Reporte General de Calificaciones',
+      'UICYT - Reporte General de Calificaciones',
       ['Código', 'Proyecto', 'Carrera', 'Categoría', 'Evals', 'Promedio', 'Ranking'],
       pdfRows,
-      `SCEITII_Reporte_General_${new Date().toISOString().split('T')[0]}`
+      `UICYT_Reporte_General_${new Date().toISOString().split('T')[0]}`
     );
   });
 
@@ -193,7 +193,7 @@ export default function ReportesPage() {
       'Puntaje Acumulado': p.puntajeAcumulado,
       'Promedio Final': p.promedio
     }));
-    await exportToExcel(rows, `SCEITII_Cuadro_Honor_y_Clasificaciones_${new Date().getFullYear()}`);
+    await exportToExcel(rows, `UICYT_Cuadro_Honor_y_Clasificaciones_${new Date().getFullYear()}`);
   });
 
   const dlHonorPDF = () => handleDownload('honor', 'pdf', async () => {
@@ -212,10 +212,10 @@ export default function ReportesPage() {
       p.promedio.toFixed(2)
     ]);
     await exportToPDF(
-      'SCEITII - Cuadro de Honor y Clasificaciones',
+      'UICYT - Cuadro de Honor y Clasificaciones',
       ['Posición', 'Código', 'Proyecto', 'Carrera', 'Categoría', 'Evals', 'Promedio Final'],
       pdfRows,
-      `SCEITII_Cuadro_Honor_${new Date().getFullYear()}`
+      `UICYT_Cuadro_Honor_${new Date().getFullYear()}`
     );
   });
 
@@ -231,7 +231,7 @@ export default function ReportesPage() {
       'Proyectos Asignados': d.proyectosAsignados,
       'Estado del Docente': d.estado
     }));
-    await exportToExcel(rows, `SCEITII_Registro_Jurados_Carga_${new Date().getFullYear()}`);
+    await exportToExcel(rows, `UICYT_Registro_Jurados_Carga_${new Date().getFullYear()}`);
   });
 
   const dlDocentesPDF = () => handleDownload('docentes', 'pdf', async () => {
@@ -245,10 +245,10 @@ export default function ReportesPage() {
       d.estado
     ]);
     await exportToPDF(
-      'SCEITII - Registro de Jurados y Carga Evaluadora',
+      'UICYT - Registro de Jurados y Carga Evaluadora',
       ['Código', 'Nombre Completo', 'Materia/Área', 'Grado', 'Asignados', 'Estado'],
       pdfRows,
-      `SCEITII_Registro_Jurados_${new Date().getFullYear()}`
+      `UICYT_Registro_Jurados_${new Date().getFullYear()}`
     );
   });
 
@@ -263,7 +263,7 @@ export default function ReportesPage() {
       'Estado Asistencia': p.asistio ? 'Presente en Stand' : 'Ausente / Pendiente',
       'Estado de Proyecto': p.habilitado !== false ? 'Habilitado para Calificar' : 'Inhabilitado'
     }));
-    await exportToExcel(rows, `SCEITII_Planilla_Control_Asistencia_y_Stands_${new Date().getFullYear()}`);
+    await exportToExcel(rows, `UICYT_Planilla_Control_Asistencia_y_Stands_${new Date().getFullYear()}`);
   });
 
   const dlStandsPDF = () => handleDownload('stands', 'pdf', async () => {
@@ -277,10 +277,10 @@ export default function ReportesPage() {
       p.habilitado !== false ? 'Habilitado' : 'Inhabilitado'
     ]);
     await exportToPDF(
-      'SCEITII - Planilla de Control de Stands y Asistencia',
+      'UICYT - Planilla de Control de Stands y Asistencia',
       ['Código', 'Proyecto', 'Carrera', 'Categoría', 'Asistencia', 'Habilitado'],
       pdfRows,
-      `SCEITII_Control_Stands_${new Date().getFullYear()}`
+      `UICYT_Control_Stands_${new Date().getFullYear()}`
     );
   });
 
@@ -296,7 +296,7 @@ export default function ReportesPage() {
       'Estado de Calificación': 'Inhabilitado para Evaluaciones',
       'Registro Auditoría': 'Dado de baja administrativa'
     }));
-    await exportToExcel(rows, `SCEITII_Auditoria_Proyectos_Inhabilitados_${new Date().getFullYear()}`);
+    await exportToExcel(rows, `UICYT_Auditoria_Proyectos_Inhabilitados_${new Date().getFullYear()}`);
   });
 
   const dlInactivosPDF = () => handleDownload('inactivos', 'pdf', async () => {
@@ -310,10 +310,10 @@ export default function ReportesPage() {
       'Inhabilitado'
     ]);
     await exportToPDF(
-      'SCEITII - Reporte de Proyectos Inhabilitados',
+      'UICYT - Reporte de Proyectos Inhabilitados',
       ['Código', 'Proyecto', 'Categoría', 'Sociedad', 'Calificación'],
       pdfRows,
-      `SCEITII_Proyectos_Inhabilitados_${new Date().getFullYear()}`
+      `UICYT_Proyectos_Inhabilitados_${new Date().getFullYear()}`
     );
   });
 

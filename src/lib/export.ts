@@ -30,7 +30,7 @@ export async function exportToExcel(data: ExportRow[], fileName: string) {
   // 1. Banner Superior de Título Corporativo (Filas 2 y 3)
   worksheet.mergeCells(`A2:${lastColLetter}3`);
   const titleCell = worksheet.getCell('A2');
-  titleCell.value = 'UICYT · UNIDAD DE INVESTIGACIÓN CIENCIA Y TECNOLOGÍA\nSISTEMA DE EVALUACIONES Y CALIFICACIONES';
+  titleCell.value = 'UICYT · UNIDAD DE INVESTIGACIÓN CIENCIA Y TECNOLOGÍA\nSISTEMA DE EVALUACIONES Y CALIFICACIONES · GESTIÓN 2026';
   titleCell.font = {
     name: 'Segoe UI',
     size: 13,
@@ -40,7 +40,7 @@ export async function exportToExcel(data: ExportRow[], fileName: string) {
   titleCell.fill = {
     type: 'pattern',
     pattern: 'solid',
-    fgColor: { argb: 'FF162748' } // Azul Marino Institucional
+    fgColor: { argb: 'FF094E8F' } // Azul UICYT
   };
   titleCell.alignment = {
     vertical: 'middle',
@@ -200,7 +200,7 @@ export async function exportToPDF(title: string, columns: string[], data: (strin
   const doc = new jsPDF();
   
   doc.setFontSize(16);
-  doc.setTextColor(22, 39, 72); // #162748
+  doc.setTextColor(9, 78, 143); // #094e8f
   doc.text('UICYT · UNIDAD DE INVESTIGACIÓN CIENCIA Y TECNOLOGÍA', 14, 18);
   
   doc.setFontSize(13);
@@ -216,7 +216,7 @@ export async function exportToPDF(title: string, columns: string[], data: (strin
     head: [columns],
     body: data,
     theme: 'grid',
-    headStyles: { fillColor: '#162748', textColor: 255, fontStyle: 'bold' },
+    headStyles: { fillColor: '#094e8f', textColor: 255, fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [245, 247, 250] },
   });
 

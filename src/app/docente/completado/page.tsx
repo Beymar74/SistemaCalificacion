@@ -20,11 +20,17 @@ export default function CompletadoPage() {
             className="flex items-center gap-2 sm:gap-3"
           >
             <img
+              src="/logo/Emi logo.png"
+              alt="Logo EMI"
+              className="w-10 h-10 sm:w-11 sm:h-11 object-contain flex-shrink-0"
+            />
+            <div className="w-px h-6 bg-slate-200" />
+            <img
               src="/logo/uicyt-logo.png"
               alt="Logo UICYT"
               className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg object-contain flex-shrink-0"
             />
-            <span className="text-lg sm:text-xl font-black text-[#162748] tracking-tight">
+            <span className="text-lg sm:text-xl font-black text-[#094e8f] tracking-tight">
               UICYT
             </span>
           </motion.div>

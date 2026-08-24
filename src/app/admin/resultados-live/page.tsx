@@ -17,6 +17,7 @@ import {
   CATEGORIAS,
   CARRERAS_INGENIERIAS,
   CARRERAS_TECNICOS,
+  getCarreraConfig,
 } from '@/lib/constants';
 import CarreraBadge from '@/components/CarreraBadge';
 
@@ -76,7 +77,7 @@ export default function ResultadosLivePage() {
 
   const filteredResultados: ResultadoLiveConPosicion[] = useMemo(() => {
     const list = resultados.filter(r => {
-      if (selectedCategoria !== 'all' && (r.categoria || 'Categoría 1') !== selectedCategoria) return false;
+      if (selectedCategoria !== 'all' && r.categoria !== selectedCategoria) return false;
       if (selectedCarrera !== 'all' && (r.carrera || '') !== selectedCarrera) return false;
       return true;
     });
@@ -224,14 +225,24 @@ export default function ResultadosLivePage() {
                         key={r.id || r.posicionRelativa}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`relative rounded-[2rem] p-6 text-center shadow-sm border ${
+                        className={`relative rounded-[2.5rem] p-6 text-center transition-all ${
                           isFirst
-                            ? 'bg-[#162748] text-white w-72 py-8 shadow-2xl shadow-blue-900/20 z-10 border-transparent'
-                            : 'bg-white border-slate-100 w-56'
+                            ? 'bg-[#094e8f] text-white w-72 py-9 shadow-2xl shadow-blue-900/30 z-10'
+                            : 'bg-white text-slate-800 w-56 border border-slate-200/80 shadow-sm'
                         }`}
                       >
-                        <div className="text-3xl mb-2">{medalColors[r.posicionRelativa]?.icon || `#${r.posicionRelativa}`}</div>
-                        <h3 className={`text-sm font-bold mb-1 leading-snug ${isFirst ? 'text-white' : 'text-[#162748]'}`}>
+                        <div 
+                          className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-black shadow-md"
+                          style={{
+                            backgroundColor: isFirst ? '#f0d114' : '#FFFFFF',
+                            color: isFirst ? '#094e8f' : '#64748B',
+                            borderColor: isFirst ? '#FFFFFF' : '#E2E8F0',
+                          }}
+                        >
+                          {r.posicionRelativa}
+                        </div>
+                        <Medal className="w-9 h-9 mx-auto mb-3 mt-1" style={{ color: isFirst ? '#f0d114' : '#94A3B8' }} />
+                        <h3 className={`text-sm font-bold mb-1.5 leading-snug ${isFirst ? 'text-white' : 'text-slate-800'}`}>
                           {r.nombre.length > 40 ? r.nombre.slice(0, 40) + '...' : r.nombre}
                         </h3>
                         {r.carrera && (
@@ -239,10 +250,17 @@ export default function ResultadosLivePage() {
                             <CarreraBadge carrera={r.carrera} size="xs" />
                           </div>
                         )}
-                        <p className={`text-[10px] font-black uppercase tracking-widest mb-2 ${isFirst ? 'text-blue-200' : 'text-slate-400'}`}>
-                          {r.codigo} · {r.categoria || 'Categoría 1'}
-                        </p>
-                        <p className={`text-4xl font-black mb-1 ${isFirst ? 'text-white' : 'text-[#162748]'}`}>
+                        {r.categoria && (
+                          <span 
+                            className={`inline-block px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest mb-2 border ${
+                              isFirst ? 'bg-white/15 text-white border-white/20' : 'bg-slate-100 text-slate-600 border-slate-200'
+                            }`}
+                          >
+                            {r.categoria}
+                          </span>
+                        )}
+                        {isFirst && <p className="text-xs text-[#f0d114] font-black uppercase tracking-wider mb-1">★ 1ER LUGAR ★</p>}
+                        <p className={`text-4xl font-black mb-1 ${isFirst ? 'text-white' : 'text-[#094e8f]'}`}>
                           {r.promedio.toFixed(2)}
                         </p>
                         <p className={`text-xs ${isFirst ? 'text-blue-100' : 'text-slate-500'}`}>
@@ -305,7 +323,7 @@ export default function ResultadosLivePage() {
                               </td>
                               <td className="px-6 py-4">
                                 <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-200/50">
-                                  {r.categoria || 'Categoría 1'}
+                                  {r.categoria}
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-center">
@@ -331,7 +349,7 @@ export default function ResultadosLivePage() {
         {/* Footer */}
         <div className="mt-10 text-center">
           <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">
-            SCEITII · Sistema de Calificación EMI · {YEAR}
+            UICYT · Sistema de Calificación y Evaluación · {YEAR}
           </p>
         </div>
       </div>

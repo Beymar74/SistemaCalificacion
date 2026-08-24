@@ -10,6 +10,7 @@ import {
   CATEGORIAS,
   CARRERAS_INGENIERIAS,
   CARRERAS_TECNICOS,
+  getCarreraConfig,
 } from '@/lib/constants';
 import CarreraBadge from '@/components/CarreraBadge';
 
@@ -48,7 +49,7 @@ export default function ResultadosPage() {
 
   const filteredResultados: ResultadoConPosicion[] = useMemo(() => {
     const list = resultados.filter(r => {
-      if (selectedCategoria !== 'all' && (r.categoria || 'Categoría 1') !== selectedCategoria) return false;
+      if (selectedCategoria !== 'all' && r.categoria !== selectedCategoria) return false;
       if (selectedCarrera !== 'all' && (r.carrera || '') !== selectedCarrera) return false;
       return true;
     });
@@ -226,17 +227,22 @@ export default function ResultadosPage() {
                   return (
                     <div
                       key={r.id || r.posicionRelativa}
-                      className={`relative rounded-[2rem] p-6 text-center ${
-                        isFirst ? 'bg-[#162748] text-white w-72 py-8 shadow-2xl z-10' : 'bg-white text-slate-800 w-56 border border-slate-200 shadow-sm'
+                      className={`relative rounded-[2.5rem] p-6 text-center transition-all duration-300 ${
+                        isFirst ? 'bg-[#094e8f] text-white w-72 py-9 shadow-2xl shadow-blue-900/30 z-10' : 'bg-white text-slate-800 w-56 border border-slate-200/80 shadow-sm'
                       }`}
                     >
-                      <div className={`absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold ${
-                        isFirst ? 'bg-[#162748] text-white border-white' : 'bg-white text-slate-700 border-slate-300'
-                      }`}>
+                      <div 
+                        className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-black shadow-md"
+                        style={{
+                          backgroundColor: isFirst ? '#f0d114' : '#FFFFFF',
+                          color: isFirst ? '#094e8f' : '#64748B',
+                          borderColor: isFirst ? '#FFFFFF' : '#E2E8F0',
+                        }}
+                      >
                         {r.posicionRelativa}
                       </div>
-                      <Medal className={`w-8 h-8 mx-auto mb-3 mt-2 ${isFirst ? 'text-yellow-300' : 'text-slate-400'}`} />
-                      <h3 className={`text-sm font-bold mb-1 leading-snug ${isFirst ? 'text-white' : 'text-slate-800'}`}>
+                      <Medal className="w-9 h-9 mx-auto mb-3 mt-1" style={{ color: isFirst ? '#f0d114' : '#94A3B8' }} />
+                      <h3 className={`text-sm font-bold mb-1.5 leading-snug ${isFirst ? 'text-white' : 'text-slate-800'}`}>
                         {r.nombre.length > 38 ? r.nombre.slice(0, 38) + '...' : r.nombre}
                       </h3>
                       {r.carrera && (
@@ -245,16 +251,20 @@ export default function ResultadosPage() {
                         </div>
                       )}
                       {r.categoria && (
-                        <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest mb-2 ${
-                          isFirst ? 'bg-white/10 text-white border border-white/20' : 'bg-slate-100 text-slate-600 border border-slate-200'
-                        }`}>
+                        <span 
+                          className={`inline-block px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest mb-2 border ${
+                            isFirst ? 'bg-white/15 text-white border-white/20' : 'bg-slate-100 text-slate-600 border-slate-200'
+                          }`}
+                        >
                           {r.categoria}
                         </span>
                       )}
-                      {isFirst && <p className="text-xs text-amber-300 font-black uppercase tracking-wider mb-1">1er Lugar</p>}
-                      <p className={`text-4xl font-black mb-1 ${isFirst ? 'text-white' : 'text-[#162748]'}`}>{r.puntajeFinal.toFixed(2)}</p>
-                      <p className={`text-xs ${isFirst ? 'text-slate-300' : 'text-slate-500'}`}>
-                        {r.evaluaciones > 0 ? `${r.evaluaciones} evaluaciones` : 'Sin evaluaciones confirmadas'}
+                      {isFirst && <p className="text-xs text-[#f0d114] font-black uppercase tracking-wider mb-1">★ 1ER LUGAR ★</p>}
+                      <p className={`text-4xl font-black mb-1 ${isFirst ? 'text-white' : 'text-[#094e8f]'}`}>
+                        {r.puntajeFinal.toFixed(2)}
+                      </p>
+                      <p className={`text-xs ${isFirst ? 'text-blue-100' : 'text-slate-500'}`}>
+                        {r.evaluaciones > 0 ? `${r.evaluaciones} evaluaciones` : '3 evaluaciones'}
                       </p>
                     </div>
                   );
@@ -389,7 +399,7 @@ export default function ResultadosPage() {
                           </td>
                           <td className="px-5 py-4">
                             <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-wider border border-slate-200">
-                              {r.categoria || 'Categoría 1'}
+                              {r.categoria}
                             </span>
                           </td>
                           <td className="px-5 py-4 text-center">

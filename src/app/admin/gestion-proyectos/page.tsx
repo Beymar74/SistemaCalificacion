@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Search,
   Plus,
@@ -34,10 +34,12 @@ import { supabase } from '../../../lib/supabase';
 import type { ProyectoGestion } from '../../../lib/data';
 import {
   CATEGORIAS,
+  CARRERAS,
   CARRERAS_INGENIERIAS,
   CARRERAS_TECNICOS,
   CATEGORIA_DEFAULT,
   CARRERA_DEFAULT,
+  getCategoriaPorCarrera,
 } from '@/lib/constants';
 import CarreraBadge from '@/components/CarreraBadge';
 
@@ -81,6 +83,13 @@ export default function GestionProyectosPage() {
     sociedad: '',
     gestion: new Date().getFullYear().toString()
   });
+
+  const carrerasDisponiblesPorCategoria = useMemo(() => {
+    const cat = projectForm.categoria;
+    if (!cat) return CARRERAS;
+    const filtradas = CARRERAS.filter(c => getCategoriaPorCarrera(c) === cat);
+    return filtradas.length > 0 ? filtradas : CARRERAS;
+  }, [projectForm.categoria]);
 
   const handleOpenAssign = async (p: ProyectoGestion) => {
     setSelected(p);
@@ -713,8 +722,16 @@ export default function GestionProyectosPage() {
                       <select
                         required
                         value={projectForm.categoria}
-                        onChange={e => setProjectForm({ ...projectForm, categoria: e.target.value })}
-                        className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-3 focus:bg-white focus:border-blue-600/10 font-bold text-sm outline-none transition-all"
+                        onChange={e => {
+                          const nuevaCat = e.target.value;
+                          const validas = CARRERAS.filter(c => getCategoriaPorCarrera(c) === nuevaCat);
+                          setProjectForm({ 
+                            ...projectForm, 
+                            categoria: nuevaCat,
+                            carrera: validas.includes(projectForm.carrera as any) ? projectForm.carrera : (validas[0] || CARRERA_DEFAULT)
+                          });
+                        }}
+                        className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-3 focus:bg-white focus:border-[#094e8f]/30 font-bold text-sm outline-none transition-all"
                       >
                         {CATEGORIAS.map(cat => (
                           <option key={cat} value={cat}>{cat}</option>
@@ -726,28 +743,28 @@ export default function GestionProyectosPage() {
                       <select
                         required
                         value={projectForm.carrera}
-                        onChange={e => setProjectForm({ ...projectForm, carrera: e.target.value })}
-                        className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-3 focus:bg-white focus:border-blue-600/10 font-bold text-sm outline-none transition-all"
+                        onChange={e => {
+                          const newCar = e.target.value;
+                          setProjectForm({ 
+                            ...projectForm, 
+                            carrera: newCar,
+                            categoria: getCategoriaPorCarrera(newCar)
+                          });
+                        }}
+                        className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-4 py-3 focus:bg-white focus:border-[#094e8f]/30 font-bold text-sm outline-none transition-all"
                       >
-                        <optgroup label="Ingenierías">
-                          {CARRERAS_INGENIERIAS.map(car => (
-                            <option key={car} value={car}>{car}</option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="Técnicos Superiores">
-                          {CARRERAS_TECNICOS.map(car => (
-                            <option key={car} value={car}>{car}</option>
-                          ))}
-                        </optgroup>
+                        {carrerasDisponiblesPorCategoria.map(car => (
+                          <option key={car} value={car}>{car}</option>
+                        ))}
                       </select>
                     </div>
                   </div>
                   <div className="pt-4">
                     <button
                       disabled={confirming}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-900/10 transition-all flex items-center justify-center gap-2"
+                      className="w-full bg-[#094e8f] hover:bg-[#073b6d] text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-900/15 transition-all flex items-center justify-center gap-2"
                     >
-                      {confirming ? <RefreshCw className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
+                      {confirming ? <RefreshCw className="w-5 h-5 animate-spin text-[#f0d114]" /> : <CheckCircle2 className="w-5 h-5 text-[#f0d114]" />}
                       <span className="uppercase tracking-widest text-xs">{isEditing ? 'Actualizar' : 'Guardar'} Proyecto</span>
                     </button>
                   </div>

@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import type { Proyecto, EstadoProyecto, ProyectoGestion, ResultadoTop, ProyectoAsignado, EstadoAsignado } from './data';
+import { CATEGORIA_DEFAULT, getCategoriaPorCarrera } from './constants';
 
 // ─── TYPES ──────────────────────────────────────────────────────────────────
 
@@ -108,7 +109,7 @@ export async function fetchProyectosAdmin(): Promise<Proyecto[]> {
       codigo: p.codigo_proyecto,
       nombre: p.nombre_proyecto,
       grupo: '',
-      categoria: p.categoria || 'Categoría 1',
+      categoria: (p.categoria && p.categoria !== 'General' && !p.categoria.startsWith('Categoría')) ? p.categoria : getCategoriaPorCarrera(p.carrera || p.sociedad),
       carrera: p.carrera || p.sociedad || '',
       estado,
       evaluacionesCompletadas: completadas,
@@ -265,7 +266,7 @@ export async function fetchProyectosParaGestion(): Promise<ProyectoGestion[]> {
     id: p.id,
     codigo: p.codigo_proyecto,
     nombre: p.nombre_proyecto,
-    sector: p.categoria || 'Categoría 1',
+    sector: (p.categoria && p.categoria !== 'General' && !p.categoria.startsWith('Categoría')) ? p.categoria : getCategoriaPorCarrera(p.carrera || p.sociedad),
     carrera: p.carrera || p.sociedad || '',
     sociedad: p.sociedad || '',
     asistio: p.asistio ?? true,
@@ -410,11 +411,12 @@ export async function autoAsignarDocentes(): Promise<{ success: boolean; count?:
 }
 
 export async function actualizarProyecto(id: string, data: any) {
+  const carrera = data.carrera || data.sociedad || '';
   const payload: any = {
     codigo_proyecto: data.codigo,
     nombre_proyecto: data.nombre,
-    categoria: data.categoria || 'Categoría 1',
-    sociedad: data.carrera || data.sociedad || '',
+    categoria: (data.categoria && data.categoria !== 'General' && !data.categoria.startsWith('Categoría')) ? data.categoria : getCategoriaPorCarrera(carrera),
+    sociedad: carrera,
     gestion: data.gestion || new Date().getFullYear().toString()
   };
   return await supabase
@@ -464,16 +466,21 @@ export async function fetchResultadosTop(limit: number = 50): Promise<ResultadoT
     evalCount[e.id_proyecto] = (evalCount[e.id_proyecto] || 0) + 1;
   });
 
-  return data.map((r: any) => ({
-    id: r.id_proyecto,
-    posicion: r.ranking_posicion,
-    codigo: r.proyectos?.codigo_proyecto || 'S/C',
-    nombre: r.proyectos?.nombre_proyecto || 'Proyecto Desconocido',
-    categoria: r.proyectos?.categoria || 'Categoría 1',
-    carrera: r.proyectos?.carrera || r.proyectos?.sociedad || '',
-    puntajeFinal: Number(r.promedio_final) || 0,
-    evaluaciones: evalCount[r.id_proyecto] || 0,
-  }));
+  return data.map((r: any) => {
+    const rawCat = r.proyectos?.categoria;
+    const carrera = r.proyectos?.carrera || r.proyectos?.sociedad || '';
+    const categoria = (rawCat && rawCat !== 'General' && !rawCat.startsWith('Categoría')) ? rawCat : getCategoriaPorCarrera(carrera);
+    return {
+      id: r.id_proyecto,
+      posicion: r.ranking_posicion,
+      codigo: r.proyectos?.codigo_proyecto || 'S/C',
+      nombre: r.proyectos?.nombre_proyecto || 'Proyecto Desconocido',
+      categoria,
+      carrera,
+      puntajeFinal: Number(r.promedio_final) || 0,
+      evaluaciones: evalCount[r.id_proyecto] || 0,
+    };
+  });
 }
 
 export async function resetTodasLasCalificaciones(): Promise<{ error?: string }> {
@@ -642,13 +649,18 @@ export async function fetchProyectosHabilitados(): Promise<{ id: string; codigo_
     .select('id, codigo_proyecto, nombre_proyecto, categoria, sociedad')
     .eq('habilitado', true)
     .order('codigo_proyecto');
-  return (data || []).map((p: any) => ({
-    id: p.id,
-    codigo_proyecto: p.codigo_proyecto,
-    nombre_proyecto: p.nombre_proyecto,
-    categoria: p.categoria || 'Categoría 1',
-    carrera: p.carrera || p.sociedad || ''
-  }));
+  return (data || []).map((p: any) => {
+    const rawCat = p.categoria;
+    const carrera = p.carrera || p.sociedad || '';
+    const categoria = (rawCat && rawCat !== 'General' && !rawCat.startsWith('Categoría')) ? rawCat : getCategoriaPorCarrera(carrera);
+    return {
+      id: p.id,
+      codigo_proyecto: p.codigo_proyecto,
+      nombre_proyecto: p.nombre_proyecto,
+      categoria,
+      carrera
+    };
+  });
 }
 
 export async function fetchAsignacionesDocente(idDocente: string): Promise<ProyectoAsignado[]> {
@@ -676,14 +688,19 @@ export async function fetchAsignacionesDocente(idDocente: string): Promise<Proye
 
   const evalMap = new Map(evals?.map(e => [e.id_proyecto, e.confirmada]) || []);
 
-  return data.map((a: any) => ({
-    id: a.proyectos?.id || '',
-    stand: a.proyectos?.codigo_proyecto || 'S/N',
-    categoria: a.proyectos?.categoria || 'Categoría 1',
-    carrera: a.proyectos?.carrera || a.proyectos?.sociedad || '',
-    nombre: a.proyectos?.nombre_proyecto || 'Desconocido',
-    estado: evalMap.get(a.id_proyecto) ? 'Calificado' : 'Pendiente' as EstadoAsignado,
-  }));
+  return data.map((a: any) => {
+    const rawCat = a.proyectos?.categoria;
+    const carrera = a.proyectos?.carrera || a.proyectos?.sociedad || '';
+    const categoria = (rawCat && rawCat !== 'General' && !rawCat.startsWith('Categoría')) ? rawCat : getCategoriaPorCarrera(carrera);
+    return {
+      id: a.proyectos?.id || '',
+      stand: a.proyectos?.codigo_proyecto || 'S/N',
+      categoria,
+      carrera,
+      nombre: a.proyectos?.nombre_proyecto || 'Desconocido',
+      estado: evalMap.get(a.id_proyecto) ? 'Calificado' : 'Pendiente' as EstadoAsignado,
+    };
+  });
 }
 
 // ─── CONFIGURACIÓN DEL SISTEMA ────────────────────────────────────────────────
@@ -788,12 +805,16 @@ export async function fetchComputoProyectos(): Promise<ProyectoComputo[]> {
     const confirmadas = pEvals.filter((e: any) => e.confirmada);
     const res = resultadosMap.get(p.id);
 
+    const rawCat = p.categoria;
+    const carrera = p.carrera || p.sociedad || '';
+    const categoria = (rawCat && rawCat !== 'General' && !rawCat.startsWith('Categoría')) ? rawCat : getCategoriaPorCarrera(carrera);
+
     return {
       id: p.id,
       codigo: p.codigo_proyecto,
       nombre: p.nombre_proyecto,
-      categoria: p.categoria || 'Categoría 1',
-      carrera: p.carrera || p.sociedad || '',
+      categoria,
+      carrera,
       evaluacionesConfirmadas: confirmadas.length,
       puntajeAcumulado: res ? Number(res.puntaje_acumulado) : 0,
       promedio: res ? Number(res.promedio_final) : 0,
@@ -941,13 +962,16 @@ export async function fetchResultadosLive(): Promise<ResultadoLive[]> {
 
   return resultados.map((r: any) => {
     const p = proysMap.get(r.id_proyecto);
+    const rawCat = p?.categoria;
+    const carrera = (p as any)?.carrera || p?.sociedad || '';
+    const categoria = (rawCat && rawCat !== 'General' && !rawCat.startsWith('Categoría')) ? rawCat : getCategoriaPorCarrera(carrera);
     return {
       posicion: r.ranking_posicion,
       id: r.id_proyecto,
       codigo: p?.codigo_proyecto || 'S/C',
       nombre: p?.nombre_proyecto || 'Proyecto Desconocido',
-      categoria: p?.categoria || 'Categoría 1',
-      carrera: (p as any)?.carrera || p?.sociedad || '',
+      categoria,
+      carrera,
       promedio: Number(r.promedio_final) || 0,
       evaluacionesConfirmadas: evalCount[r.id_proyecto] || 0
     };

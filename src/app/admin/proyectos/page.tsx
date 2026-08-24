@@ -118,7 +118,7 @@ export default function ProyectosPage() {
           p.codigo.toLowerCase().includes(q) ||
           (p.carrera || '').toLowerCase().includes(q);
         const matchEstado = !estado || p.estado === estado;
-        const matchCat = !categoria || (p.categoria || 'Categoría 1') === categoria;
+        const matchCat = !categoria || p.categoria === categoria;
         const matchCar = !carrera || (p.carrera || '') === carrera;
         return matchSearch && matchEstado && matchCat && matchCar;
       })
@@ -329,7 +329,7 @@ export default function ProyectosPage() {
                       </td>
                       <td className="px-6 py-5">
                         <span className="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-blue-100/50">
-                          {p.categoria || 'Categoría 1'}
+                          {p.categoria}
                         </span>
                       </td>
                       <td className="px-6 py-5">
