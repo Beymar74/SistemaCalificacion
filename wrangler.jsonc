@@ -7,7 +7,8 @@
     "nodejs_compat"
   ],
   "vars": {
-    "NEXT_PUBLIC_SUPABASE_URL": "https://rfvmfdliabcwnxuzeefe.supabase.co"
+    "NEXT_PUBLIC_SUPABASE_URL": "https://rfvmfdliabcwnxuzeefe.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_tWqbRuovwI5Hce1yVN8Ong_SL0cjk2k"
   },
   "assets": {
     "directory": ".open-next/assets",
