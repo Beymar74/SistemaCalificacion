@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
+// Configuración de autenticación administrativa y sincronización con Supabase Auth
 const DEFAULT_PASSWORD = 'EMI2026*';
 
 export async function POST(req: NextRequest) {
