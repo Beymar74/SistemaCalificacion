@@ -1,22 +1,26 @@
 'use client';
 
-import { useState } from 'react';
-import { 
-  Download, 
-  FileText, 
-  Trophy, 
-  Users, 
-  CheckSquare, 
-  FileX, 
-  Layers, 
+import { useState, useEffect, useMemo } from 'react';
+import {
+  Download,
+  FileText,
+  Trophy,
+  CheckSquare,
+  FileX,
+  Layers,
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Filter,
+  FileSignature,
+  Search,
+  User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HelpBanner from '@/components/HelpBanner';
-import { exportToExcel, exportToPDF } from '@/lib/export';
-import { fetchComputoProyectos, fetchDocentesAdmin, fetchProyectosParaGestion } from '@/lib/db';
+import { exportToExcel, exportToPDF, exportAnexoCPDF, ANEXO_C_BLOQUE1_DEF, ANEXO_C_BLOQUE2_DEF, type AnexoCEvaluacion } from '@/lib/export';
+import { fetchComputoProyectos, fetchDocentesAdmin, fetchProyectosParaGestion, fetchEvaluacionesDetalle } from '@/lib/db';
+import { CATEGORIAS } from '@/lib/constants';
 
 interface ReportCardProps {
   id: string;
@@ -64,7 +68,7 @@ function ReportCard({
           onClick={onDownloadExcel}
           disabled={isAnyLoading}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-            isExcelLoading 
+            isExcelLoading
               ? 'bg-blue-50 text-blue-600'
               : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 active:scale-95 disabled:opacity-50 disabled:pointer-events-none'
           }`}
@@ -81,7 +85,7 @@ function ReportCard({
           onClick={onDownloadPDF}
           disabled={isAnyLoading}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-            isPdfLoading 
+            isPdfLoading
               ? 'bg-blue-50 text-blue-600'
               : 'bg-rose-50 hover:bg-rose-100 text-rose-700 active:scale-95 disabled:opacity-50 disabled:pointer-events-none'
           }`}
@@ -98,9 +102,137 @@ function ReportCard({
   );
 }
 
+// ─── Tarjeta especial: Respaldo de Firma por Jurado (Anexo C) ────────────────
+interface DocenteOpcion {
+  nombre: string;
+  materia: string;
+}
+
+function RespaldoFirmaCard({ notify }: { notify: (text: string, type: 'success' | 'error') => void }) {
+  const [docentes, setDocentes] = useState<DocenteOpcion[]>([]);
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchDocentesAdmin().then(data => {
+      setDocentes(data.map(d => ({ nombre: d.nombre, materia: d.departamento })));
+    });
+  }, []);
+
+  const sugerencias = useMemo(() => {
+    if (!search.trim() || selected) return [];
+    const term = search.toLowerCase();
+    return docentes.filter(d => d.nombre.toLowerCase().includes(term)).slice(0, 6);
+  }, [search, docentes, selected]);
+
+  const handleDescargar = async () => {
+    const nombreDocente = selected || search.trim();
+    if (!nombreDocente) {
+      notify('Escribe o selecciona el nombre de un jurado.', 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const evals = await fetchEvaluacionesDetalle();
+      const propias = evals.filter(e => e.docenteNombre === nombreDocente && e.confirmada);
+
+      if (propias.length === 0) {
+        notify('Ese jurado no tiene evaluaciones confirmadas todavía.', 'error');
+        setLoading(false);
+        return;
+      }
+
+      const payload: AnexoCEvaluacion[] = propias.map(e => ({
+        proyectoCodigo: e.proyectoCodigo,
+        proyectoNombre: e.proyectoNombre,
+        docenteNombre: e.docenteNombre,
+        observaciones: e.observaciones,
+        bloque1: ANEXO_C_BLOQUE1_DEF.map(def => ({
+          aspecto: def.aspecto,
+          criterio: def.aspecto,
+          label: def.label,
+          valor: (e as unknown as Record<string, number>)[def.key] ?? 0,
+        })),
+        bloque2: ANEXO_C_BLOQUE2_DEF.map(def => ({
+          aspecto: def.aspecto,
+          criterio: def.aspecto,
+          label: def.label,
+          valor: (e as unknown as Record<string, number>)[def.key] ?? 0,
+        })),
+      }));
+
+      exportAnexoCPDF(payload, nombreDocente);
+      notify(`Respaldo generado: ${propias.length} planilla(s) de ${nombreDocente}.`, 'success');
+    } catch (err) {
+      console.error(err);
+      notify('Error al generar el respaldo del jurado.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-all md:col-span-2 lg:col-span-1">
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-2xl bg-indigo-50 flex-shrink-0">
+            <FileSignature className="w-6 h-6 text-indigo-600" />
+          </div>
+          <h3 className="font-black text-[#162748] text-base leading-tight tracking-tight">Respaldo de Firma por Jurado</h3>
+        </div>
+        <p className="text-slate-500 font-medium text-xs leading-relaxed">
+          Busca a un docente y descarga en PDF todas sus evaluaciones confirmadas ya llenadas en el formato oficial Anexo &quot;C&quot;, listas para imprimir y firmar como respaldo físico.
+        </p>
+
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => { setSearch(e.target.value); setSelected(null); }}
+            placeholder="Nombre del jurado..."
+            className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-blue-600/40 focus:bg-white transition-all"
+          />
+          {sugerencias.length > 0 && (
+            <div className="absolute z-20 mt-1.5 w-full bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+              {sugerencias.map(d => (
+                <button
+                  key={d.nombre}
+                  onClick={() => { setSelected(d.nombre); setSearch(d.nombre); }}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-left hover:bg-slate-50 transition-colors"
+                >
+                  <User className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-slate-800">{d.nombre}</p>
+                    <p className="text-[10px] text-slate-400 font-medium">{d.materia}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-6 pt-4 border-t border-slate-50">
+        <button
+          onClick={handleDescargar}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-indigo-50 hover:bg-indigo-100 text-indigo-700 active:scale-95 disabled:opacity-50 disabled:pointer-events-none transition-all"
+        >
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+          <span>Descargar Respaldo PDF</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function ReportesPage() {
   const [loadingReport, setLoadingReport] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [selectedCategoria, setSelectedCategoria] = useState<string>('all');
 
   const notify = (text: string, type: 'success' | 'error') => {
     setFeedback({ text, type });
@@ -121,9 +253,17 @@ export default function ReportesPage() {
     }
   };
 
+  const sufijoCategoria = () =>
+    selectedCategoria === 'all' ? 'General' : selectedCategoria.replace(/\s+/g, '_');
+
+  const tituloCategoria = () =>
+    selectedCategoria === 'all' ? '' : ` — ${selectedCategoria}`;
+
   // 1. Reporte General de Calificaciones
   const dlGeneralExcel = () => handleDownload('general', 'excel', async () => {
-    const data = await fetchComputoProyectos();
+    const raw = await fetchComputoProyectos();
+    const data = selectedCategoria === 'all' ? raw : raw.filter(p => p.categoria === selectedCategoria);
+
     const rows: Record<string, string | number>[] = [];
     data.forEach(p => {
       if (p.evaluadores.length === 0) {
@@ -154,11 +294,13 @@ export default function ReportesPage() {
         });
       }
     });
-    await exportToExcel(rows, `UICYT_Reporte_General_Calificaciones_${new Date().toISOString().split('T')[0]}`);
+    await exportToExcel(rows, `UICYT_Reporte_General_Calificaciones_${sufijoCategoria()}_${new Date().toISOString().split('T')[0]}`);
   });
 
   const dlGeneralPDF = () => handleDownload('general', 'pdf', async () => {
-    const data = await fetchComputoProyectos();
+    const raw = await fetchComputoProyectos();
+    const data = selectedCategoria === 'all' ? raw : raw.filter(p => p.categoria === selectedCategoria);
+
     const pdfRows = data.map(p => [
       p.codigo,
       p.nombre,
@@ -169,16 +311,18 @@ export default function ReportesPage() {
       p.ranking > 0 ? p.ranking.toString() : '—'
     ]);
     await exportToPDF(
-      'UICYT - Reporte General de Calificaciones',
+      `UICYT - Reporte General de Calificaciones${tituloCategoria()}`,
       ['Código', 'Proyecto', 'Carrera', 'Categoría', 'Evals', 'Promedio', 'Ranking'],
       pdfRows,
-      `UICYT_Reporte_General_${new Date().toISOString().split('T')[0]}`
+      `UICYT_Reporte_General_${sufijoCategoria()}_${new Date().toISOString().split('T')[0]}`
     );
   });
 
   // 2. Cuadro de Honor y Resultados (Rankings)
   const dlHonorExcel = () => handleDownload('honor', 'excel', async () => {
-    const data = await fetchComputoProyectos();
+    const raw = await fetchComputoProyectos();
+    const data = selectedCategoria === 'all' ? raw : raw.filter(p => p.categoria === selectedCategoria);
+
     const evaluated = data
       .filter(p => p.promedio > 0)
       .sort((a, b) => a.ranking - b.ranking);
@@ -193,11 +337,13 @@ export default function ReportesPage() {
       'Puntaje Acumulado': p.puntajeAcumulado,
       'Promedio Final': p.promedio
     }));
-    await exportToExcel(rows, `UICYT_Cuadro_Honor_y_Clasificaciones_${new Date().getFullYear()}`);
+    await exportToExcel(rows, `UICYT_Cuadro_Honor_y_Clasificaciones_${sufijoCategoria()}_${new Date().getFullYear()}`);
   });
 
   const dlHonorPDF = () => handleDownload('honor', 'pdf', async () => {
-    const data = await fetchComputoProyectos();
+    const raw = await fetchComputoProyectos();
+    const data = selectedCategoria === 'all' ? raw : raw.filter(p => p.categoria === selectedCategoria);
+
     const evaluated = data
       .filter(p => p.promedio > 0)
       .sort((a, b) => a.ranking - b.ranking);
@@ -212,47 +358,14 @@ export default function ReportesPage() {
       p.promedio.toFixed(2)
     ]);
     await exportToPDF(
-      'UICYT - Cuadro de Honor y Clasificaciones',
+      `UICYT - Cuadro de Honor y Clasificaciones${tituloCategoria()}`,
       ['Posición', 'Código', 'Proyecto', 'Carrera', 'Categoría', 'Evals', 'Promedio Final'],
       pdfRows,
-      `UICYT_Cuadro_Honor_${new Date().getFullYear()}`
+      `UICYT_Cuadro_Honor_${sufijoCategoria()}_${new Date().getFullYear()}`
     );
   });
 
-  // 3. Registro de Jurados y Carga
-  const dlDocentesExcel = () => handleDownload('docentes', 'excel', async () => {
-    const data = await fetchDocentesAdmin();
-    const rows = data.map(d => ({
-      'Código Usuario': d.codigo,
-      'Nombre Completo': d.nombre,
-      'Correo Electrónico': d.email,
-      'Materia / Área': d.departamento,
-      'Grado Académico': d.especialidad,
-      'Proyectos Asignados': d.proyectosAsignados,
-      'Estado del Docente': d.estado
-    }));
-    await exportToExcel(rows, `UICYT_Registro_Jurados_Carga_${new Date().getFullYear()}`);
-  });
-
-  const dlDocentesPDF = () => handleDownload('docentes', 'pdf', async () => {
-    const data = await fetchDocentesAdmin();
-    const pdfRows = data.map(d => [
-      d.codigo,
-      d.nombre,
-      d.departamento,
-      d.especialidad,
-      d.proyectosAsignados.toString(),
-      d.estado
-    ]);
-    await exportToPDF(
-      'UICYT - Registro de Jurados y Carga Evaluadora',
-      ['Código', 'Nombre Completo', 'Materia/Área', 'Grado', 'Asignados', 'Estado'],
-      pdfRows,
-      `UICYT_Registro_Jurados_${new Date().getFullYear()}`
-    );
-  });
-
-  // 4. Stands y Asistencia
+  // 3. Stands y Asistencia (sin filtro de categoría: no aplica)
   const dlStandsExcel = () => handleDownload('stands', 'excel', async () => {
     const data = await fetchProyectosParaGestion();
     const rows = data.map(p => ({
@@ -284,7 +397,7 @@ export default function ReportesPage() {
     );
   });
 
-  // 5. Auditoría de Proyectos Inhabilitados
+  // 4. Auditoría de Proyectos Inhabilitados (sin filtro de categoría: no aplica)
   const dlInactivosExcel = () => handleDownload('inactivos', 'excel', async () => {
     const data = await fetchProyectosParaGestion();
     const inactivos = data.filter(p => p.habilitado === false);
@@ -358,8 +471,43 @@ export default function ReportesPage() {
       <HelpBanner
         storageKey="reportes-admin"
         title="Guía Operativa: Centro de Descarga de Planillas y Reportes Oficiales"
-        description="Este panel reúne toda la logística e información de calificaciones del certamen. Cada reporte cuenta con formatos automatizados en Excel (.xlsx) con diseño premium de celdas ajustadas, y PDF (.pdf) en grilla limpia para impresiones institucionales rápidas. Descargue reportes generales de notas, clasificaciones jerárquicas o auditorías de control docente según sea requerido."
+        description="Este panel reúne toda la logística e información de calificaciones del certamen. Cada reporte cuenta con formatos automatizados en Excel (.xlsx) y PDF (.pdf). El Reporte General y el Cuadro de Honor respetan el filtro de categoría. La tarjeta de Respaldo de Firma genera, por cada jurado, la Planilla Anexo 'C' ya llenada con sus notas y observaciones, lista para imprimir y firmar."
       />
+
+      {/* Filtro de Categoría */}
+      <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 shadow-sm">
+        <div className="flex items-center gap-2 mb-3 text-slate-500 font-bold text-xs uppercase tracking-wider">
+          <Filter className="w-4 h-4 text-blue-600" />
+          <span>Filtro de Categoría (aplica al Reporte General y al Cuadro de Honor)</span>
+        </div>
+        <select
+          value={selectedCategoria}
+          onChange={e => setSelectedCategoria(e.target.value)}
+          className="w-full md:w-96 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-blue-600 shadow-sm transition-all"
+        >
+          <option value="all">Todas las Categorías (General)</option>
+          {CATEGORIAS.map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
+
+        {selectedCategoria !== 'all' && (
+          <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500 font-medium">Filtro activo:</span>
+              <span className="px-2.5 py-0.5 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold">
+                {selectedCategoria}
+              </span>
+            </div>
+            <button
+              onClick={() => setSelectedCategoria('all')}
+              className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              Restablecer filtro
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Reports Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -387,17 +535,8 @@ export default function ReportesPage() {
           loadingReport={loadingReport}
         />
 
-        <ReportCard
-          id="docentes"
-          title="Carga Evaluadora de Jurados"
-          description="Estadística y registro académico de docentes jurados. Permite auditar la cantidad de proyectos asignados, carga de calificaciones y su estado de actividad."
-          icon={Users}
-          iconColor="text-indigo-600"
-          bgColor="bg-indigo-50"
-          onDownloadExcel={dlDocentesExcel}
-          onDownloadPDF={dlDocentesPDF}
-          loadingReport={loadingReport}
-        />
+        {/* Reemplaza a "Carga Evaluadora de Jurados" */}
+        <RespaldoFirmaCard notify={notify} />
 
         <ReportCard
           id="stands"

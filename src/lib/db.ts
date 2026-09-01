@@ -889,10 +889,8 @@ export async function fetchEvaluacionesDetalle(): Promise<EvaluacionDetalle[]> {
     const proy = proysMap.get(e.id_proyecto);
     const docente = personasMap.get(e.id_docente);
 
-    const doc_innov = (e.doc_ind3 + e.doc_ind5 + e.doc_ind6) * (20 / 15);
-    const doc_calidad = (e.doc_ind1 + e.doc_ind2 + e.doc_ind4 + e.doc_ind7) * (10 / 20);
-    const bloque1 = doc_innov + doc_calidad;
-    const bloque2 = (e.exp_ind1 + e.exp_ind2 + e.exp_ind3 + e.exp_ind4 + e.exp_ind5 + e.exp_ind6) * 2 + e.exp_ind7 * 2;
+    const bloque1 = e.doc_ind1 + e.doc_ind2 + e.doc_ind3 + e.doc_ind4 + e.doc_ind5 + e.doc_ind6; // máx 30
+    const bloque2 = e.exp_ind1 + e.exp_ind2 + e.exp_ind3 + e.exp_ind4 + e.exp_ind5 + e.exp_ind6 + e.exp_ind7; // máx 70
 
     return {
       idEvaluacion: e.id,
