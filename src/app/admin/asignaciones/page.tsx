@@ -239,7 +239,7 @@ export default function EvaluacionesPage() {
                                   Bloque 1 — Documento / Proyecto
                                 </p>
                                 <div className="space-y-1.5">
-                                  {([1,2,3,4,5,6,7] as const).map(i => (
+                                  {([1,2,3,4,5,6] as const).map(i => (
                                     <div key={i} className="flex items-center justify-between">
                                       <p className="text-xs text-slate-500 font-medium">Indicador D{i}</p>
                                       <span className="text-xs font-black text-[#162748]">
