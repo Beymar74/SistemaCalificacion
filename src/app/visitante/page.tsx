@@ -16,6 +16,7 @@ import type { ProyectoAsignado } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import CarreraBadge from '@/components/CarreraBadge';
 import { getCarreraConfig } from '@/lib/constants';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -125,9 +126,11 @@ export default function VisitanteHome() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
-                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-            </div>
+            <LoadingScreen
+                message="Cargando proyectos para evaluar..."
+                submessage="Feria de Ciencia, Tecnología e Innovación · UICYT"
+                fullScreen={true}
+            />
         );
     }
 
@@ -232,7 +235,7 @@ export default function VisitanteHome() {
                                     <div className="p-6 flex flex-col flex-1">
                                         <div className="flex items-start justify-between mb-4">
                                             <span 
-                                                className="px-4 py-2 text-base font-black rounded-xl uppercase tracking-wider border"
+                                                className="px-3.5 py-1.5 text-sm sm:text-base font-black font-mono rounded-xl uppercase tracking-wider whitespace-nowrap inline-flex items-center justify-center border shadow-xs"
                                                 style={{
                                                     backgroundColor: p.estado === 'Calificado' ? '#ECFDF5' : cfg.bg,
                                                     color: p.estado === 'Calificado' ? '#047857' : cfg.text,

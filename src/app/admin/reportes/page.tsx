@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { 
-  Download, 
   FileText, 
   Trophy, 
   Users, 
@@ -11,7 +10,11 @@ import {
   Layers, 
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  FileSpreadsheet,
+  BarChart3,
+  ShieldCheck,
+  Printer
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HelpBanner from '@/components/HelpBanner';
@@ -20,11 +23,15 @@ import { fetchComputoProyectos, fetchDocentesAdmin, fetchProyectosParaGestion } 
 
 interface ReportCardProps {
   id: string;
+  badge: string;
+  badgeColor: string;
   title: string;
   description: string;
+  features: string[];
   icon: React.ComponentType<{ className?: string }>;
   iconColor: string;
-  bgColor: string;
+  iconBg: string;
+  gradientBar: string;
   onDownloadExcel: () => Promise<void>;
   onDownloadPDF: () => Promise<void>;
   loadingReport: string | null;
@@ -32,11 +39,15 @@ interface ReportCardProps {
 
 function ReportCard({
   id,
+  badge,
+  badgeColor,
   title,
   description,
+  features,
   icon: Icon,
   iconColor,
-  bgColor,
+  iconBg,
+  gradientBar,
   onDownloadExcel,
   onDownloadPDF,
   loadingReport
@@ -46,55 +57,87 @@ function ReportCard({
   const isAnyLoading = !!loadingReport;
 
   return (
-    <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
+    <motion.div 
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
+      className="group relative bg-white p-7 rounded-[2.2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-slate-200 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+    >
+      {/* Accent Gradient Top Line */}
+      <div className={`absolute top-0 left-0 right-0 h-1.5 ${gradientBar}`} />
+
       <div className="space-y-4">
-        {/* Icon & Title */}
-        <div className="flex items-center gap-3">
-          <div className={`p-3 rounded-2xl ${bgColor} flex-shrink-0`}>
+        {/* Top Header: Icon + Badge */}
+        <div className="flex items-start justify-between gap-3">
+          <div className={`w-13 h-13 p-3.5 rounded-2xl ${iconBg} flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-300`}>
             <Icon className={`w-6 h-6 ${iconColor}`} />
           </div>
-          <h3 className="font-black text-[#162748] text-base leading-tight tracking-tight">{title}</h3>
+          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${badgeColor}`}>
+            {badge}
+          </span>
         </div>
-        <p className="text-slate-500 font-medium text-xs leading-relaxed">{description}</p>
+
+        {/* Title & Description */}
+        <div>
+          <h3 className="font-black text-[#162748] text-lg leading-tight tracking-tight group-hover:text-[#094e8f] transition-colors">
+            {title}
+          </h3>
+          <p className="text-slate-500 font-medium text-xs leading-relaxed mt-2">
+            {description}
+          </p>
+        </div>
+
+        {/* Mini Feature Chips */}
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {features.map((feat, idx) => (
+            <span 
+              key={idx}
+              className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md"
+            >
+              {feat}
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* Buttons */}
-      <div className="flex items-center gap-2 mt-6 pt-4 border-t border-slate-50">
+      <div className="flex items-center gap-2.5 mt-6 pt-4 border-t border-slate-100">
         <button
           onClick={onDownloadExcel}
           disabled={isAnyLoading}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-3.5 rounded-xl text-xs font-black tracking-wide transition-all shadow-sm ${
             isExcelLoading 
               ? 'bg-blue-50 text-blue-600'
-              : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 active:scale-95 disabled:opacity-50 disabled:pointer-events-none'
+              : 'bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white active:scale-95 disabled:opacity-50 disabled:pointer-events-none hover:shadow-emerald-200'
           }`}
         >
           {isExcelLoading ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <Download className="w-3.5 h-3.5" />
+            <FileSpreadsheet className="w-4 h-4" />
           )}
           <span>Excel</span>
+          <span className="text-[9px] opacity-75 font-semibold">.xlsx</span>
         </button>
 
         <button
           onClick={onDownloadPDF}
           disabled={isAnyLoading}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-3.5 rounded-xl text-xs font-black tracking-wide transition-all shadow-sm ${
             isPdfLoading 
               ? 'bg-blue-50 text-blue-600'
-              : 'bg-rose-50 hover:bg-rose-100 text-rose-700 active:scale-95 disabled:opacity-50 disabled:pointer-events-none'
+              : 'bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white active:scale-95 disabled:opacity-50 disabled:pointer-events-none hover:shadow-rose-200'
           }`}
         >
           {isPdfLoading ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <Download className="w-3.5 h-3.5" />
+            <Printer className="w-4 h-4" />
           )}
           <span>PDF</span>
+          <span className="text-[9px] opacity-75 font-semibold">.pdf</span>
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -317,6 +360,39 @@ export default function ReportesPage() {
     );
   });
 
+  // 6. Resumen de Categorías y Carreras
+  const dlCategoriasExcel = () => handleDownload('categorias', 'excel', async () => {
+    const data = await fetchComputoProyectos();
+    const rows = data.map(p => ({
+      'Código Proyecto': p.codigo,
+      'Nombre del Proyecto': p.nombre,
+      'Categoría Oficial': p.categoria,
+      'Carrera / Especialidad': p.carrera || '—',
+      'Evaluaciones Completadas': p.evaluacionesConfirmadas,
+      'Promedio Registrado': p.promedio > 0 ? p.promedio : 'Pendiente',
+      'Estado General': p.promedio > 0 ? 'Evaluado' : 'En Proceso'
+    }));
+    await exportToExcel(rows, `UICYT_Distribucion_Categorias_y_Carreras_${new Date().getFullYear()}`);
+  });
+
+  const dlCategoriasPDF = () => handleDownload('categorias', 'pdf', async () => {
+    const data = await fetchComputoProyectos();
+    const pdfRows = data.map(p => [
+      p.codigo,
+      p.nombre,
+      p.categoria,
+      p.carrera || '—',
+      p.evaluacionesConfirmadas.toString(),
+      p.promedio > 0 ? p.promedio.toFixed(2) : '—'
+    ]);
+    await exportToPDF(
+      'UICYT - Distribución de Proyectos por Categoría y Carrera',
+      ['Código', 'Proyecto', 'Categoría', 'Carrera', 'Evals', 'Promedio'],
+      pdfRows,
+      `UICYT_Categorias_Carreras_${new Date().getFullYear()}`
+    );
+  });
+
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
       {/* Feedback Toast */}
@@ -326,16 +402,16 @@ export default function ReportesPage() {
             initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-6 py-4 rounded-2xl shadow-xl border ${
+            className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-6 py-4 rounded-2xl shadow-xl border backdrop-blur-md ${
               feedback.type === 'success'
-                ? 'bg-emerald-50 border-emerald-100 text-emerald-800'
-                : 'bg-rose-50 border-rose-100 text-rose-800'
+                ? 'bg-emerald-500/95 border-emerald-400 text-white'
+                : 'bg-rose-500/95 border-rose-400 text-white'
             }`}
           >
             {feedback.type === 'success' ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+              <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
             )}
             <span className="text-xs font-bold uppercase tracking-wider">{feedback.text}</span>
           </motion.div>
@@ -345,14 +421,47 @@ export default function ReportesPage() {
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <div className="flex items-center gap-2 text-blue-600 font-black text-xs uppercase tracking-[0.2em] mb-2">
-            <Layers className="w-4 h-4" />
-            <span>Auditoría & Descargas</span>
+          <div className="flex items-center gap-2 text-[#094e8f] font-black text-xs uppercase tracking-[0.2em] mb-2">
+            <Layers className="w-4 h-4 text-[#f0d114]" />
+            <span>Auditoría & Descargas Oficiales · UICYT 2026</span>
           </div>
           <h1 className="text-4xl font-black text-[#162748] tracking-tight">Centro de Reportes</h1>
           <p className="text-slate-500 font-medium mt-1">Consolide, visualice y descargue toda la información de la feria en un solo lugar.</p>
         </div>
       </header>
+
+      {/* Features Bar */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/50 p-4 rounded-2xl border border-blue-100 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-[#094e8f] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+            <FileSpreadsheet className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="text-xs font-black text-[#162748] uppercase tracking-wide">Planillas Excel (.xlsx)</h4>
+            <p className="text-[11px] text-slate-500 font-medium mt-0.5">Celdas formateadas, auto-ajustadas y membrete institucional.</p>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-amber-50/80 to-yellow-50/50 p-4 rounded-2xl border border-amber-100 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+            <Printer className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="text-xs font-black text-[#162748] uppercase tracking-wide">Documentos PDF (.pdf)</h4>
+            <p className="text-[11px] text-slate-500 font-medium mt-0.5">Diseño en grilla compacta A4 listo para impresión y firma.</p>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-emerald-50/80 to-teal-50/50 p-4 rounded-2xl border border-emerald-100 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+            <ShieldCheck className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="text-xs font-black text-[#162748] uppercase tracking-wide">Auditoría en Tiempo Real</h4>
+            <p className="text-[11px] text-slate-500 font-medium mt-0.5">Sincronización directa con las evaluaciones confirmadas.</p>
+          </div>
+        </div>
+      </div>
 
       {/* Help Banner */}
       <HelpBanner
@@ -365,11 +474,15 @@ export default function ReportesPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <ReportCard
           id="general"
+          badge="Calificaciones"
+          badgeColor="bg-blue-50 text-blue-700 border border-blue-100"
           title="Reporte General de Calificaciones"
           description="Planilla completa y detallada de todas las evaluaciones emitidas por jurado, incluyendo notas, observaciones individuales, promedios finales y rankings de posición."
+          features={['✓ Notas de Jurados', '✓ Observaciones', '✓ Promedios']}
           icon={FileText}
-          iconColor="text-blue-600"
-          bgColor="bg-blue-50"
+          iconColor="text-[#094e8f]"
+          iconBg="bg-blue-50"
+          gradientBar="bg-gradient-to-r from-[#094e8f] to-blue-500"
           onDownloadExcel={dlGeneralExcel}
           onDownloadPDF={dlGeneralPDF}
           loadingReport={loadingReport}
@@ -377,11 +490,15 @@ export default function ReportesPage() {
 
         <ReportCard
           id="honor"
+          badge="Podios & Rankings"
+          badgeColor="bg-amber-50 text-amber-700 border border-amber-100"
           title="Cuadro de Honor y Resultados"
           description="Listado oficial jerárquico de todos los proyectos con calificaciones, clasificados y ordenados de mayor a menor por su promedio final acumulado. Ideal para publicaciones."
+          features={['✓ Orden Jerárquico', '✓ Top Rankings', '✓ Aprobados']}
           icon={Trophy}
           iconColor="text-amber-600"
-          bgColor="bg-amber-50"
+          iconBg="bg-amber-50"
+          gradientBar="bg-gradient-to-r from-amber-400 to-[#f0d114]"
           onDownloadExcel={dlHonorExcel}
           onDownloadPDF={dlHonorPDF}
           loadingReport={loadingReport}
@@ -389,11 +506,15 @@ export default function ReportesPage() {
 
         <ReportCard
           id="docentes"
+          badge="Jurados"
+          badgeColor="bg-indigo-50 text-indigo-700 border border-indigo-100"
           title="Carga Evaluadora de Jurados"
           description="Estadística y registro académico de docentes jurados. Permite auditar la cantidad de proyectos asignados, carga de calificaciones y su estado de actividad."
+          features={['✓ Carga por Jurado', '✓ Contactos', '✓ Estado']}
           icon={Users}
           iconColor="text-indigo-600"
-          bgColor="bg-indigo-50"
+          iconBg="bg-indigo-50"
+          gradientBar="bg-gradient-to-r from-indigo-500 to-purple-600"
           onDownloadExcel={dlDocentesExcel}
           onDownloadPDF={dlDocentesPDF}
           loadingReport={loadingReport}
@@ -401,11 +522,15 @@ export default function ReportesPage() {
 
         <ReportCard
           id="stands"
+          badge="Logística"
+          badgeColor="bg-emerald-50 text-emerald-700 border border-emerald-100"
           title="Planilla de Control y Stands"
           description="Planilla logística orientada al control físico de los stands y la asistencia oficial (Presentes/Ausentes) de los grupos y proyectos de la feria."
+          features={['✓ Control de Stands', '✓ Asistencia', '✓ Ubicaciones']}
           icon={CheckSquare}
           iconColor="text-emerald-600"
-          bgColor="bg-emerald-50"
+          iconBg="bg-emerald-50"
+          gradientBar="bg-gradient-to-r from-emerald-500 to-teal-500"
           onDownloadExcel={dlStandsExcel}
           onDownloadPDF={dlStandsPDF}
           loadingReport={loadingReport}
@@ -413,16 +538,37 @@ export default function ReportesPage() {
 
         <ReportCard
           id="inactivos"
+          badge="Control & Bajas"
+          badgeColor="bg-rose-50 text-rose-700 border border-rose-100"
           title="Auditoría de Inhabilitados"
           description="Listado y control administrativo de proyectos dados de baja o inhabilitados para recibir evaluaciones durante el desarrollo del certamen."
+          features={['✓ Proyectos de Baja', '✓ Motivo', '✓ Trazabilidad']}
           icon={FileX}
           iconColor="text-rose-600"
-          bgColor="bg-rose-50"
+          iconBg="bg-rose-50"
+          gradientBar="bg-gradient-to-r from-rose-500 to-red-600"
           onDownloadExcel={dlInactivosExcel}
           onDownloadPDF={dlInactivosPDF}
+          loadingReport={loadingReport}
+        />
+
+        <ReportCard
+          id="categorias"
+          badge="Distribución"
+          badgeColor="bg-sky-50 text-sky-700 border border-sky-100"
+          title="Categorías y Carreras UICYT"
+          description="Consolidado de proyectos clasificados por las 6 categorías oficiales y 18 carreras, facilitando el análisis de participación académica general."
+          features={['✓ 6 Categorías', '✓ 18 Carreras', '✓ Avance']}
+          icon={BarChart3}
+          iconColor="text-sky-600"
+          iconBg="bg-sky-50"
+          gradientBar="bg-gradient-to-r from-sky-500 to-blue-600"
+          onDownloadExcel={dlCategoriasExcel}
+          onDownloadPDF={dlCategoriasPDF}
           loadingReport={loadingReport}
         />
       </div>
     </div>
   );
 }
+

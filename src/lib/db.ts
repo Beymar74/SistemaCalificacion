@@ -849,6 +849,8 @@ export interface EvaluacionDetalle {
   idProyecto: string;
   proyectoCodigo: string;
   proyectoNombre: string;
+  proyectoCategoria?: string;
+  proyectoCarrera?: string;
   idDocente: string;
   docenteNombre: string;
   docenteMateria: string;
@@ -878,7 +880,7 @@ export async function fetchEvaluacionesDetalle(): Promise<EvaluacionDetalle[]> {
   if (error || !evals) return [];
 
   const [{ data: proys }, { data: personas }] = await Promise.all([
-    supabase.from('proyectos').select('id, codigo_proyecto, nombre_proyecto'),
+    supabase.from('proyectos').select('id, codigo_proyecto, nombre_proyecto, categoria, sociedad'),
     supabase.from('personas').select('id_usuario, nombre_completo, materia')
   ]);
 
@@ -894,11 +896,17 @@ export async function fetchEvaluacionesDetalle(): Promise<EvaluacionDetalle[]> {
     const bloque1 = doc_innov + doc_calidad;
     const bloque2 = (e.exp_ind1 + e.exp_ind2 + e.exp_ind3 + e.exp_ind4 + e.exp_ind5 + e.exp_ind6) * 2 + e.exp_ind7 * 2;
 
+    const rawCat = proy?.categoria;
+    const carrera = (proy as any)?.carrera || proy?.sociedad || '';
+    const categoria = (rawCat && rawCat !== 'General' && !rawCat.startsWith('Categoría')) ? rawCat : getCategoriaPorCarrera(carrera);
+
     return {
       idEvaluacion: e.id,
       idProyecto: e.id_proyecto,
       proyectoCodigo: proy?.codigo_proyecto || 'S/C',
       proyectoNombre: proy?.nombre_proyecto || 'Proyecto desconocido',
+      proyectoCategoria: categoria,
+      proyectoCarrera: carrera,
       idDocente: e.id_docente,
       docenteNombre: docente?.nombre_completo || 'Docente desconocido',
       docenteMateria: docente?.materia || 'General',

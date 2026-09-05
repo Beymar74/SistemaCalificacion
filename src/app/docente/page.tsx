@@ -17,6 +17,7 @@ import type { ProyectoAsignado } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import CarreraBadge from '@/components/CarreraBadge';
 import { getCarreraConfig } from '@/lib/constants';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -91,12 +92,11 @@ export default function DocenteHome() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-9 h-9 border-4 border-[#162748] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Cargando...</p>
-        </div>
-      </div>
+      <LoadingScreen
+        message="Cargando proyectos asignados..."
+        submessage="Portal Docente Evaluador · UICYT"
+        fullScreen={true}
+      />
     );
   }
 
@@ -107,7 +107,7 @@ export default function DocenteHome() {
       <div className="pointer-events-none fixed bottom-0 left-0 w-[250px] h-[250px] sm:w-[400px] sm:h-[400px] bg-indigo-100/30 rounded-full blur-3xl -z-10 -translate-x-1/3 translate-y-1/3" />
 
       {/* ── Header ── */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/70 px-4 sm:px-6 py-1.5 sm:py-2">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/80 px-4 sm:px-6 py-2.5 sm:py-3.5 shadow-2xs">
         <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-3">
           {/* Logo + nombre */}
           <motion.div
@@ -116,24 +116,34 @@ export default function DocenteHome() {
             className="flex items-center gap-3 sm:gap-4 min-w-0"
           >
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-              <img
-                src="/logo/Emi logo.png"
-                alt="Logo EMI"
-                className="w-10 h-10 sm:w-12 sm:h-12 object-contain flex-shrink-0"
-              />
-              <div className="w-px h-7 bg-slate-200" />
-              <img
-                src="/logo/uicyt-logo.png"
-                alt="Logo UICYT"
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-contain flex-shrink-0 drop-shadow-sm"
-              />
+              <div className="p-1.5 bg-white rounded-xl shadow-xs border border-slate-100">
+                <img
+                  src="/logo/Emi logo.png"
+                  alt="Logo EMI"
+                  className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0"
+                />
+              </div>
+              <div className="w-px h-6 bg-slate-200" />
+              <div className="p-1.5 bg-white rounded-xl shadow-xs border border-slate-100">
+                <img
+                  src="/logo/uicyt-logo.png"
+                  alt="Logo UICYT"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-contain flex-shrink-0"
+                />
+              </div>
             </div>
             <div className="flex flex-col justify-center">
-              <span className="text-base sm:text-xl font-black text-[#094e8f] tracking-tight leading-none">
-                UICYT
-              </span>
-              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-widest hidden sm:block mt-1">
-                Evaluación Docente
+              <div className="flex items-center gap-1.5">
+                <span className="text-base sm:text-lg font-black text-[#094e8f] tracking-tight leading-none">
+                  UICYT
+                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#f0d114]" />
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  2026
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest hidden sm:block mt-0.5">
+                Portal de Evaluación Docente
               </span>
             </div>
           </motion.div>
@@ -141,9 +151,9 @@ export default function DocenteHome() {
           {/* Botón cerrar sesión */}
           <button
             onClick={handleCerrarSesion}
-            className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2.5 sm:py-3 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-600 font-bold text-xs sm:text-sm rounded-xl sm:rounded-2xl border border-red-200 transition-all active:scale-95 flex-shrink-0 shadow-sm"
+            className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-white hover:bg-red-50 text-slate-600 hover:text-red-600 font-bold text-xs sm:text-sm rounded-2xl border border-slate-200 hover:border-red-200 transition-all active:scale-95 flex-shrink-0 shadow-2xs cursor-pointer"
           >
-            <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+            <LogOut className="w-4 h-4 text-slate-400 group-hover:text-red-600" />
             <span className="hidden sm:inline">Cerrar Sesión</span>
             <span className="sm:hidden inline">Salir</span>
           </button>
@@ -151,64 +161,79 @@ export default function DocenteHome() {
       </header>
 
       {/* ── Main ── */}
-      <main className="px-4 sm:px-6 py-6 sm:py-8 max-w-[1400px] mx-auto w-full flex-1">
+      <main className="px-4 sm:px-6 py-6 sm:py-10 max-w-[1400px] mx-auto w-full flex-1">
         {/* Sección bienvenida */}
-        <section className="mb-8 sm:mb-10">
+        <section className="mb-8 sm:mb-12">
           <motion.div
-            initial={{ opacity: 0, y: 18 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="flex flex-col lg:flex-row lg:items-end justify-between gap-6"
+            className="bg-white rounded-3xl sm:rounded-[2.5rem] border border-slate-200/80 p-6 sm:p-8 lg:p-10 shadow-sm relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-6"
           >
+            {/* Ambient subtle light */}
+            <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-blue-50 to-transparent pointer-events-none rounded-full blur-2xl" />
+
             {/* Saludo */}
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-100 rounded-full mb-3">
-                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                <p className="text-[10px] sm:text-[11px] font-bold text-blue-600 uppercase tracking-widest">
-                  Panel de Evaluación
+            <div className="max-w-2xl relative z-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50/90 border border-blue-100 rounded-full mb-3.5">
+                <span className="w-2 h-2 rounded-full bg-[#094e8f] animate-pulse" />
+                <p className="text-[10px] sm:text-[11px] font-black text-[#094e8f] uppercase tracking-widest">
+                  Panel de Jurado Evaluador
                 </p>
               </div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#162748] tracking-tight leading-tight">
-                Hola, <br className="hidden lg:block" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-                  {persona?.grado} {persona?.nombre_completo}
+
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-800 tracking-tight leading-tight">
+                Hola, <br />
+                <span className="text-[#094e8f]">
+                  {persona?.grado ? `${persona.grado} ` : ''}{persona?.nombre_completo || 'Docente Evaluador'}
                 </span>
               </h1>
-              <p className="text-slate-500 mt-2 text-sm sm:text-base font-medium leading-relaxed">
-                Revisa y califica los proyectos asignados. Tienes{' '}
-                <span className="text-[#162748] font-bold bg-slate-100 px-2 py-0.5 rounded-md">{pendientes} pendientes</span>.
+
+              <p className="text-slate-500 mt-2.5 text-xs sm:text-sm md:text-base font-medium leading-relaxed">
+                {proyectos.length === 0 ? (
+                  'Bienvenido al sistema. Tus proyectos asignados se mostrarán a continuación cuando sean asignados.'
+                ) : pendientes > 0 ? (
+                  <>
+                    Tienes <strong className="text-[#094e8f] font-bold">{pendientes} {pendientes === 1 ? 'proyecto pendiente' : 'proyectos pendientes'}</strong> por calificar en esta jornada.
+                  </>
+                ) : (
+                  <span className="text-emerald-600 font-bold">¡Excelente! Has completado todas tus evaluaciones asignadas.</span>
+                )}
               </p>
             </div>
 
             {/* Badges de estadísticas */}
-            <div className="flex flex-wrap lg:flex-nowrap gap-3 lg:gap-4 lg:mb-1 w-full lg:w-auto">
-              <div className="flex-1 lg:flex-none bg-white p-3 sm:p-4 rounded-3xl border border-slate-200/60 shadow-sm flex items-center gap-3 sm:gap-4 hover:shadow-md transition-shadow">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                  <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+            <div className="flex flex-wrap sm:flex-nowrap gap-3 sm:gap-4 relative z-10 w-full lg:w-auto">
+              {/* Calificados */}
+              <div className="flex-1 sm:min-w-[130px] bg-slate-50/80 hover:bg-slate-50 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/70 transition-all flex items-center gap-3.5 shadow-2xs">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Calificados</p>
-                  <p className="text-lg sm:text-xl font-black text-slate-700 leading-none">{calificados}</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Calificados</p>
+                  <p className="text-xl sm:text-2xl font-black text-slate-800 leading-none mt-0.5">{calificados}</p>
                 </div>
               </div>
               
-              <div className="flex-1 lg:flex-none bg-white p-3 sm:p-4 rounded-3xl border border-slate-200/60 shadow-sm flex items-center gap-3 sm:gap-4 hover:shadow-md transition-shadow">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-amber-50 flex items-center justify-center flex-shrink-0">
-                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
+              {/* Pendientes */}
+              <div className="flex-1 sm:min-w-[130px] bg-slate-50/80 hover:bg-slate-50 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/70 transition-all flex items-center gap-3.5 shadow-2xs">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Pendientes</p>
-                  <p className="text-lg sm:text-xl font-black text-slate-700 leading-none">{pendientes}</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Pendientes</p>
+                  <p className="text-xl sm:text-2xl font-black text-slate-800 leading-none mt-0.5">{pendientes}</p>
                 </div>
               </div>
 
-              <div className="flex-1 lg:flex-none bg-white p-3 sm:p-4 rounded-3xl border border-slate-200/60 shadow-sm flex items-center gap-3 sm:gap-4 hover:shadow-md transition-shadow">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+              {/* Total */}
+              <div className="flex-1 sm:min-w-[130px] bg-slate-50/80 hover:bg-slate-50 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/70 transition-all flex items-center gap-3.5 shadow-2xs">
+                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#094e8f] flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Total</p>
-                  <p className="text-lg sm:text-xl font-black text-slate-700 leading-none">{proyectos.length}</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Total</p>
+                  <p className="text-xl sm:text-2xl font-black text-slate-800 leading-none mt-0.5">{proyectos.length}</p>
                 </div>
               </div>
             </div>
@@ -225,31 +250,47 @@ export default function DocenteHome() {
             transition={{ delay: 0.15 }}
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                <LayoutGrid className="w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex items-center justify-center">
+                <LayoutGrid className="w-4 h-4 sm:w-5 sm:h-5 text-[#094e8f]" />
               </div>
-              <h2 className="text-sm sm:text-base font-bold text-slate-700 uppercase tracking-widest">
-                Proyectos Asignados
-              </h2>
+              <div>
+                <h2 className="text-base sm:text-lg font-black text-slate-800 tracking-tight">
+                  Proyectos Asignados
+                </h2>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  {proyectos.length === 0 ? 'Sin evaluaciones pendientes' : `${proyectos.length} proyectos bajo tu jurado`}
+                </p>
+              </div>
             </div>
           </motion.div>
 
-          {/* Estado vacío */}
+          {/* Estado vacío amigable */}
           {proyectos.length === 0 && (
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-12 sm:p-16 flex flex-col items-center text-center max-w-2xl mx-auto"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+              className="bg-white rounded-3xl sm:rounded-[2.5rem] border border-slate-200/80 shadow-sm p-10 sm:p-14 lg:p-16 flex flex-col items-center text-center max-w-2xl mx-auto relative overflow-hidden"
             >
-              <div className="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center mb-6 ring-8 ring-slate-50/50">
-                <ClipboardList className="w-10 h-10 text-slate-300" />
+              <div className="w-20 h-20 rounded-3xl bg-blue-50/80 border border-blue-100 flex items-center justify-center mb-5 text-[#094e8f]">
+                <ClipboardList className="w-9 h-9" />
               </div>
-              <p className="text-lg font-bold text-slate-600 mb-2">Sin proyectos asignados</p>
-              <p className="text-sm text-slate-400 leading-relaxed max-w-sm">Cuando el administrador de la feria te asigne proyectos para evaluar, aparecerán en esta sección.</p>
+
+              <h3 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight mb-2">
+                Sin proyectos asignados por el momento
+              </h3>
+
+              <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed max-w-md mb-6">
+                Cuando la coordinación de la feria te asigne proyectos o stands para evaluar, aparecerán listados automáticamente en esta sección.
+              </p>
+
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-100 rounded-full text-slate-400 text-xs font-semibold">
+                <span>Gestión 2026 · UICYT</span>
+              </div>
             </motion.div>
           )}
 
-          {/* Grid de cards - AHORA HASTA 4 COLUMNAS */}
+          {/* Grid de cards - HASTA 4 COLUMNAS */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -262,24 +303,21 @@ export default function DocenteHome() {
                 <motion.div
                   key={p.id}
                   variants={itemVariants}
-                  whileHover={{ y: -6, boxShadow: `0 25px 50px -12px ${cfg.hex}33` }}
-                  className="group bg-white rounded-[2rem] border shadow-sm overflow-hidden flex flex-col transition-all relative h-full"
+                  whileHover={{ y: -6, boxShadow: `0 25px 50px -12px ${cfg.hex}25` }}
+                  className="group bg-white rounded-3xl border shadow-xs overflow-hidden flex flex-col transition-all relative h-full"
                   style={{ borderColor: cfg.border }}
                 >
-                  {/* Barra superior de acento con color de la carrera */}
+                  {/* Barra superior de acento */}
                   <div className="h-2 w-full" style={{ backgroundColor: cfg.hex }} />
-
-                  {/* Glow de hover */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-white to-slate-50/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
                   <div className="p-5 sm:p-6 flex flex-col flex-1 relative z-10">
                     {/* Header de la card */}
-                    <div className="flex items-start justify-between gap-3 mb-5">
-                      {/* Badge de stand con color de carrera */}
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Stand</span>
+                    <div className="flex items-start justify-between gap-3 mb-4">
+                      {/* Stand */}
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stand</span>
                         <span 
-                          className="px-4 py-1.5 text-base sm:text-lg font-black rounded-xl uppercase tracking-wider flex-shrink-0 inline-flex items-center justify-center border"
+                          className="px-3 py-1 text-sm sm:text-base font-black font-mono rounded-xl uppercase tracking-wider whitespace-nowrap inline-flex items-center justify-center border shadow-2xs"
                           style={{
                             backgroundColor: cfg.bg,
                             color: cfg.text,
@@ -290,14 +328,14 @@ export default function DocenteHome() {
                         </span>
                       </div>
 
-                      {/* Badge de estado */}
+                      {/* Estado */}
                       {p.estado === 'Calificado' ? (
-                        <span className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider border border-emerald-100 flex-shrink-0">
+                        <span className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider border border-emerald-100/80">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           Completado
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1.5 text-blue-700 bg-blue-50 px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider border border-blue-100 flex-shrink-0">
+                        <span className="flex items-center gap-1.5 text-[#094e8f] bg-blue-50 px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider border border-blue-100">
                           <Clock className="w-3.5 h-3.5" />
                           Pendiente
                         </span>
@@ -305,9 +343,9 @@ export default function DocenteHome() {
                     </div>
 
                     {/* Categoría y Carrera */}
-                    <div className="flex items-center gap-2 flex-wrap mb-2">
+                    <div className="flex items-center gap-2 flex-wrap mb-2.5">
                       {p.categoria && (
-                        <span className="text-[10px] sm:text-[11px] font-bold text-slate-600 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">
+                        <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider bg-slate-100 px-2.5 py-0.5 rounded-lg border border-slate-200">
                           {p.categoria}
                         </span>
                       )}
@@ -322,11 +360,11 @@ export default function DocenteHome() {
                     </h3>
 
                     {/* Botón CTA */}
-                    <div className="mt-auto pt-4">
+                    <div className="mt-auto pt-2">
                       {p.estado === 'Calificado' ? (
                         <button
                           disabled
-                          className="w-full flex items-center justify-center gap-2 py-4 bg-slate-50/80 text-slate-400 rounded-2xl text-xs sm:text-sm font-bold border border-slate-100 cursor-not-allowed min-h-[52px]"
+                          className="w-full flex items-center justify-center gap-2 py-3.5 bg-slate-50 text-slate-400 rounded-2xl text-xs sm:text-sm font-bold border border-slate-100 cursor-not-allowed"
                         >
                           <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                           RESULTADO ENVIADO
@@ -334,10 +372,10 @@ export default function DocenteHome() {
                       ) : (
                         <Link
                           href={`/docente/evaluar/${p.id}`}
-                          className="w-full flex items-center justify-center gap-2 py-4 bg-[#094e8f] hover:bg-[#073b6d] text-white rounded-2xl text-xs sm:text-sm font-black transition-all shadow-md shadow-blue-900/15 active:scale-[0.98] min-h-[52px]"
+                          className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#094e8f] hover:bg-[#073b6d] text-white rounded-2xl text-xs sm:text-sm font-black transition-all shadow-md shadow-blue-900/15 active:scale-[0.98]"
                         >
                           <ClipboardList className="w-4 h-4 text-[#f0d114]" />
-                          INICIAR EVALUACIÓN
+                          EVALUAR PROYECTO
                         </Link>
                       )}
                     </div>
@@ -350,9 +388,9 @@ export default function DocenteHome() {
       </main>
 
       {/* Footer */}
-      <footer className="px-4 sm:px-6 py-8 sm:py-12 text-center opacity-50 mt-auto">
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 flex items-center justify-center gap-2">
-          Feria de Innovación Tecnológica <span className="w-1 h-1 rounded-full bg-slate-300" /> 2026
+      <footer className="px-4 sm:px-6 py-6 sm:py-8 text-center opacity-60 mt-auto border-t border-slate-200/60 bg-white/40">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+          Escuela Militar de Ingeniería · Carrera de Ingeniería de Sistemas · 2026
         </p>
       </footer>
     </div>

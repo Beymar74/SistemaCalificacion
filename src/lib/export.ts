@@ -209,7 +209,7 @@ export async function exportToPDF(title: string, columns: string[], data: (strin
   
   doc.setFontSize(9.5);
   doc.setTextColor(100);
-  doc.text(`Generado el: ${new Date().toLocaleDateString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}`, 14, 33);
+  doc.text(`Generado el: ${new Date().toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}`, 14, 33);
 
   autoTable(doc, {
     startY: 40,
