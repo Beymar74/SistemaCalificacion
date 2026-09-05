@@ -33,7 +33,7 @@ export default function CarreraBadge({
           className="w-2 h-2 rounded-full flex-shrink-0"
           style={{ backgroundColor: config.hex }}
         />
-        <span className="truncate">{carrera}</span>
+        <span className="break-words">{carrera}</span>
       </span>
     );
   }
@@ -41,7 +41,7 @@ export default function CarreraBadge({
   if (variant === 'subtle') {
     return (
       <span
-        className={`font-black uppercase tracking-wider ${className}`}
+        className={`font-black uppercase tracking-wider break-words ${className}`}
         style={{ color: config.hex }}
       >
         {carrera}
@@ -51,7 +51,7 @@ export default function CarreraBadge({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-lg font-black uppercase tracking-wider border shadow-sm transition-all ${sizeClasses} ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-lg font-black uppercase tracking-wider border shadow-xs transition-all leading-tight ${sizeClasses} ${className}`}
       style={{
         backgroundColor: config.bg,
         color: config.text,
@@ -62,7 +62,7 @@ export default function CarreraBadge({
         className="w-1.5 h-1.5 rounded-full flex-shrink-0"
         style={{ backgroundColor: config.hex }}
       />
-      <span className="truncate">{carrera}</span>
+      <span className="break-words text-left leading-tight">{carrera}</span>
     </span>
   );
 }

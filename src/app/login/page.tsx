@@ -79,7 +79,7 @@ export default function LoginPage() {
           <div className="grid grid-cols-1 md:grid-cols-12">
             
             {/* Left Column: Branding / Identity */}
-            <div className="md:col-span-5 bg-gradient-to-b from-slate-50/80 via-[#f8fafc] to-blue-50/30 p-8 md:p-10 lg:p-12 flex flex-col justify-between items-center text-center border-b md:border-b-0 md:border-r border-slate-100 relative">
+            <div className="md:col-span-5 bg-gradient-to-b from-slate-50/80 via-[#f8fafc] to-blue-50/30 p-5 sm:p-7 md:p-10 lg:p-12 flex flex-col justify-between items-center text-center border-b md:border-b-0 md:border-r border-slate-100 relative">
               <div className="flex flex-col items-center my-auto w-full">
                 
                 {/* Logos */}
@@ -87,26 +87,26 @@ export default function LoginPage() {
                   initial={{ scale: 0.85, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.15, type: "spring", stiffness: 220 }}
-                  className="flex items-center justify-center gap-4 mb-6"
+                  className="flex items-center justify-center gap-2.5 sm:gap-3.5 md:gap-4 mb-3 sm:mb-4 md:mb-6"
                 >
-                  <div className="p-2 bg-white rounded-2xl shadow-sm border border-slate-100">
+                  <div className="p-1.5 sm:p-2 bg-white rounded-xl md:rounded-2xl shadow-xs border border-slate-100">
                     <Image
                       src="/logo/Emi logo.png"
                       alt="Logo EMI"
                       width={70}
                       height={70}
-                      className="object-contain w-14 h-14 md:w-16 md:h-16"
+                      className="object-contain w-9 h-9 sm:w-11 sm:h-11 md:w-16 md:h-16"
                       priority
                     />
                   </div>
-                  <div className="w-[1.5px] h-10 bg-slate-200/80" />
-                  <div className="p-2 bg-white rounded-2xl shadow-sm border border-slate-100">
+                  <div className="w-[1.5px] h-6 sm:h-8 md:h-10 bg-slate-200/80" />
+                  <div className="p-1.5 sm:p-2 bg-white rounded-xl md:rounded-2xl shadow-xs border border-slate-100">
                     <Image
                       src="/logo/uicyt-logo.png"
                       alt="Logo UICYT"
                       width={70}
                       height={70}
-                      className="object-contain w-14 h-14 md:w-16 md:h-16 rounded-xl"
+                      className="object-contain w-9 h-9 sm:w-11 sm:h-11 md:w-16 md:h-16 rounded-lg md:rounded-xl"
                       priority
                     />
                   </div>
@@ -119,16 +119,16 @@ export default function LoginPage() {
                   transition={{ delay: 0.25 }}
                   className="text-center"
                 >
-                  <span className="text-[10px] font-black tracking-[0.25em] text-[#094e8f] uppercase bg-blue-50/80 px-3 py-1 rounded-full border border-blue-100/60 mb-2.5 inline-block">
+                  <span className="text-[9px] sm:text-[10px] font-black tracking-[0.2em] text-[#094e8f] uppercase bg-blue-50/80 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-blue-100/60 mb-1.5 sm:mb-2.5 inline-block">
                     Plataforma Oficial
                   </span>
-                  <h1 className="text-3xl md:text-4xl font-black text-[#094e8f] tracking-tight leading-tight">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#094e8f] tracking-tight leading-tight">
                     UICYT
                   </h1>
-                  <p className="text-slate-800 text-xs md:text-sm font-extrabold uppercase tracking-wide max-w-[260px] leading-snug mt-2">
+                  <p className="text-slate-800 text-[11px] sm:text-xs md:text-sm font-extrabold uppercase tracking-wide max-w-[240px] md:max-w-[260px] leading-tight sm:leading-snug mt-1 sm:mt-2">
                     Unidad de Investigación Ciencia y Tecnología
                   </p>
-                  <p className="text-slate-400 text-[11px] font-semibold tracking-normal mt-1">
+                  <p className="text-slate-400 text-[10px] sm:text-[11px] font-semibold tracking-normal mt-0.5 sm:mt-1">
                     Sistema de Calificación y Evaluación
                   </p>
                 </motion.div>
@@ -144,13 +144,13 @@ export default function LoginPage() {
             </div>
 
             {/* Right Column: Login Form */}
-            <div className="md:col-span-7 p-7 sm:p-9 md:p-10 lg:p-12 flex flex-col justify-between">
+            <div className="md:col-span-7 p-5 sm:p-7 md:p-10 lg:p-12 flex flex-col justify-between">
               <div>
-                <div className="mb-6 md:mb-8">
-                  <h2 className="text-2xl font-black text-slate-800 tracking-tight">
+                <div className="mb-5 sm:mb-6 md:mb-8">
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">
                     Iniciar Sesión
                   </h2>
-                  <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+                  <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5 sm:mt-1">
                     Ingresa con tus credenciales asignadas
                   </p>
                 </div>
