@@ -222,3 +222,225 @@ export async function exportToPDF(title: string, columns: string[], data: (strin
 
   doc.save(`${fileName}.pdf`);
 }
+
+// ─── Planilla Anexo "C" — Hoja de Calificación Oficial ───────────────────────
+export interface AnexoCIndicadorInput {
+  aspecto: string;
+  criterio: string;
+  label: string;
+  valor: number;
+}
+
+export interface AnexoCEvaluacion {
+  proyectoCodigo: string;
+  proyectoNombre: string;
+  docenteNombre: string;
+  bloque1: AnexoCIndicadorInput[];
+  bloque2: AnexoCIndicadorInput[];
+  observaciones: string;
+}
+
+export const ANEXO_C_BLOQUE1_DEF = [
+  { key: 'doc_ind1', aspecto: 'Originalidad del trabajo', label: 'Existe innovación.' },
+  { key: 'doc_ind2', aspecto: 'Originalidad del trabajo', label: 'Contrasta y argumenta con revisión bibliográfica.' },
+  { key: 'doc_ind3', aspecto: 'Enfoque científico', label: 'Aporte al análisis metodológico, conocimiento, ciencia y cultura.' },
+  { key: 'doc_ind4', aspecto: 'Enfoque científico', label: 'Aporte a la solución del problema específico.' },
+  { key: 'doc_ind5', aspecto: 'Interpretación y aplicación de los resultados', label: 'Coherencia de los objetivos con los resultados obtenidos.' },
+  { key: 'doc_ind6', aspecto: 'Interpretación y aplicación de los resultados', label: 'Existe orientación a nuevos estudios.' },
+] as const;
+
+export const ANEXO_C_BLOQUE2_DEF = [
+  { key: 'exp_ind1', aspecto: 'Interpretación y aplicación de los resultados', label: 'Coherencia de los objetivos con los resultados obtenidos.' },
+  { key: 'exp_ind2', aspecto: 'Interpretación y aplicación de los resultados', label: 'Sugiere aplicaciones de los resultados obtenidos.' },
+  { key: 'exp_ind3', aspecto: 'Utilización eficiente de los recursos', label: 'Montaje del material de apoyo en la exposición.' },
+  { key: 'exp_ind4', aspecto: 'Calidad de la presentación', label: 'Precisión en el lenguaje científico tecnológico.' },
+  { key: 'exp_ind5', aspecto: 'Calidad de la presentación', label: 'Calidad de exposición, apoyos audiovisuales.' },
+  { key: 'exp_ind6', aspecto: 'Defensa del proyecto', label: 'Dominio del tema.' },
+  { key: 'exp_ind7', aspecto: 'Defensa del proyecto', label: 'Calidad de respuestas.' },
+] as const;
+
+const ESCALA_B1 = [1, 2, 3, 4, 5];
+const ESCALA_B2 = [2, 4, 6, 8, 10];
+const NIVELES = ['Deficiente', 'Malo', 'Regular', 'Bueno', 'Excelente'];
+
+function dibujarBloque(
+  doc: jsPDF,
+  startY: number,
+  tituloBloque: string,
+  indicadores: AnexoCIndicadorInput[],
+  escala: number[],
+  totalMax: number,
+  subtotal: number
+): number {
+  const headEscala = NIVELES.map((n, i) => `${n}\n(${escala[i]} pto${escala[i] > 1 ? 's' : ''})`);
+  const head = [['ASPECTO', 'CRITERIO', 'INDICADORES', ...headEscala]];
+
+  const body: any[] = [];
+  let i = 0;
+  while (i < indicadores.length) {
+    let j = i;
+    while (j < indicadores.length && indicadores[j].aspecto === indicadores[i].aspecto) j++;
+    const groupSize = j - i;
+
+    for (let k = i; k < j; k++) {
+      const ind = indicadores[k];
+      const row: any[] = [];
+
+      if (k === 0) {
+        row.push({
+          content: tituloBloque,
+          rowSpan: indicadores.length,
+          styles: { fontStyle: 'bold', halign: 'center', valign: 'middle', fontSize: 7.5, fillColor: '#ffffff' },
+        });
+      }
+
+      if (k === i) {
+        row.push({
+          content: ind.aspecto,
+          rowSpan: groupSize,
+          styles: { fontStyle: 'bold', valign: 'middle', fontSize: 7.5, fillColor: '#ffffff' },
+        });
+      }
+
+      row.push({ content: ind.label, styles: { fontSize: 7.5, fillColor: '#ffffff' } });
+
+      // Celdas de escala: SOLO la "X", sin relleno de color (ahorro de tinta)
+      escala.forEach(v => {
+        const marcado = ind.valor === v;
+        row.push({
+          content: marcado ? 'X' : '',
+          styles: { halign: 'center', fillColor: '#ffffff', fontStyle: marcado ? 'bold' : 'normal' },
+        });
+      });
+
+      body.push(row);
+    }
+    i = j;
+  }
+
+  autoTable(doc, {
+    startY,
+    head,
+    body,
+    theme: 'grid',
+    styles: { fontSize: 8, cellPadding: 2, valign: 'middle', lineColor: [30, 41, 59], lineWidth: 0.15 },
+    headStyles: {
+      fillColor: '#d9d9d9',
+      textColor: '#1e293b',
+      fontStyle: 'bold',
+      fontSize: 7.5,
+      halign: 'center',
+      lineColor: [30, 41, 59],
+      lineWidth: 0.15,
+    },
+    footStyles: {
+      fillColor: '#ffffff',
+      textColor: '#000000',
+      lineColor: [30, 41, 59],
+      lineWidth: 0.15,
+    },
+    columnStyles: {
+      0: { cellWidth: 28 },
+      1: { cellWidth: 32 },
+      2: { cellWidth: 47 },
+      3: { cellWidth: 15 },
+      4: { cellWidth: 15 },
+      5: { cellWidth: 15 },
+      6: { cellWidth: 15 },
+      7: { cellWidth: 15 },
+    },
+    foot: [[
+      { content: `${tituloBloque} — TOTAL PARCIAL DE PUNTOS/${totalMax}`, colSpan: 7, styles: { halign: 'right', fontStyle: 'bold', fontSize: 8.5, fillColor: '#ffffff' } } as any,
+      { content: subtotal.toFixed(2), styles: { halign: 'center', fontStyle: 'bold', fontSize: 9, fillColor: '#ffffff' } } as any,
+    ]],
+    margin: { left: 14, right: 14 },
+  });
+
+  // @ts-expect-error - jspdf-autotable adjunta lastAutoTable en la instancia de doc
+  return doc.lastAutoTable.finalY as number;
+}
+
+export function exportAnexoCPDF(evaluaciones: AnexoCEvaluacion[], docenteNombreArchivo: string) {
+  if (!evaluaciones || evaluaciones.length === 0) return;
+
+  const doc = new jsPDF();
+  const LABEL_X = 14;
+  const VALUE_X = 62;
+  const VALUE_WIDTH = 196 - VALUE_X; // ancho disponible hasta el margen derecho
+  const LINE_HEIGHT = 5;
+
+  evaluaciones.forEach((ev, idx) => {
+    if (idx > 0) doc.addPage();
+
+    const bloque1Total = ev.bloque1.reduce((s, i) => s + (i.valor || 0), 0);
+    const bloque2Total = ev.bloque2.reduce((s, i) => s + (i.valor || 0), 0);
+    const notaTotal = bloque1Total + bloque2Total;
+
+    // Encabezado institucional — todo en negro/negrita, sin línea divisoria
+    doc.setFontSize(13);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.text('UICYT · UNIDAD DE INVESTIGACIÓN CIENCIA Y TECNOLOGÍA', 105, 15, { align: 'center' });
+
+    doc.setFontSize(11);
+    doc.text('HOJA DE CALIFICACIÓN', 105, 22, { align: 'center' });
+
+    doc.setFontSize(9.5);
+    doc.text('EXPOCIENCIA REGIONAL EMI - UALP 2026', 105, 27, { align: 'center' });
+
+    // Nombre del proyecto: se parte en tantas líneas como haga falta según el ancho disponible
+    doc.setFontSize(9.5);
+    doc.setTextColor(30, 41, 59);
+    doc.setFont('helvetica', 'bold');
+    doc.text('NOMBRE DEL PROYECTO:', LABEL_X, 37);
+    doc.setFont('helvetica', 'normal');
+    const nombreProyectoTexto = `${ev.proyectoCodigo} — ${ev.proyectoNombre}`;
+    const nombreProyectoLineas = doc.splitTextToSize(nombreProyectoTexto, VALUE_WIDTH);
+    doc.text(nombreProyectoLineas, VALUE_X, 37);
+
+    // La posición de JURADO (y todo lo que sigue) se ajusta según cuántas líneas ocupó el nombre
+    const juradoY = 37 + (nombreProyectoLineas.length - 1) * LINE_HEIGHT + 7;
+    doc.setFont('helvetica', 'bold');
+    doc.text('JURADO:', LABEL_X, juradoY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(ev.docenteNombre, 32, juradoY);
+
+    const tablaStartY = juradoY + 6;
+
+    let y = dibujarBloque(doc, tablaStartY, 'EVALUACIÓN DEL DOCUMENTO', ev.bloque1, ESCALA_B1, 30, bloque1Total);
+    y = dibujarBloque(doc, y + 6, 'EXPOSICIÓN Y DEFENSA FINAL', ev.bloque2, ESCALA_B2, 70, bloque2Total);
+
+    // Nota total
+    doc.setDrawColor(9, 78, 143);
+    doc.setLineWidth(0.4);
+    doc.rect(140, y + 8, 56, 16);
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('NOTA TOTAL / SOBRE 100%', 168, y + 13, { align: 'center' });
+    doc.setFontSize(14);
+    doc.setTextColor(9, 78, 143);
+    doc.text(notaTotal.toFixed(2), 168, y + 21, { align: 'center' });
+
+    // Observaciones
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 41, 59);
+    doc.text('OBSERVACIONES:', 14, y + 13);
+    doc.setFont('helvetica', 'normal');
+    const obsTexto = ev.observaciones?.trim() ? ev.observaciones : 'Sin observaciones registradas.';
+    const obsLineas = doc.splitTextToSize(obsTexto, 118);
+    doc.text(obsLineas, 14, y + 19);
+
+    // Firma
+    const firmaY = y + 45;
+    doc.setDrawColor(30, 41, 59);
+    doc.setLineWidth(0.2);
+    doc.line(60, firmaY, 150, firmaY);
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Firma del Jurado', 105, firmaY + 5, { align: 'center' });
+  });
+
+  doc.save(`UICYT_Hoja_Calificacion_${docenteNombreArchivo.replace(/\s+/g, '_')}.pdf`);
+}
