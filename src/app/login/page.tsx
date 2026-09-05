@@ -172,7 +172,7 @@ export default function LoginPage() {
                       <input
                         type="text"
                         required
-                        placeholder="Ej: docente1 o admin"
+                        placeholder="Ingresa tu usuario"
                         value={username}
                         onChange={e => setUsername(e.target.value)}
                         className="w-full pl-14 pr-4 py-3.5 sm:py-4 bg-slate-50/70 hover:bg-slate-50 border border-slate-200/90 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#094e8f]/50 focus:bg-white focus:ring-4 focus:ring-[#094e8f]/10 transition-all font-medium text-sm shadow-xs"
