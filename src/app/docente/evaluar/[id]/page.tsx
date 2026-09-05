@@ -357,7 +357,7 @@ export default function EvaluarProyecto() {
             {proyecto.nombre_proyecto}
           </h2>
           <p className="text-sm sm:text-base text-slate-500 leading-relaxed font-medium relative z-10">
-            Proyecto presentado en la Feria de Tecnología, Emprendimiento e Innovación Industrial 2026.
+            Proyecto presentado en la Feria Regional de Investigación, Desarrollo e  Innovación. 2026.
           </p>
         </div>
 

@@ -208,7 +208,7 @@ export default function EvaluarProyectoVisitante() {
           <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 4px' }}>{proyecto.codigo_proyecto}</p>
           <h2 style={{ fontSize: 16, fontWeight: 800, color: '#1e293b', margin: '0 0 12px' }}>{proyecto.nombre_proyecto}</h2>
           <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.6, margin: 0 }}>
-            Proyecto presentado en la Feria de Tecnología, Emprendimiento e Innovación Industrial 2026.
+            Proyecto presentado en la Feria Regional de Investigación, Desarrollo e  Innovación. 2026.
           </p>
         </div>
         <button onClick={() => setStep(2)} style={{ width: '100%', background: '#162748', color: '#fff', border: 'none', borderRadius: 14, padding: '16px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>

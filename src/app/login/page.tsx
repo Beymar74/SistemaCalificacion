@@ -80,48 +80,48 @@ export default function LoginPage() {
             
             {/* Left Column: Branding / Identity */}
             <div className="md:col-span-5 bg-gradient-to-b from-slate-50/80 via-[#f8fafc] to-blue-50/30 p-5 sm:p-7 md:p-10 lg:p-12 flex flex-col justify-between items-center text-center border-b md:border-b-0 md:border-r border-slate-100 relative">
-              <div className="flex flex-col items-center my-auto w-full">
-                
-                {/* Logos */}
-                <motion.div
-                  initial={{ scale: 0.85, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.15, type: "spring", stiffness: 220 }}
-                  className="flex items-center justify-center gap-5 sm:gap-7 md:gap-8 mb-4 sm:mb-5 md:mb-6"
-                >
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 p-2 sm:p-2.5 md:p-3 bg-white rounded-2xl shadow-xs border border-slate-200/80 flex items-center justify-center flex-shrink-0">
-                    <Image
-                      src="/logo/Emi logo.png"
-                      alt="Logo EMI"
-                      width={70}
-                      height={70}
-                      className="w-full h-full object-contain"
-                      priority
-                    />
-                  </div>
-                  <div className="w-[1.5px] h-8 sm:h-10 md:h-12 bg-slate-200/90 flex-shrink-0" />
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 p-2 sm:p-2.5 md:p-3 bg-white rounded-2xl shadow-xs border border-slate-200/80 flex items-center justify-center flex-shrink-0">
-                    <Image
-                      src="/logo/uicyt-logo.png"
-                      alt="Logo UICYT"
-                      width={70}
-                      height={70}
-                      className="w-full h-full object-contain rounded-lg md:rounded-xl"
-                      priority
-                    />
-                  </div>
-                </motion.div>
 
+              {/* Logos a los costados, sin caja, tamaño real */}
+              <motion.div
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.15, type: "spring", stiffness: 220 }}
+                className="absolute top-7 left-7 sm:top-8 sm:left-8 md:top-9 md:left-9 w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28"
+              >
+                <Image
+                  src="/logo/Emi logo.png"
+                  alt="Logo EMI"
+                  width={160}
+                  height={160}
+                  className="w-full h-full object-contain drop-shadow-[0_4px_10px_rgba(9,78,143,0.15)]"
+                  priority
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.15, type: "spring", stiffness: 220 }}
+                className="absolute top-7 right-7 sm:top-8 sm:right-8 md:top-9 md:right-9 w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28"
+              >
+                <Image
+                  src="/logo/uicyt-logo-transparent.png"
+                  alt="Logo UICYT"
+                  width={160}
+                  height={160}
+                  className="w-full h-full object-contain drop-shadow-[0_4px_10px_rgba(9,78,143,0.15)]"
+                  priority
+                />
+              </motion.div>
+
+              <div className="flex flex-col items-center my-auto w-full pt-20 sm:pt-24 md:pt-28">
                 {/* Typography */}
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25 }}
+                  transition={{ delay: 0.3 }}
                   className="text-center"
                 >
-                  <span className="text-[9px] sm:text-[10px] font-black tracking-[0.2em] text-[#094e8f] uppercase bg-blue-50/80 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-blue-100/60 mb-1.5 sm:mb-2.5 inline-block">
-                    Plataforma Oficial
-                  </span>
                   <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#094e8f] tracking-tight leading-tight">
                     UICYT
                   </h1>
