@@ -76,40 +76,40 @@ function ReportCard({
 
   return (
     <motion.div 
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -3 }}
       transition={{ duration: 0.2 }}
-      className="group relative bg-white p-7 rounded-[2.2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-slate-200 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+      className="group relative bg-white p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden"
     >
       {/* Accent Gradient Top Line */}
-      <div className={`absolute top-0 left-0 right-0 h-1.5 ${gradientBar}`} />
+      <div className={`absolute top-0 left-0 right-0 h-1 ${gradientBar}`} />
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Top Header: Icon + Badge */}
-        <div className="flex items-start justify-between gap-3">
-          <div className={`w-13 h-13 p-3.5 rounded-2xl ${iconBg} flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-300`}>
-            <Icon className={`w-6 h-6 ${iconColor}`} />
+        <div className="flex items-center justify-between gap-2">
+          <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0 shadow-2xs`}>
+            <Icon className={`w-4.5 h-4.5 ${iconColor}`} />
           </div>
-          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${badgeColor}`}>
+          <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${badgeColor}`}>
             {badge}
           </span>
         </div>
 
         {/* Title & Description */}
         <div>
-          <h3 className="font-black text-[#162748] text-lg leading-tight tracking-tight group-hover:text-[#094e8f] transition-colors">
+          <h3 className="font-black text-slate-800 text-sm sm:text-base leading-snug tracking-tight group-hover:text-[#094e8f] transition-colors">
             {title}
           </h3>
-          <p className="text-slate-500 font-medium text-xs leading-relaxed mt-2">
+          <p className="text-slate-500 font-medium text-xs leading-relaxed mt-1 line-clamp-2">
             {description}
           </p>
         </div>
 
         {/* Mini Feature Chips */}
-        <div className="flex flex-wrap gap-1.5 pt-1">
+        <div className="flex flex-wrap gap-1 pt-0.5">
           {features.map((feat, idx) => (
             <span 
               key={idx}
-              className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md"
+              className="inline-flex items-center gap-1 text-[9px] font-bold text-slate-500 bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded"
             >
               {feat}
             </span>
@@ -118,41 +118,39 @@ function ReportCard({
       </div>
 
       {/* Buttons */}
-      <div className="flex items-center gap-2.5 mt-6 pt-4 border-t border-slate-100">
+      <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100">
         <button
           onClick={onDownloadExcel}
           disabled={isAnyLoading}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-3.5 rounded-xl text-xs font-black tracking-wide transition-all shadow-sm ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl text-xs font-black tracking-wide transition-all shadow-2xs ${
             isExcelLoading 
               ? 'bg-blue-50 text-blue-600'
-              : 'bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white active:scale-95 disabled:opacity-50 disabled:pointer-events-none hover:shadow-emerald-200'
+              : 'bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white active:scale-95 disabled:opacity-50 disabled:pointer-events-none'
           }`}
         >
           {isExcelLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
-            <FileSpreadsheet className="w-4 h-4" />
+            <FileSpreadsheet className="w-3.5 h-3.5" />
           )}
           <span>Excel</span>
-          <span className="text-[9px] opacity-75 font-semibold">.xlsx</span>
         </button>
 
         <button
           onClick={onDownloadPDF}
           disabled={isAnyLoading}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-3.5 rounded-xl text-xs font-black tracking-wide transition-all shadow-sm ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl text-xs font-black tracking-wide transition-all shadow-2xs ${
             isPdfLoading 
               ? 'bg-blue-50 text-blue-600'
-              : 'bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white active:scale-95 disabled:opacity-50 disabled:pointer-events-none hover:shadow-rose-200'
+              : 'bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white active:scale-95 disabled:opacity-50 disabled:pointer-events-none'
           }`}
         >
           {isPdfLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
-            <Printer className="w-4 h-4" />
+            <Printer className="w-3.5 h-3.5" />
           )}
           <span>PDF</span>
-          <span className="text-[9px] opacity-75 font-semibold">.pdf</span>
         </button>
       </div>
     </motion.div>
@@ -232,56 +230,56 @@ function RespaldoFirmaCard({ notify }: { notify: (text: string, type: 'success' 
 
   return (
     <motion.div 
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -3 }}
       transition={{ duration: 0.2 }}
-      className="group relative bg-white p-7 rounded-[2.2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-slate-200 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+      className="group relative bg-white p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden"
     >
       {/* Accent Gradient Top Line */}
-      <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Top Header */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="w-13 h-13 p-3.5 rounded-2xl bg-indigo-50 flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-300">
-            <FileSignature className="w-6 h-6 text-indigo-600" />
+        <div className="flex items-center justify-between gap-2">
+          <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 shadow-2xs">
+            <FileSignature className="w-4.5 h-4.5" />
           </div>
-          <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100">
-            Planilla Anexo &quot;C&quot;
+          <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100">
+            Anexo &quot;C&quot;
           </span>
         </div>
 
         {/* Title & Description */}
         <div>
-          <h3 className="font-black text-[#162748] text-lg leading-tight tracking-tight group-hover:text-[#094e8f] transition-colors">
+          <h3 className="font-black text-slate-800 text-sm sm:text-base leading-snug tracking-tight group-hover:text-[#094e8f] transition-colors">
             Respaldo de Firma por Jurado
           </h3>
-          <p className="text-slate-500 font-medium text-xs leading-relaxed mt-2">
-            Genera la Hoja Oficial Anexo &quot;C&quot; en PDF ya rellenada con rúbricas de documento (30 pts), exposición (70 pts) y observaciones de cada jurado para su firma física.
+          <p className="text-slate-500 font-medium text-xs leading-relaxed mt-1 line-clamp-2">
+            Planilla Oficial Anexo &quot;C&quot; en PDF rellenada con rúbricas (30 y 70 pts) y observaciones para firma física.
           </p>
         </div>
 
         {/* Search input with autocomplete */}
-        <div className="relative pt-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <div className="relative pt-0.5">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
           <input
             type="text"
             value={search}
             onChange={e => { setSearch(e.target.value); setSelected(null); }}
-            placeholder="Buscar docente o jurado..."
-            className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500/60 focus:bg-white transition-all shadow-2xs"
+            placeholder="Buscar jurado..."
+            className="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500/60 focus:bg-white transition-all shadow-2xs"
           />
           {sugerencias.length > 0 && (
-            <div className="absolute z-20 mt-1.5 w-full bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto">
+            <div className="absolute z-20 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden max-h-40 overflow-y-auto">
               {sugerencias.map(d => (
                 <button
                   key={d.nombre}
                   onClick={() => { setSelected(d.nombre); setSearch(d.nombre); }}
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-left hover:bg-indigo-50/70 transition-colors border-b border-slate-50 last:border-0"
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-50/70 transition-colors border-b border-slate-50 last:border-0"
                 >
-                  <User className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
+                  <User className="w-3 h-3 text-indigo-600 flex-shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-xs font-black text-slate-800 truncate">{d.nombre}</p>
-                    <p className="text-[10px] text-slate-400 font-medium truncate">{d.materia}</p>
+                    <p className="text-xs font-bold text-slate-800 truncate">{d.nombre}</p>
+                    <p className="text-[9px] text-slate-400 truncate">{d.materia}</p>
                   </div>
                 </button>
               ))}
@@ -291,19 +289,18 @@ function RespaldoFirmaCard({ notify }: { notify: (text: string, type: 'success' 
       </div>
 
       {/* Button */}
-      <div className="mt-6 pt-4 border-t border-slate-100">
+      <div className="mt-4 pt-3 border-t border-slate-100">
         <button
           onClick={handleDescargar}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 py-3 px-3.5 rounded-xl text-xs font-black tracking-wide bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white active:scale-95 disabled:opacity-50 disabled:pointer-events-none transition-all shadow-sm hover:shadow-indigo-200"
+          className="w-full flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl text-xs font-black tracking-wide bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white active:scale-95 disabled:opacity-50 disabled:pointer-events-none transition-all shadow-2xs"
         >
           {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
-            <Download className="w-4 h-4" />
+            <Download className="w-3.5 h-3.5" />
           )}
           <span>Descargar Planilla Anexo C</span>
-          <span className="text-[9px] opacity-75 font-semibold">.pdf</span>
         </button>
       </div>
     </motion.div>
@@ -616,69 +613,29 @@ export default function ReportesPage() {
         )}
       </AnimatePresence>
 
-      {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      {/* Header Minimalista */}
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2 text-[#094e8f] font-black text-xs uppercase tracking-[0.2em] mb-2">
-            <Layers className="w-4 h-4 text-[#f0d114]" />
-            <span>Auditoría & Descargas Oficiales · UICYT 2026</span>
+          <div className="flex items-center gap-1.5 text-[#094e8f] font-black text-[10px] uppercase tracking-wider mb-0.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#f0d114]" />
+            <span>Auditoría & Descargas Oficiales · 2026</span>
           </div>
-          <h1 className="text-4xl font-black text-[#162748] tracking-tight">Centro de Reportes</h1>
-          <p className="text-slate-500 font-medium mt-1">Consolide, visualice y descargue toda la información de la feria en un solo lugar.</p>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Centro de Reportes</h1>
+          <p className="text-slate-500 font-medium text-xs mt-0.5">Genera y descarga planillas consolidadas, cuadros de honor y actas oficiales.</p>
         </div>
       </header>
 
-      {/* Features Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/50 p-4 rounded-2xl border border-blue-100 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-[#094e8f] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
-            <FileSpreadsheet className="w-5 h-5" />
-          </div>
-          <div>
-            <h4 className="text-xs font-black text-[#162748] uppercase tracking-wide">Planillas Excel (.xlsx)</h4>
-            <p className="text-[11px] text-slate-500 font-medium mt-0.5">Celdas formateadas, auto-ajustadas y membrete institucional.</p>
-          </div>
+      {/* Filtro de Categoría Compacto */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-slate-600 font-bold text-xs">
+          <Filter className="w-3.5 h-3.5 text-[#094e8f]" />
+          <span>Filtrar por Categoría:</span>
         </div>
-
-        <div className="bg-gradient-to-r from-amber-50/80 to-yellow-50/50 p-4 rounded-2xl border border-amber-100 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
-            <Printer className="w-5 h-5" />
-          </div>
-          <div>
-            <h4 className="text-xs font-black text-[#162748] uppercase tracking-wide">Documentos PDF (.pdf)</h4>
-            <p className="text-[11px] text-slate-500 font-medium mt-0.5">Diseño en grilla compacta A4 listo para impresión y firma.</p>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-emerald-50/80 to-teal-50/50 p-4 rounded-2xl border border-emerald-100 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <h4 className="text-xs font-black text-[#162748] uppercase tracking-wide">Auditoría en Tiempo Real</h4>
-            <p className="text-[11px] text-slate-500 font-medium mt-0.5">Sincronización directa con las evaluaciones confirmadas.</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Help Banner */}
-      <HelpBanner
-        storageKey="reportes-admin"
-        title="Guía Operativa: Centro de Descarga de Planillas y Reportes Oficiales"
-        description="Este panel reúne toda la logística e información de calificaciones del certamen. Cada reporte cuenta con formatos automatizados en Excel (.xlsx) y PDF (.pdf). El Reporte General y el Cuadro de Honor respetan el filtro de categoría seleccionado. La tarjeta de Respaldo de Firma genera la Planilla Anexo 'C' oficial con rúbricas de documento (30 pts) y exposición (70 pts) rellenadas con sus notas y observaciones, lista para imprimir y firmar."
-      />
-
-      {/* Filtro de Categoría */}
-      <div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-xs relative overflow-hidden">
-        <div className="flex items-center gap-2 mb-3 text-slate-500 font-bold text-xs uppercase tracking-wider">
-          <Filter className="w-4 h-4 text-[#094e8f]" />
-          <span>Filtro de Categoría (Aplica a Reporte General y Cuadro de Honor)</span>
-        </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="flex items-center gap-2 flex-1 sm:max-w-md">
           <select
             value={selectedCategoria}
             onChange={e => setSelectedCategoria(e.target.value)}
-            className="w-full md:w-96 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-[#094e8f] focus:bg-white shadow-2xs transition-all cursor-pointer"
+            className="w-full bg-slate-50 hover:bg-slate-100/80 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 outline-none focus:border-[#094e8f] focus:bg-white shadow-2xs transition-all cursor-pointer"
           >
             <option value="all">Todas las Categorías (General Consolidado)</option>
             {CATEGORIAS.map(cat => (
@@ -687,23 +644,18 @@ export default function ReportesPage() {
           </select>
 
           {selectedCategoria !== 'all' && (
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1.5 bg-blue-50 border border-blue-200 text-[#094e8f] rounded-xl text-xs font-black">
-                Filtro: {selectedCategoria}
-              </span>
-              <button
-                onClick={() => setSelectedCategoria('all')}
-                className="text-xs font-bold text-slate-500 hover:text-red-600 px-3 py-1.5 rounded-xl hover:bg-red-50 border border-slate-200 hover:border-red-200 transition-all cursor-pointer"
-              >
-                Restablecer
-              </button>
-            </div>
+            <button
+              onClick={() => setSelectedCategoria('all')}
+              className="text-xs font-bold text-slate-500 hover:text-red-600 px-2.5 py-1.5 rounded-xl hover:bg-red-50 border border-slate-200 transition-colors whitespace-nowrap cursor-pointer"
+            >
+              Limpiar
+            </button>
           )}
         </div>
       </div>
 
       {/* Reports Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
         <ReportCard
           id="general"
           badge="Calificaciones"
