@@ -15,7 +15,6 @@ import { supabase } from '../../../lib/supabase';
 import { fetchAsignacionesDocente } from '@/lib/db';
 import type { ProyectoAsignado } from '@/lib/data';
 import { useRouter } from 'next/navigation';
-import CarreraBadge from '@/components/CarreraBadge';
 import { getCarreraConfig } from '@/lib/constants';
 import LoadingScreen from '@/components/LoadingScreen';
 
@@ -113,35 +112,25 @@ export default function DocenteHome() {
           <motion.div
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3 sm:gap-4 min-w-0"
+            className="flex items-center gap-3.5 sm:gap-5 min-w-0"
           >
-            <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
-              <div className="p-1.5 sm:p-2 bg-white rounded-xl shadow-xs border border-slate-100 flex items-center justify-center">
-                <img
-                  src="/logo/Emi logo.png"
-                  alt="Logo EMI"
-                  className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0"
-                />
-              </div>
-              <div className="w-[1.5px] h-6 sm:h-7 bg-slate-200 flex-shrink-0" />
-              <div className="p-1.5 sm:p-2 bg-white rounded-xl shadow-xs border border-slate-100 flex items-center justify-center">
-                <img
-                  src="/logo/uicyt-logo.png"
-                  alt="Logo UICYT"
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-contain flex-shrink-0"
-                />
-              </div>
+            <div className="flex items-center gap-3.5 sm:gap-5 flex-shrink-0">
+              <img
+                src="/logo/Emi logo.png"
+                alt="Logo EMI"
+                className="w-10 h-10 sm:w-12 sm:h-12 object-contain flex-shrink-0 drop-shadow-[0_2px_6px_rgba(9,78,143,0.12)]"
+              />
+              <div className="w-px h-7 sm:h-8 bg-slate-200 flex-shrink-0" />
+              <img
+                src="/logo/uicyt-logo-transparent.png"
+                alt="Logo UICYT"
+                className="w-10 h-10 sm:w-12 sm:h-12 object-contain flex-shrink-0 drop-shadow-[0_2px_6px_rgba(9,78,143,0.12)]"
+              />
             </div>
             <div className="flex flex-col justify-center">
-              <div className="flex items-center gap-1.5">
-                <span className="text-base sm:text-lg font-black text-[#094e8f] tracking-tight leading-none">
-                  UICYT
-                </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#f0d114]" />
-                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                  2026
-                </span>
-              </div>
+              <span className="text-base sm:text-lg font-black text-[#094e8f] tracking-tight leading-none">
+                UICYT
+              </span>
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest hidden sm:block mt-0.5">
                 Portal de Evaluación Docente
               </span>
@@ -182,7 +171,7 @@ export default function DocenteHome() {
                 </span>
               </div>
 
-              <h1 className="text-lg sm:text-xl font-black text-slate-800 tracking-tight leading-snug">
+              <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight leading-snug">
                 Hola, <span className="text-[#094e8f]">{persona?.grado ? `${persona.grado} ` : ''}{persona?.nombre_completo || 'Docente'}</span>
               </h1>
 
@@ -339,15 +328,12 @@ export default function DocenteHome() {
                       )}
                     </div>
 
-                    {/* Categoría y Carrera */}
+                    {/* Categoría */}
                     <div className="flex items-start gap-1.5 flex-wrap mb-2.5">
                       {p.categoria && (
                         <span className="text-[9px] font-bold text-slate-600 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
                           {p.categoria}
                         </span>
-                      )}
-                      {p.carrera && (
-                        <CarreraBadge carrera={p.carrera} size="xs" />
                       )}
                     </div>
 
