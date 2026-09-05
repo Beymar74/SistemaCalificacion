@@ -17,18 +17,18 @@ export default function CompletadoPage() {
           <motion.div
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-2 sm:gap-3"
+            className="flex items-center gap-3.5 sm:gap-5"
           >
             <img
               src="/logo/Emi logo.png"
               alt="Logo EMI"
-              className="w-10 h-10 sm:w-11 sm:h-11 object-contain flex-shrink-0"
+              className="w-10 h-10 sm:w-12 sm:h-12 object-contain flex-shrink-0 drop-shadow-[0_2px_6px_rgba(9,78,143,0.12)]"
             />
-            <div className="w-px h-6 bg-slate-200" />
+            <div className="w-px h-7 sm:h-8 bg-slate-200 flex-shrink-0" />
             <img
-              src="/logo/uicyt-logo.png"
+              src="/logo/uicyt-logo-transparent.png"
               alt="Logo UICYT"
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg object-contain flex-shrink-0"
+              className="w-10 h-10 sm:w-12 sm:h-12 object-contain flex-shrink-0 drop-shadow-[0_2px_6px_rgba(9,78,143,0.12)]"
             />
             <span className="text-lg sm:text-xl font-black text-[#094e8f] tracking-tight">
               UICYT

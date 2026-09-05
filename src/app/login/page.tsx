@@ -114,7 +114,7 @@ export default function LoginPage() {
                 />
               </motion.div>
 
-              <div className="flex flex-col items-center my-auto w-full pt-20 sm:pt-24 md:pt-28">
+              <div className="flex flex-col items-center my-auto w-full pt-28 sm:pt-32 md:pt-36">
                 {/* Typography */}
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
@@ -122,10 +122,7 @@ export default function LoginPage() {
                   transition={{ delay: 0.3 }}
                   className="text-center"
                 >
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#094e8f] tracking-tight leading-tight">
-                    UICYT
-                  </h1>
-                  <p className="text-slate-800 text-[11px] sm:text-xs md:text-sm font-extrabold uppercase tracking-wide max-w-[240px] md:max-w-[260px] leading-tight sm:leading-snug mt-1 sm:mt-2">
+                  <p className="text-slate-800 text-sm sm:text-base md:text-lg font-extrabold uppercase tracking-wide max-w-[320px] md:max-w-[360px] leading-tight sm:leading-snug">
                     Unidad de Investigación Ciencia y Tecnología
                   </p>
                   <p className="text-slate-400 text-[10px] sm:text-[11px] font-semibold tracking-normal mt-0.5 sm:mt-1">
