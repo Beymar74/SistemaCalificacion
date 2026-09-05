@@ -101,8 +101,8 @@ export default function VersionWelcomeModal() {
 
                 <div className="relative z-10">
                   {/* Logos Header */}
-                  <div className="flex items-center justify-center md:justify-start gap-3 mb-6">
-                    <div className="p-2 bg-white rounded-2xl shadow-sm">
+                  <div className="flex items-center justify-center md:justify-start gap-4 sm:gap-5 mb-6">
+                    <div className="p-2.5 bg-white rounded-2xl shadow-sm flex items-center justify-center">
                       <Image
                         src="/logo/Emi logo.png"
                         alt="Logo EMI"
@@ -112,8 +112,8 @@ export default function VersionWelcomeModal() {
                         priority
                       />
                     </div>
-                    <div className="w-[1.5px] h-8 bg-white/20" />
-                    <div className="p-2 bg-white rounded-2xl shadow-sm">
+                    <div className="w-px h-8 bg-white/25" />
+                    <div className="p-2.5 bg-white rounded-2xl shadow-sm flex items-center justify-center">
                       <Image
                         src="/logo/uicyt-logo.png"
                         alt="Logo UICYT"

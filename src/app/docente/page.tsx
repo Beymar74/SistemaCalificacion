@@ -115,16 +115,16 @@ export default function DocenteHome() {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-3 sm:gap-4 min-w-0"
           >
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-              <div className="p-1.5 bg-white rounded-xl shadow-xs border border-slate-100">
+            <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+              <div className="p-1.5 sm:p-2 bg-white rounded-xl shadow-xs border border-slate-100 flex items-center justify-center">
                 <img
                   src="/logo/Emi logo.png"
                   alt="Logo EMI"
                   className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0"
                 />
               </div>
-              <div className="w-px h-6 bg-slate-200" />
-              <div className="p-1.5 bg-white rounded-xl shadow-xs border border-slate-100">
+              <div className="w-[1.5px] h-6 sm:h-7 bg-slate-200 flex-shrink-0" />
+              <div className="p-1.5 sm:p-2 bg-white rounded-xl shadow-xs border border-slate-100 flex items-center justify-center">
                 <img
                   src="/logo/uicyt-logo.png"
                   alt="Logo UICYT"

@@ -87,26 +87,26 @@ export default function LoginPage() {
                   initial={{ scale: 0.85, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.15, type: "spring", stiffness: 220 }}
-                  className="flex items-center justify-center gap-2.5 sm:gap-3.5 md:gap-4 mb-3 sm:mb-4 md:mb-6"
+                  className="flex items-center justify-center gap-5 sm:gap-7 md:gap-8 mb-4 sm:mb-5 md:mb-6"
                 >
-                  <div className="p-1.5 sm:p-2 bg-white rounded-xl md:rounded-2xl shadow-xs border border-slate-100">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 p-2 sm:p-2.5 md:p-3 bg-white rounded-2xl shadow-xs border border-slate-200/80 flex items-center justify-center flex-shrink-0">
                     <Image
                       src="/logo/Emi logo.png"
                       alt="Logo EMI"
                       width={70}
                       height={70}
-                      className="object-contain w-9 h-9 sm:w-11 sm:h-11 md:w-16 md:h-16"
+                      className="w-full h-full object-contain"
                       priority
                     />
                   </div>
-                  <div className="w-[1.5px] h-6 sm:h-8 md:h-10 bg-slate-200/80" />
-                  <div className="p-1.5 sm:p-2 bg-white rounded-xl md:rounded-2xl shadow-xs border border-slate-100">
+                  <div className="w-[1.5px] h-8 sm:h-10 md:h-12 bg-slate-200/90 flex-shrink-0" />
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 p-2 sm:p-2.5 md:p-3 bg-white rounded-2xl shadow-xs border border-slate-200/80 flex items-center justify-center flex-shrink-0">
                     <Image
                       src="/logo/uicyt-logo.png"
                       alt="Logo UICYT"
                       width={70}
                       height={70}
-                      className="object-contain w-9 h-9 sm:w-11 sm:h-11 md:w-16 md:h-16 rounded-lg md:rounded-xl"
+                      className="w-full h-full object-contain rounded-lg md:rounded-xl"
                       priority
                     />
                   </div>
