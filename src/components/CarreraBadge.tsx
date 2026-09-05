@@ -51,7 +51,7 @@ export default function CarreraBadge({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-lg font-black uppercase tracking-wider border shadow-xs transition-all leading-tight ${sizeClasses} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-lg font-black uppercase tracking-wider border shadow-xs transition-all leading-tight ${sizeClasses} ${className}`}
       style={{
         backgroundColor: config.bg,
         color: config.text,
@@ -62,7 +62,7 @@ export default function CarreraBadge({
         className="w-1.5 h-1.5 rounded-full flex-shrink-0"
         style={{ backgroundColor: config.hex }}
       />
-      <span className="break-words text-left leading-tight">{carrera}</span>
+      <span className="break-words text-center leading-tight">{carrera}</span>
     </span>
   );
 }
