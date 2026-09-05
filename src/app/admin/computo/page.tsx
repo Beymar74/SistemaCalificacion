@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HelpBanner from '@/components/HelpBanner';
+import LoadingScreen from '@/components/LoadingScreen';
 import { fetchComputoProyectos, sincronizarTodosLosResultados, type ProyectoComputo } from '@/lib/db';
 import {
   CATEGORIAS,
@@ -69,10 +70,11 @@ export default function ComputoPage() {
   const pendientes = filteredProyectos.filter(p => p.evaluacionesConfirmadas === 0);
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] gap-4">
-      <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin" />
-      <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Calculando cómputo...</p>
-    </div>
+    <LoadingScreen
+      message="Calculando cómputo general..."
+      submessage="Auditando notas, jurados y observaciones por stand"
+      fullScreen={false}
+    />
   );
 
   return (
@@ -233,7 +235,7 @@ export default function ComputoPage() {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded">{p.codigo}</span>
+                    <span className="text-xs font-bold font-mono bg-slate-100 text-[#094e8f] px-2.5 py-0.5 rounded-lg border border-slate-200/70 whitespace-nowrap">{p.codigo}</span>
                     <p className="text-sm font-bold text-slate-800 truncate">{p.nombre}</p>
                   </div>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">

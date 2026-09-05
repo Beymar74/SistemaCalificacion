@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ChevronLeft, AlignLeft, AlertTriangle, Pencil, Check, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { sincronizarResultadosProyecto } from '@/lib/db';
+import LoadingScreen from '@/components/LoadingScreen';
 
 type Step = 1 | 2 | 3;
 
@@ -308,12 +309,11 @@ export default function EvaluarProyecto() {
 
   // ── Loading ───────────────────────────────────────────────────────────────
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-9 h-9 rounded-full border-4 border-[#162748] border-t-transparent animate-spin" />
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Cargando...</p>
-      </div>
-    </div>
+    <LoadingScreen
+      message="Cargando rúbrica y datos del proyecto..."
+      submessage="Instrumento Oficial de Evaluación · UICYT"
+      fullScreen={true}
+    />
   );
 
   if (!proyecto) return (

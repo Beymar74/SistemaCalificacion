@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HelpBanner from '@/components/HelpBanner';
+import LoadingScreen from '@/components/LoadingScreen';
 import { fetchCriterios, upsertCriterio, eliminarCriterio, type Criterio } from '@/lib/db';
 
 export default function CriteriosPage() {
@@ -152,10 +153,11 @@ export default function CriteriosPage() {
       {/* Criteria List */}
       <div className="space-y-4">
         {isLoading ? (
-          <div className="py-20 text-center">
-            <div className="w-10 h-10 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Cargando rúbrica...</p>
-          </div>
+          <LoadingScreen
+            message="Cargando rúbrica de evaluación..."
+            submessage="Obteniendo criterios, pesos y descripciones"
+            fullScreen={false}
+          />
         ) : (
           criterios.map((c) => (
             <motion.div

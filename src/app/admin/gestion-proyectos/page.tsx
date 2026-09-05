@@ -277,27 +277,20 @@ export default function GestionProyectosPage() {
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <div className="flex items-center gap-2 text-blue-600 font-black text-xs uppercase tracking-[0.2em] mb-2">
+          <div className="flex items-center gap-2 text-[#094e8f] font-black text-xs uppercase tracking-[0.2em] mb-2">
             <Layers className="w-4 h-4" />
             <span>Administración</span>
           </div>
-          <h1 className="text-4xl font-black text-[#162748] tracking-tight">Gestión de Proyectos</h1>
+          <h1 className="text-3xl md:text-4xl font-black text-[#162748] tracking-tight">Gestión de Proyectos</h1>
           <p className="text-slate-500 font-medium mt-1">Gestione proyectos, jurados, asignaciones y asistencia.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={loadData} className="p-3.5 bg-white border border-slate-200 text-slate-500 rounded-2xl hover:bg-slate-50 transition-all shadow-sm">
+          <button onClick={loadData} className="p-3.5 bg-white border border-slate-200 text-slate-500 rounded-2xl hover:bg-slate-50 transition-all shadow-sm cursor-pointer" title="Actualizar datos">
             <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
           </button>
           <button
-            onClick={() => setConfirmAutoAssign(true)}
-            className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black px-6 py-3.5 rounded-2xl shadow-xl shadow-indigo-900/10 transition-all active:scale-95"
-          >
-            <Users className="w-5 h-5" />
-            <span>Asignación Automática</span>
-          </button>
-          <button
             onClick={() => { setIsEditing(false); setProjectForm({ codigo: '', nombre: '', categoria: CATEGORIA_DEFAULT, carrera: CARRERA_DEFAULT, sociedad: '', gestion: new Date().getFullYear().toString() }); setProjectModal(true); }}
-            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-black px-6 py-3.5 rounded-2xl shadow-xl shadow-blue-900/10 transition-all active:scale-95"
+            className="flex items-center justify-center gap-2 bg-[#094e8f] hover:bg-[#073b6d] text-white font-black px-6 py-3.5 rounded-2xl shadow-xl shadow-blue-900/15 transition-all active:scale-95 cursor-pointer"
           >
             <Plus className="w-5 h-5" />
             <span>Nuevo Proyecto</span>
@@ -309,45 +302,67 @@ export default function GestionProyectosPage() {
       <HelpBanner
         storageKey="gestion-proyectos"
         title="Guía de Operaciones: Gestión y Asignación de Proyectos"
-        description="Configure el núcleo de la feria. Desde esta pantalla puede registrar nuevos proyectos, controlar la asistencia de los grupos en los stands (Presente/Ausente) y asignar exactamente a los 3 jurados evaluadores por cada proyecto basándose en su carga actual. Si es necesario, puede dar de baja proyectos o remover asignaciones."
+        description="Configure el núcleo de la feria. Desde esta pantalla puede registrar nuevos proyectos, controlar la asistencia de los grupos en los stands (Presente/Ausente) y asignar jurados evaluadores por cada proyecto basándose en su disponibilidad. Si es necesario, puede dar de baja proyectos o remover asignaciones."
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Proyectos</p>
-          <p className="text-2xl font-black text-[#162748]">{proyectos.length}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Proyectos</p>
+            <p className="text-2xl font-black text-[#162748]">{proyectos.length}</p>
+          </div>
+          <div className="w-11 h-11 bg-blue-50 text-[#094e8f] rounded-2xl flex items-center justify-center font-bold">
+            <Layers className="w-5 h-5" />
+          </div>
         </div>
-        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Jurados Disponibles</p>
-          <p className="text-2xl font-black text-[#162748]">{evaluadores.length}</p>
+
+        <div className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Jurados Disponibles</p>
+            <p className="text-2xl font-black text-[#162748]">{evaluadores.length}</p>
+          </div>
+          <div className="w-11 h-11 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-bold">
+            <Users className="w-5 h-5" />
+          </div>
         </div>
-        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Gestión Activa</p>
-          <p className="text-2xl font-black text-blue-600">{new Date().getFullYear()}</p>
+
+        <div className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Gestión Activa</p>
+            <p className="text-2xl font-black text-[#094e8f]">{new Date().getFullYear()}</p>
+          </div>
+          <div className="w-11 h-11 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center font-bold">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
         </div>
 
         <button
           onClick={() => setQuickFilterIncomplete(prev => !prev)}
-          className={`p-6 rounded-[2rem] border-2 shadow-sm text-left transition-all active:scale-95 ${quickFilterIncomplete
-            ? 'bg-amber-500 border-amber-400 shadow-amber-900/10'
-            : incompletos > 0
+          className={`p-5 rounded-[2rem] border-2 shadow-sm text-left transition-all active:scale-95 flex items-center justify-between cursor-pointer ${
+            quickFilterIncomplete
+              ? 'bg-amber-500 border-amber-400 shadow-amber-900/10 text-white'
+              : incompletos > 0
               ? 'bg-white border-amber-200 hover:border-amber-300 hover:bg-amber-50/40'
               : 'bg-white border-slate-100 hover:bg-slate-50'
-            }`}
+          }`}
         >
-          <div className="flex items-center justify-between mb-1">
-            <p className={`text-[10px] font-black uppercase tracking-widest ${quickFilterIncomplete ? 'text-amber-100' : 'text-slate-400'}`}>
+          <div>
+            <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${quickFilterIncomplete ? 'text-amber-100' : 'text-slate-400'}`}>
               Sin Completar
             </p>
-            <AlertTriangle className={`w-4 h-4 ${quickFilterIncomplete ? 'text-amber-100' : incompletos > 0 ? 'text-amber-400' : 'text-slate-300'}`} />
+            <p className={`text-2xl font-black ${quickFilterIncomplete ? 'text-white' : incompletos > 0 ? 'text-amber-600' : 'text-slate-300'}`}>
+              {incompletos}
+            </p>
+            <p className={`text-[10px] font-bold mt-0.5 ${quickFilterIncomplete ? 'text-amber-100' : 'text-slate-400'}`}>
+              {quickFilterIncomplete ? 'Mostrando incompletos' : 'proyectos sin 3 jurados'}
+            </p>
           </div>
-          <p className={`text-2xl font-black ${quickFilterIncomplete ? 'text-white' : incompletos > 0 ? 'text-amber-500' : 'text-slate-300'}`}>
-            {incompletos}
-          </p>
-          <p className={`text-[10px] font-bold mt-1 ${quickFilterIncomplete ? 'text-amber-100' : 'text-slate-400'}`}>
-            {quickFilterIncomplete ? 'Mostrando incompletos' : 'proyectos sin 3 jurados'}
-          </p>
+          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${
+            quickFilterIncomplete ? 'bg-amber-600 text-white' : incompletos > 0 ? 'bg-amber-50 text-amber-500' : 'bg-slate-50 text-slate-300'
+          }`}>
+            <AlertTriangle className="w-5 h-5" />
+          </div>
         </button>
       </div>
 
@@ -368,7 +383,7 @@ export default function GestionProyectosPage() {
             </div>
             <button
               onClick={() => setQuickFilterIncomplete(false)}
-              className="flex items-center gap-1.5 text-[10px] font-black text-amber-600 hover:text-amber-800 uppercase tracking-widest transition-colors"
+              className="flex items-center gap-1.5 text-[10px] font-black text-amber-600 hover:text-amber-800 uppercase tracking-widest transition-colors cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
               Quitar filtro
@@ -377,12 +392,12 @@ export default function GestionProyectosPage() {
         )}
       </AnimatePresence>
 
-      {/* Table */}
+      {/* Table Card */}
       <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-50 flex items-center gap-4 flex-wrap">
+        <div className="p-6 border-b border-slate-100 flex items-center gap-4 flex-wrap bg-slate-50/40">
           {/* Buscar */}
-          <div className="flex flex-col gap-1.5 flex-1 min-w-[200px]">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Buscar</span>
+          <div className="flex flex-col gap-1.5 flex-1 min-w-[220px]">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-1">Buscar</span>
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
@@ -390,18 +405,18 @@ export default function GestionProyectosPage() {
                 placeholder="Buscar por código, nombre o docente..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border-2 border-transparent rounded-xl text-sm focus:outline-none focus:border-blue-600/10 focus:bg-white transition-all font-medium"
+                className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#094e8f]/40 focus:ring-2 focus:ring-[#094e8f]/10 transition-all font-medium"
               />
             </div>
           </div>
 
           {/* Categoría */}
-          <div className="flex flex-col gap-1.5 min-w-[150px]">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Categoría</span>
+          <div className="flex flex-col gap-1.5 min-w-[160px]">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-1">Categoría</span>
             <select
               value={filterCategoria}
               onChange={e => setFilterCategoria(e.target.value)}
-              className="bg-slate-50 border border-slate-100 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-blue-600/20"
+              className="bg-white border border-slate-200 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-[#094e8f]/40 cursor-pointer transition-colors"
             >
               <option value="all">Todas las Categorías</option>
               {CATEGORIAS.map(cat => (
@@ -412,11 +427,11 @@ export default function GestionProyectosPage() {
 
           {/* Carrera */}
           <div className="flex flex-col gap-1.5 min-w-[200px]">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Carrera</span>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-1">Carrera</span>
             <select
               value={filterCarrera}
               onChange={e => setFilterCarrera(e.target.value)}
-              className="bg-slate-50 border border-slate-100 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-blue-600/20"
+              className="bg-white border border-slate-200 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-[#094e8f]/40 cursor-pointer transition-colors"
             >
               <option value="all">Todas las Carreras</option>
               <optgroup label="Ingenierías">
@@ -434,14 +449,14 @@ export default function GestionProyectosPage() {
 
           {/* Asistencia */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Asistencia</span>
-            <div className="flex items-center bg-slate-50 border border-slate-100 p-1 rounded-xl gap-1">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-1">Asistencia</span>
+            <div className="flex items-center bg-white border border-slate-200 p-1 rounded-xl gap-1 shadow-2xs">
               <button
                 type="button"
                 onClick={() => setFilterAttendance('all')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterAttendance === 'all'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 font-bold'
-                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${filterAttendance === 'all'
+                  ? 'bg-[#094e8f] text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                   }`}
               >
                 Todos
@@ -449,9 +464,9 @@ export default function GestionProyectosPage() {
               <button
                 type="button"
                 onClick={() => setFilterAttendance('present')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterAttendance === 'present'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 font-bold'
-                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${filterAttendance === 'present'
+                  ? 'bg-[#094e8f] text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                   }`}
               >
                 Presentes
@@ -459,9 +474,9 @@ export default function GestionProyectosPage() {
               <button
                 type="button"
                 onClick={() => setFilterAttendance('absent')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterAttendance === 'absent'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 font-bold'
-                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${filterAttendance === 'absent'
+                  ? 'bg-[#094e8f] text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                   }`}
               >
                 Ausentes
@@ -471,14 +486,14 @@ export default function GestionProyectosPage() {
 
           {/* Asignación */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Asignación de Jurados</span>
-            <div className="flex items-center bg-slate-50 border border-slate-100 p-1 rounded-xl gap-1">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-1">Asignación de Jurados</span>
+            <div className="flex items-center bg-white border border-slate-200 p-1 rounded-xl gap-1 shadow-2xs">
               <button
                 type="button"
                 onClick={() => setFilterAssignment('all')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterAssignment === 'all'
-                  ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
-                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${filterAssignment === 'all'
+                  ? 'bg-[#094e8f] text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                   }`}
               >
                 Todos
@@ -486,9 +501,9 @@ export default function GestionProyectosPage() {
               <button
                 type="button"
                 onClick={() => setFilterAssignment('assigned')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterAssignment === 'assigned'
-                  ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
-                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${filterAssignment === 'assigned'
+                  ? 'bg-[#094e8f] text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                   }`}
               >
                 Con Jurado
@@ -496,9 +511,9 @@ export default function GestionProyectosPage() {
               <button
                 type="button"
                 onClick={() => setFilterAssignment('unassigned')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterAssignment === 'unassigned'
-                  ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
-                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${filterAssignment === 'unassigned'
+                  ? 'bg-[#094e8f] text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                   }`}
               >
                 Sin Jurado
@@ -508,14 +523,14 @@ export default function GestionProyectosPage() {
 
           {/* Estado */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Estado de Proyecto</span>
-            <div className="flex items-center bg-slate-50 border border-slate-100 p-1 rounded-xl gap-1">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-1">Estado de Proyecto</span>
+            <div className="flex items-center bg-white border border-slate-200 p-1 rounded-xl gap-1 shadow-2xs">
               <button
                 type="button"
                 onClick={() => setFilterState('all')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterState === 'all'
-                  ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
-                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${filterState === 'all'
+                  ? 'bg-[#094e8f] text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                   }`}
               >
                 Todos
@@ -523,9 +538,9 @@ export default function GestionProyectosPage() {
               <button
                 type="button"
                 onClick={() => setFilterState('active')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterState === 'active'
-                  ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
-                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${filterState === 'active'
+                  ? 'bg-[#094e8f] text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                   }`}
               >
                 Habilitados
@@ -533,9 +548,9 @@ export default function GestionProyectosPage() {
               <button
                 type="button"
                 onClick={() => setFilterState('inactive')}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterState === 'inactive'
-                  ? 'bg-[#162748] text-white shadow-md shadow-blue-900/10 font-bold'
-                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${filterState === 'inactive'
+                  ? 'bg-[#094e8f] text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                   }`}
               >
                 Inhabilitados
@@ -570,7 +585,9 @@ export default function GestionProyectosPage() {
                 return (
                   <tr key={p.id} className={`hover:bg-slate-50/80 transition-colors group ${!estaHabilitado ? 'opacity-40 grayscale' : ''}`}>
                     <td className="px-6 py-5">
-                      <span className="font-black text-[#162748] text-sm">{p.codigo}</span>
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold font-mono bg-slate-100 text-[#094e8f] border border-slate-200/80 whitespace-nowrap tracking-wide">
+                        {p.codigo}
+                      </span>
                     </td>
                     <td className="px-6 py-5">
                       <div>
@@ -613,27 +630,37 @@ export default function GestionProyectosPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-5">
-                      <span className="px-3 py-1 bg-slate-100 text-slate-700 font-black text-[10px] rounded-lg border border-slate-200 uppercase tracking-wider inline-block">
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <span className="px-3 py-1 bg-blue-50 text-[#094e8f] font-bold text-xs rounded-lg border border-blue-200/60 whitespace-nowrap inline-flex items-center shadow-2xs">
                         {p.sector}
                       </span>
                     </td>
-                    <td className="px-6 py-5 text-center">
+                    <td className="px-6 py-5 text-center whitespace-nowrap">
                       <button
+                        type="button"
                         onClick={() => handleToggleAttendance(p)}
-                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider border transition-all ${p.asistio
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                          : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95 ${p.asistio
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80 hover:bg-emerald-100'
+                          : 'bg-rose-50 text-rose-700 border-rose-200/80 hover:bg-rose-100'
                           }`}
+                        title="Clic para alternar asistencia"
                       >
                         {p.asistio ? '✓ Presente' : '✗ Ausente'}
                       </button>
                     </td>
-                    <td className="px-6 py-5 text-center">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${estaHabilitado ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-100 text-slate-400 border-slate-200'
-                        }`}>
-                        {estaHabilitado ? 'Activo' : 'Baja'}
-                      </span>
+                    <td className="px-6 py-5 text-center whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleHabilitado(p)}
+                        className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95 ${estaHabilitado
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80 hover:bg-emerald-100'
+                          : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
+                          }`}
+                        title={estaHabilitado ? 'Clic para inhabilitar' : 'Clic para habilitar'}
+                      >
+                        <span className={`w-2 h-2 rounded-full ${estaHabilitado ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]' : 'bg-slate-400'}`} />
+                        <span>{estaHabilitado ? 'Activo' : 'Baja'}</span>
+                      </button>
                     </td>
                     <td className="px-6 py-5">
                       <div className="flex items-center justify-end gap-2">
@@ -856,9 +883,8 @@ export default function GestionProyectosPage() {
                           </p>
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-0.5">{ev.departamento}</p>
                         </div>
-                        <span className={`text-[9px] px-2.5 py-1 rounded-lg font-black uppercase tracking-wider ${(ev.asignaciones || 0) >= 5 ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500'
-                          }`}>
-                          {ev.asignaciones || 0}/5
+                        <span className="text-xs px-2.5 py-1 rounded-lg font-bold bg-blue-50 text-[#094e8f] border border-blue-100/80 whitespace-nowrap shadow-2xs">
+                          {ev.asignaciones || 0} {ev.asignaciones === 1 ? 'proy.' : 'proys.'}
                         </span>
                       </button>
                     ))}

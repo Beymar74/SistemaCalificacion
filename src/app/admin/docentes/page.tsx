@@ -17,10 +17,14 @@ import {
   Key,
   Eye,
   EyeOff,
+  Clock,
+  CheckCircle2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HelpBanner from '@/components/HelpBanner';
-import { fetchDocentesAdmin, upsertDocente, deshabilitarDocente, habilitarDocente, type DocenteAdmin } from '@/lib/db';
+import { fetchDocentesAdmin, fetchAsignacionesDocente, upsertDocente, deshabilitarDocente, habilitarDocente, type DocenteAdmin } from '@/lib/db';
+import type { ProyectoAsignado } from '@/lib/data';
+import CarreraBadge from '@/components/CarreraBadge';
 
 const PAGE_SIZE = 8;
 const DEFAULT_PASSWORD = 'EMI2026*';
@@ -39,24 +43,47 @@ function generarUsername(nombre: string): string {
   return inicial + apellido;
 }
 
-const StatCard = ({ title, value, icon: Icon, color, delay }: {
-  title: string; value: number | string; icon: React.ElementType; color: string; delay: number;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay }}
-    className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-all group"
-  >
-    <div className={`p-3.5 rounded-2xl ${color} text-white shadow-lg shadow-blue-900/10`}>
-      <Icon className="w-6 h-6" />
-    </div>
-    <div>
-      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{title}</p>
-      <p className="text-2xl font-black text-[#162748]">{value}</p>
-    </div>
-  </motion.div>
-);
+const StatCard = ({ title, value, icon: Icon, theme, subtext }: {
+  title: string; 
+  value: number | string; 
+  icon: React.ElementType; 
+  theme: 'blue' | 'emerald' | 'indigo'; 
+  subtext: string;
+}) => {
+  const themes = {
+    blue: {
+      bubble: 'bg-blue-50 text-[#094e8f]',
+      borderHover: 'hover:border-blue-200'
+    },
+    emerald: {
+      bubble: 'bg-emerald-50 text-emerald-600',
+      borderHover: 'hover:border-emerald-200'
+    },
+    indigo: {
+      bubble: 'bg-indigo-50 text-indigo-600',
+      borderHover: 'hover:border-indigo-200'
+    }
+  };
+
+  const current = themes[theme];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`bg-white p-5 sm:p-6 rounded-[2.2rem] border border-slate-200/80 shadow-xs flex items-start gap-4 hover:shadow-md ${current.borderHover} transition-all group`}
+    >
+      <div className={`w-11 h-11 rounded-2xl ${current.bubble} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-0.5">{title}</p>
+        <p className="text-2xl sm:text-3xl font-black text-[#162748] tracking-tight">{value}</p>
+        <p className="text-[11px] text-slate-400 font-medium mt-0.5 truncate">{subtext}</p>
+      </div>
+    </motion.div>
+  );
+};
 
 export default function DocentesPage() {
   const [activeTab, setActiveTab] = useState<'cuentas' | 'progreso'>('cuentas');
@@ -77,6 +104,24 @@ export default function DocentesPage() {
 
   // ── NUEVO: modal de correo duplicado ──
   const [duplicateEmailModal, setDuplicateEmailModal] = useState(false);
+
+  // ── NUEVO: modal de proyectos asignados al docente ──
+  const [proyectosModalDocente, setProyectosModalDocente] = useState<DocenteAdmin | null>(null);
+  const [proyectosDocente, setProyectosDocente] = useState<ProyectoAsignado[]>([]);
+  const [loadingProyectos, setLoadingProyectos] = useState(false);
+
+  const handleOpenProyectosModal = async (docente: DocenteAdmin) => {
+    setProyectosModalDocente(docente);
+    setLoadingProyectos(true);
+    try {
+      const proys = await fetchAsignacionesDocente(docente.id);
+      setProyectosDocente(proys);
+    } catch {
+      setProyectosDocente([]);
+    } finally {
+      setLoadingProyectos(false);
+    }
+  };
 
   const cargarDatos = async () => {
     setLoading(true);
@@ -249,28 +294,35 @@ export default function DocentesPage() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-16">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-indigo-600 font-black text-xs uppercase tracking-[0.2em] mb-2">
-            <Users className="w-4 h-4" />
-            <span>Docentes / Jurados</span>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-50 text-[#094e8f] border border-blue-100 flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-[#094e8f]" />
+              Docentes / Jurados Evaluadores
+            </span>
           </div>
-          <h1 className="text-4xl font-black text-[#162748] tracking-tight">Gestión de Evaluadores</h1>
-          <p className="text-slate-500 font-medium mt-1">
-            Administre las cuentas de los docentes. La contraseña por defecto es <code className="bg-slate-100 px-2 py-0.5 rounded text-indigo-700 font-black">{DEFAULT_PASSWORD}</code>
+          <h1 className="text-2xl sm:text-3xl font-black text-[#162748] tracking-tight">Gestión de Evaluadores</h1>
+          <p className="text-slate-500 font-medium text-xs sm:text-sm mt-0.5">
+            Administre las cuentas de los docentes jurados. La contraseña por defecto es <code className="bg-slate-100 px-2 py-0.5 rounded-md text-[#094e8f] font-bold font-mono text-xs">{DEFAULT_PASSWORD}</code>
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={cargarDatos} className="p-3.5 bg-white border border-slate-200 text-slate-500 rounded-2xl hover:bg-slate-50 transition-all shadow-sm">
-            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+          <button 
+            onClick={cargarDatos} 
+            title="Recargar evaluadores"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold text-xs rounded-2xl hover:bg-slate-50 hover:border-slate-300 shadow-xs transition-all active:scale-95 cursor-pointer"
+          >
+            <RefreshCw className={`w-4 h-4 text-[#094e8f] ${loading ? 'animate-spin' : ''}`} />
+            <span>Actualizar</span>
           </button>
           <button
             onClick={() => { setSelectedDocente({ estado: 'Activo' }); setGeneratedUsername(''); setModalOpen(true); }}
-            className="flex items-center justify-center gap-2 bg-[#162748] hover:bg-black text-white font-black px-6 py-3.5 rounded-2xl shadow-xl shadow-blue-900/10 transition-all active:scale-95"
+            className="flex items-center justify-center gap-2 bg-[#094e8f] hover:bg-[#073c6e] text-white font-bold text-xs px-5 py-2.5 rounded-2xl shadow-md shadow-blue-900/10 transition-all active:scale-95 cursor-pointer"
           >
-            <UserPlus className="w-5 h-5" />
+            <UserPlus className="w-4 h-4" />
             <span>Agregar Docente</span>
           </button>
         </div>
@@ -280,34 +332,34 @@ export default function DocentesPage() {
       <HelpBanner
         storageKey="docentes"
         title="Guía del Módulo: Cuentas de Docentes"
-        description="Administre los accesos y especialidades de los docentes que actúan como jurados evaluadores. Puede dar de alta nuevos docentes, editar sus datos o inhabilitar cuentas. Recuerde que la contraseña por defecto para nuevas cuentas es EMI2026* y que cada jurado puede evaluar un máximo de 5 proyectos."
+        description="Administre los accesos y especialidades de los docentes que actúan como jurados evaluadores. Puede dar de alta nuevos docentes, editar sus datos o inhabilitar cuentas. Recuerde que la contraseña por defecto para nuevas cuentas es EMI2026* y que cada jurado puede tener múltiples proyectos asignados según la necesidad de la feria."
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard title="Total Docentes" value={stats.total} icon={Users} color="bg-blue-600" delay={0.1} />
-        <StatCard title="Docentes Activos" value={stats.activos} icon={UserCheck} color="bg-emerald-500" delay={0.2} />
-        <StatCard title="Carga Global" value={stats.totalProyectos} icon={Briefcase} color="bg-indigo-500" delay={0.3} />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
+        <StatCard title="Total Docentes" value={stats.total} icon={Users} theme="blue" subtext="Docentes registrados" />
+        <StatCard title="Docentes Activos" value={stats.activos} icon={UserCheck} theme="emerald" subtext="Habilitados para evaluar" />
+        <StatCard title="Carga Global" value={stats.totalProyectos} icon={Briefcase} theme="indigo" subtext="Asignaciones totales" />
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-slate-100 p-1.5 rounded-2xl w-full sm:w-fit border border-slate-200/50 shadow-inner">
+      <div className="inline-flex bg-slate-100/80 p-1 rounded-2xl border border-slate-200/60 shadow-xs">
         <button
           onClick={() => setActiveTab('cuentas')}
-          className={`flex-1 sm:flex-initial px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'cuentas'
-              ? 'bg-[#162748] text-white shadow-lg shadow-blue-900/10'
-              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50/50'
+              ? 'bg-[#094e8f] text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           Gestión de Cuentas
         </button>
         <button
           onClick={() => setActiveTab('progreso')}
-          className={`flex-1 sm:flex-initial px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'progreso'
-              ? 'bg-[#162748] text-white shadow-lg shadow-blue-900/10'
-              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50/50'
+              ? 'bg-[#094e8f] text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           Seguimiento de Evaluaciones
@@ -315,33 +367,43 @@ export default function DocentesPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-50 flex flex-wrap items-center gap-4 bg-slate-50/30">
-          <div className="relative flex-1 min-w-[300px]">
+      <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200/80 shadow-xs overflow-hidden">
+        <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col lg:flex-row items-stretch lg:items-center gap-3.5 bg-slate-50/50">
+          <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               placeholder="Buscar por nombre, código o especialidad..."
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }}
-              className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-600/30 transition-all font-medium"
+              className="w-full pl-11 pr-10 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#094e8f] focus:ring-2 focus:ring-[#094e8f]/10 transition-all shadow-2xs"
             />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="inline-flex flex-wrap items-center gap-1.5">
             {[
               { id: 'all', label: 'Todos', icon: Users },
-              { id: 'assigned', label: 'Con Carga', icon: Briefcase },
+              { id: 'assigned', label: 'Con Proyectos', icon: Briefcase },
               { id: 'unassigned', label: 'Disponibles', icon: UserCheck },
-              { id: 'saturated', label: 'Saturados', icon: AlertTriangle },
               { id: 'visitors', label: 'Visitantes', icon: Users },
               { id: 'inactive', label: 'Inactivos', icon: UserX }
             ].map(f => (
               <button
                 key={f.id}
                 onClick={() => setFilterWorkload(f.id as 'all' | 'assigned' | 'unassigned' | 'saturated' | 'inactive' | 'visitors')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-none ${filterWorkload === f.id ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
-                  }`}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  filterWorkload === f.id
+                    ? 'bg-[#094e8f] text-white shadow-xs'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
               >
                 <f.icon className="w-3.5 h-3.5" />
                 {f.label}
@@ -389,43 +451,63 @@ export default function DocentesPage() {
                 paginated.map(d => (
                   <tr key={d.id} className={`hover:bg-slate-50/80 transition-colors group ${d.estado === 'Inactivo' ? 'opacity-50 grayscale' : ''}`}>
                     <td className="px-6 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center text-xs font-black text-indigo-600 border border-indigo-100">
+                      <div className="flex items-center gap-3.5">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center text-xs font-bold font-mono text-indigo-700 border border-indigo-100 shadow-2xs flex-shrink-0">
                           {d.initials}
                         </div>
-                        <p className="text-sm font-bold text-slate-800">{d.nombre}</p>
+                        <p className="text-sm font-bold text-slate-800 leading-snug">{d.nombre}</p>
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <p className="text-xs font-black text-slate-700 uppercase">{d.codigo || '—'}</p>
-                      <p className="text-[10px] text-slate-400">{d.email}</p>
+                      <p className="text-xs font-bold font-mono text-slate-800 uppercase tracking-tight">{d.codigo || '—'}</p>
+                      <p className="text-xs text-slate-400">{d.email}</p>
                     </td>
-                    <td className="px-6 py-5">
-                      <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold border border-indigo-100/80 whitespace-nowrap shadow-2xs">
                         {d.especialidad}
                       </span>
                     </td>
-                    <td className="px-6 py-5">
-                       <div className="flex flex-col gap-1.5 min-w-[140px]">
-                         <span className={`text-[10px] font-black uppercase tracking-tight ${d.proyectosAsignados >= 3 ? 'text-red-600' : d.proyectosAsignados >= 1 ? 'text-amber-600' : 'text-slate-600'
-                           }`}>
-                           {d.proyectosAsignados} / 3 Proyectos
-                         </span>
-                         <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                           <div
-                             className={`h-full ${d.proyectosAsignados >= 3 ? 'bg-red-600' : d.proyectosAsignados >= 1 ? 'bg-amber-500' : 'bg-emerald-500'}`}
-                             style={{ width: `${Math.min((d.proyectosAsignados / 3) * 100, 100)}%` }}
-                           />
-                         </div>
-                       </div>
-                     </td>
-                    <td className="px-6 py-5">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${d.estado === 'Activo' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                          d.estado === 'Visitante' ? 'bg-purple-50 text-purple-600 border-purple-100' :
-                            'bg-slate-50 text-slate-500 border-slate-200'
-                        }`}>
-                        {d.estado}
-                      </span>
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      {d.proyectosAsignados > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenProyectosModal(d)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100/80 active:scale-95 text-[#094e8f] border border-blue-200/80 hover:border-blue-300 rounded-xl text-xs font-bold whitespace-nowrap shadow-2xs transition-all cursor-pointer group/btn"
+                          title="Clic para ver proyectos asignados"
+                        >
+                          <Briefcase className="w-3.5 h-3.5 text-[#094e8f] group-hover/btn:scale-110 transition-transform" />
+                          <span>{d.proyectosAsignados} {d.proyectosAsignados === 1 ? 'Proyecto' : 'Proyectos'}</span>
+                        </button>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 text-slate-400 border border-slate-200/60 rounded-xl text-xs font-medium whitespace-nowrap">
+                          <UserCheck className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Sin proyectos</span>
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (d.estado === 'Inactivo') {
+                            handleEnable(d);
+                          } else {
+                            setShowConfirmDisable(d);
+                          }
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95 ${
+                          d.estado === 'Activo' ? 'bg-emerald-50 hover:bg-emerald-100/80 text-emerald-700 border-emerald-200/70' :
+                          d.estado === 'Visitante' ? 'bg-purple-50 hover:bg-purple-100/80 text-purple-700 border-purple-200/70' :
+                          'bg-slate-50 hover:bg-slate-100 text-slate-500 border-slate-200/70'
+                        }`}
+                        title={d.estado === 'Inactivo' ? 'Clic para activar cuenta' : 'Clic para dar de baja'}
+                      >
+                        <span className={`w-2 h-2 rounded-full ${
+                          d.estado === 'Activo' ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]' :
+                          d.estado === 'Visitante' ? 'bg-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.5)]' : 'bg-slate-400'
+                        }`} />
+                        <span>{d.estado}</span>
+                      </button>
                     </td>
                     <td className="px-6 py-5 text-right space-x-2">
                       <button
@@ -739,6 +821,150 @@ export default function DocentesPage() {
                   className="w-full py-3.5 rounded-2xl bg-[#162748] hover:bg-black text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-900/20 transition-all"
                 >
                   Entendido, cambiar correo
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NUEVO: Modal de Proyectos Asignados al Docente ── */}
+      <AnimatePresence>
+        {proyectosModalDocente && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setProyectosModalDocente(null)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+              className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[85vh] border border-slate-100"
+            >
+              {/* Header del Modal */}
+              <div className="p-6 md:p-8 pb-4 border-b border-slate-100 bg-slate-50/50">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center text-sm font-bold font-mono text-[#094e8f] border border-indigo-100 shadow-sm flex-shrink-0">
+                      {proyectosModalDocente.initials}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100">
+                          {proyectosModalDocente.especialidad}
+                        </span>
+                        <span className="text-xs font-mono font-bold text-slate-500 uppercase">
+                          {proyectosModalDocente.codigo}
+                        </span>
+                      </div>
+                      <h3 className="text-lg md:text-xl font-black text-[#162748] truncate leading-tight">
+                        {proyectosModalDocente.nombre}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setProyectosModalDocente(null)}
+                    className="p-2.5 hover:bg-white rounded-2xl border border-transparent hover:border-slate-200 text-slate-400 hover:text-slate-700 transition-all flex-shrink-0 cursor-pointer"
+                    aria-label="Cerrar"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-200/60">
+                  <p className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                    <Briefcase className="w-4 h-4 text-[#094e8f]" />
+                    <span>Proyectos Asignados:</span>
+                    <span className="font-black text-[#162748]">{proyectosDocente.length}</span>
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      {proyectosDocente.filter(p => p.estado === 'Calificado').length} Evaluados
+                    </span>
+                    <span className="text-xs font-bold text-amber-600 flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      {proyectosDocente.filter(p => p.estado === 'Pendiente').length} Pendientes
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lista de Proyectos */}
+              <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-3.5">
+                {loadingProyectos ? (
+                  <div className="py-16 text-center flex flex-col items-center gap-3">
+                    <div className="w-8 h-8 border-4 border-slate-100 border-t-[#094e8f] rounded-full animate-spin" />
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Cargando proyectos...</p>
+                  </div>
+                ) : proyectosDocente.length === 0 ? (
+                  <div className="py-12 text-center flex flex-col items-center gap-2">
+                    <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mb-2">
+                      <Briefcase className="w-6 h-6" />
+                    </div>
+                    <p className="text-sm font-bold text-slate-700">Sin proyectos asignados</p>
+                    <p className="text-xs text-slate-400">Este docente aún no tiene proyectos asignados como jurado evaluador.</p>
+                  </div>
+                ) : (
+                  proyectosDocente.map((p, idx) => (
+                    <div
+                      key={p.id || idx}
+                      className="p-4 bg-slate-50/70 hover:bg-blue-50/40 border border-slate-200/80 hover:border-blue-200 rounded-2xl transition-all flex items-start justify-between gap-4 group"
+                    >
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="px-2.5 py-1 text-xs font-bold font-mono bg-white text-[#094e8f] rounded-lg border border-slate-200/90 shadow-2xs whitespace-nowrap mt-0.5">
+                          {p.stand}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-bold text-slate-800 leading-snug group-hover:text-[#094e8f] transition-colors line-clamp-2">
+                            {p.nombre}
+                          </h4>
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            {p.carrera && (
+                              <CarreraBadge carrera={p.carrera} size="xs" />
+                            )}
+                            {p.categoria && (
+                              <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-50 text-[#094e8f] rounded-md border border-blue-100 whitespace-nowrap">
+                                {p.categoria}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex-shrink-0">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border ${
+                          p.estado === 'Calificado'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
+                            : 'bg-amber-50 text-amber-700 border-amber-200/80'
+                        }`}>
+                          {p.estado === 'Calificado' ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          ) : (
+                            <Clock className="w-3.5 h-3.5 text-amber-600" />
+                          )}
+                          {p.estado}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Footer del Modal */}
+              <div className="p-4 md:p-6 bg-slate-50/80 border-t border-slate-100 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setProyectosModalDocente(null)}
+                  className="px-6 py-2.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+                >
+                  Cerrar
                 </button>
               </div>
             </motion.div>

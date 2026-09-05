@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HelpBanner from '@/components/HelpBanner';
+import LoadingScreen from '@/components/LoadingScreen';
 import { fetchConfiguracion, updateConfiguracion, resetTodasLasCalificaciones, type ConfigSistema } from '@/lib/db';
 
 export default function ConfigPage() {
@@ -71,10 +72,11 @@ export default function ConfigPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] gap-4">
-        <div className="w-10 h-10 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin" />
-        <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Cargando configuración...</p>
-      </div>
+      <LoadingScreen
+        message="Cargando configuración del sistema..."
+        submessage="Control de Fases, Períodos y Parámetros · UICYT"
+        fullScreen={false}
+      />
     );
   }
 
